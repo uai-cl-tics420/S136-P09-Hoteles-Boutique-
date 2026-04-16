@@ -1,21 +1,3 @@
-/**
- * src/lib/auth/auth-service.ts — Boutique Hotels
- *
- * Cryptographic elements used (required by Prueba 1 rubric):
- *
- *  ┌──────────────────────────────────────────────────────────────────┐
- *  │  Element            │ Algorithm / Library                        │
- *  ├──────────────────────────────────────────────────────────────────┤
- *  │  Password hashing   │ Argon2id (argon2 · OWASP recommended)      │
- *  │  JWT signing        │ ES256 (ECDSA P-256 key pair, via jose)     │
- *  │  JWT verification   │ ES256 public key (middleware.ts)           │
- *  │  OTP secret storage │ AES-256-GCM encryption (pepper + IV)       │
- *  │  TOTP generation    │ HMAC-SHA1 (RFC 6238, via otplib)           │
- *  │  Refresh tokens     │ SHA-256 hash stored in Redis               │
- *  │  SSO / OIDC         │ OAuth2 Authorization Code + PKCE           │
- *  └──────────────────────────────────────────────────────────────────┘
- */
-
 import { SignJWT, importPKCS8, importSPKI } from "jose";
 import { authenticator } from "otplib";
 import { hash as argon2Hash, verify as argon2Verify } from "argon2";
