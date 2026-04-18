@@ -15,15 +15,22 @@ FROM base AS deps
 COPY package.json bun.lock* ./ 
 RUN bun install --frozen-lockfile
 
-# ── STAGE 3: builder ─────────────────────────────────────────────────────────
-FROM deps AS builder
+# ── STAGE 3: migrate (db migrations) ──────────────────────────────────────────
+FROM deps AS migrate
+COPY drizzle.config.ts .
+COPY drizzle ./drizzle
+COPY src ./src
+# No CMD here — will be overridden by docker-compose
+
+# ── STAGE 4: builder ─────────────────────────────────────────────────────────
+FROM migrate AS builder
 COPY . .
 # Generate Drizzle types before build
 RUN bun run db:generate
 # Build Next.js app (standalone output for smaller image)
 RUN bun run build
 
-# ── STAGE 4: runner (production image) ───────────────────────────────────────
+# ── STAGE 5: runner (production image) ───────────────────────────────────────
 FROM base AS runner
 WORKDIR /app
 

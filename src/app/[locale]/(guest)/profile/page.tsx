@@ -1,7 +1,66 @@
 "use client";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { useState } from "react";
+import { toast } from "sonner";
+import Image from "next/image";
 
 export default function ProfilePage() {
+  const { data: session } = useSession();
+  const [showOtpSetup, setShowOtpSetup] = useState(false);
+  const [qrCode, setQrCode] = useState("");
+  const [secret, setSecret] = useState("");
+  const [verifyToken, setVerifyToken] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  async function handleGenerateOTP() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/otp/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) throw new Error("Error generando QR");
+
+      const data = await res.json();
+      setQrCode(data.qrCode);
+      setSecret(data.secret);
+      setShowOtpSetup(true);
+      toast.success("QR generado. Escanea con tu app de autenticación.");
+    } catch (err) {
+      toast.error("Error generando código QR");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerifyOTP() {
+    setVerifying(true);
+    try {
+      const res = await fetch("/api/auth/otp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: verifyToken }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Código OTP inválido");
+      }
+
+      setShowOtpSetup(false);
+      setVerifyToken("");
+      setQrCode("");
+      setSecret("");
+      toast.success("✓ OTP habilitado correctamente");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Error verificando OTP");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-100">
@@ -11,17 +70,130 @@ export default function ProfilePage() {
       </header>
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-4">
         <h1 className="text-xl font-semibold text-gray-900">Mi perfil</h1>
+
+        {/* Información de usuario */}
+        {session?.user && (
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+            <div className="flex items-center gap-4">
+              {session.user.image && (
+                <Image
+                  src={session.user.image}
+                  alt={session.user.name || "User"}
+                  width={64}
+                  height={64}
+                  className="rounded-full"
+                />
+              )}
+              <div>
+                <p className="text-sm font-medium text-gray-900">{session.user.name}</p>
+                <p className="text-sm text-gray-500">{session.user.email}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Menú */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
           <a href="/es/bookings" className="flex items-center justify-between py-3 border-b border-gray-50 hover:text-gray-600 transition-colors">
             <span className="text-sm font-medium text-gray-900">Mis reservas</span>
             <span className="text-gray-400">→</span>
           </a>
-          <a href="/es/auth/otp" className="flex items-center justify-between py-3 border-b border-gray-50 hover:text-gray-600 transition-colors">
-            <span className="text-sm font-medium text-gray-900">Configurar autenticación en dos pasos</span>
-            <span className="text-gray-400">→</span>
-          </a>
-          <button onClick={() => signOut({ callbackUrl: "/es/auth/login" })}
-            className="w-full text-left py-3 text-sm font-medium text-red-500 hover:text-red-700 transition-colors">
+
+          {/* Configuración OTP */}
+          <div className="py-3 border-b border-gray-50">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-gray-900">Autenticación en dos pasos (OTP)</span>
+              <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">RFC 6238</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              TOTP (Time-based One-Time Password) proporciona seguridad adicional. Compatible con Google Authenticator, Authy, Microsoft Authenticator.
+            </p>
+            {!showOtpSetup && (
+              <button
+                onClick={handleGenerateOTP}
+                disabled={loading}
+                className="text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition"
+              >
+                {loading ? "Generando..." : "Configurar OTP"}
+              </button>
+            )}
+
+            {showOtpSetup && (
+              <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
+                {/* QR */}
+                <div>
+                  <p className="text-xs font-medium text-gray-700 mb-2">1. Escanea este código:</p>
+                  {qrCode && (
+                    <div className="flex justify-center">
+                      <Image
+                        src={qrCode}
+                        alt="TOTP QR"
+                        width={150}
+                        height={150}
+                        className="border border-gray-300"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Secret Manual */}
+                <div>
+                  <p className="text-xs font-medium text-gray-700 mb-2">O ingresa manualmente:</p>
+                  <div className="bg-white border border-dashed border-gray-300 p-2 rounded font-mono text-xs text-center break-all">
+                    {secret}
+                  </div>
+                </div>
+
+                {/* Verificación */}
+                <div>
+                  <p className="text-xs font-medium text-gray-700 mb-2">2. Ingresa el código de 6 dígitos:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={verifyToken}
+                      onChange={(e) =>
+                        setVerifyToken(
+                          e.target.value.replace(/\D/g, "").slice(0, 6)
+                        )
+                      }
+                      maxLength={6}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-center text-lg tracking-widest font-mono focus:ring-2 focus:ring-blue-500"
+                      placeholder="000000"
+                    />
+                    <button
+                      onClick={handleVerifyOTP}
+                      disabled={verifying || verifyToken.length !== 6}
+                      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-sm font-medium py-2 px-4 rounded transition"
+                    >
+                      {verifying ? "..." : "OK"}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setShowOtpSetup(false);
+                    setQrCode("");
+                    setSecret("");
+                    setVerifyToken("");
+                  }}
+                  className="w-full text-xs text-gray-600 hover:text-gray-800 py-2"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+              <p className="text-xs text-gray-500">
+                Abre tu app de autenticación para completar el código.
+              </p>
+          </div>
+
+          <button
+            onClick={() => signOut({ callbackUrl: "/es/auth/login" })}
+            className="w-full text-left py-3 text-sm font-medium text-red-500 hover:text-red-700 transition-colors"
+          >
             Cerrar sesión
           </button>
         </div>

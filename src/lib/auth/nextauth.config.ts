@@ -1,60 +1,82 @@
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
-import Credentials from "next-auth/providers/credentials";
+// src/lib/auth/nextauth.config.ts
+import NextAuth, { DefaultSession } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { authConfig } from "./auth.config"; // <-- Importamos la config Edge
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { verifyPassword } from "./auth-service";
 
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: string;
+      locale: string;
+      otpEnabled: boolean;
+    } & DefaultSession["user"]
+  }
+}
+
+// Construir proveedores dinámicamente - Google solo si está configurado
+const providers: any[] = [
+  CredentialsProvider({
+    name: "credentials",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) return null;
+
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, credentials.email as string),
+      });
+
+      if (!user || !user.passwordHash) return null;
+
+      const valid = await verifyPassword(
+        user.passwordHash,
+        credentials.password as string
+      );
+      if (!valid) return null;
+
+      return {
+        id: user.id.toString(),
+        email: user.email,
+        role: (user as any).role || "GUEST",
+        locale: (user as any).locale || "es",
+        otpEnabled: (user as any).otpEnabled || false,
+      };
+    },
+  }),
+];
+
+// Añadir Google solo si está configurado
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const user = await db.query.users.findFirst({
-          where: eq(users.email, credentials.email as string),
-        });
-
-        if (!user || !user.passwordHash) return null;
-
-        const valid = await verifyPassword(
-          user.passwordHash,
-          credentials.password as string
-        );
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          locale: user.locale,
-          otpEnabled: user.otpEnabled,
-        };
-      },
-    }),
-  ],
-
+  ...authConfig, // Esparcimos la configuración básica
+  providers,
   callbacks: {
+    ...authConfig.callbacks, // Mantenemos el session()
     async signIn({ user, account }) {
-      // Para SSO (Google), crear o actualizar usuario automáticamente
-      if (account?.provider === "google") {
+      if (account?.provider === "google" && user.email) {
         const existing = await db.query.users.findFirst({
-          where: eq(users.email, user.email!),
+          where: eq(users.email, user.email),
         });
 
         if (!existing) {
           await db.insert(users).values({
-            email: user.email!,
+            email: user.email,
             ssoProvider: "google",
             ssoSubject: account.providerAccountId,
             role: "GUEST",
@@ -64,41 +86,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-
     async jwt({ token, user }) {
-      if (user) {
-        // Primera vez que se crea el token
+      if (user && user.email) {
         const dbUser = await db.query.users.findFirst({
-          where: eq(users.email, user.email!),
+          where: eq(users.email, user.email),
         });
         if (dbUser) {
           token.id = dbUser.id;
-          token.role = dbUser.role;
-          token.locale = dbUser.locale;
-          token.otpEnabled = dbUser.otpEnabled;
+          token.role = (dbUser as any).role;
+          token.locale = (dbUser as any).locale;
+          token.otpEnabled = (dbUser as any).otpEnabled;
         }
       }
       return token;
     },
-
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.locale = token.locale as string;
-        session.user.otpEnabled = token.otpEnabled as string;
-      }
-      return session;
-    },
-  },
-
-  pages: {
-    signIn: "/es/auth/login",
-    error: "/es/auth/login",
-  },
-
-  session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 días
   },
 });

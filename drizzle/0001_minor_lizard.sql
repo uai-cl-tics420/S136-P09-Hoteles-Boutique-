@@ -116,7 +116,8 @@ CREATE TABLE "guest_preferences" (
 	CONSTRAINT "guest_preferences_guest_id_unique" UNIQUE("guest_id")
 );
 --> statement-breakpoint
-ALTER TABLE "users" ALTER COLUMN "id" SET DATA TYPE uuid;--> statement-breakpoint
+ALTER TABLE "users" ALTER COLUMN "id" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "users" ALTER COLUMN "id" SET DATA TYPE uuid USING id::text::uuid;--> statement-breakpoint
 ALTER TABLE "users" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();--> statement-breakpoint
 ALTER TABLE "users" ALTER COLUMN "email" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "password_hash" varchar(255);--> statement-breakpoint
