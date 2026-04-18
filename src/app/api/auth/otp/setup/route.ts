@@ -7,8 +7,12 @@ import {
   buildTotpUri,
   encryptOtpSecret,
 } from "@/lib/auth/auth-service";
-import { auth } from "@/lib/auth/nextauth.config";
 import QRCode from "qrcode";
+import { z } from "zod";
+
+const setupSchema = z.object({
+  email: z.string().email(),
+});
 
 /**
  * POST /api/auth/otp/setup
@@ -16,16 +20,23 @@ import QRCode from "qrcode";
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await request.json();
+    const { email } = setupSchema.parse(body);
+
+    // Obtener usuario de la BD
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Generar nuevo secreto TOTP (160-bit, RFC 4226 minimum)
     const secret = generateTotpSecret();
     
     // Construir URI para QR (RFC 6238 format)
-    const uri = buildTotpUri(secret, session.user.email!);
+    const uri = buildTotpUri(secret, email);
     
     // Cifrar secret con AES-256-GCM antes de guardar en BD
     const encrypted = encryptOtpSecret(secret);
@@ -40,7 +51,7 @@ export async function POST(request: NextRequest) {
     await db
       .update(users)
       .set({ otpSecret: encrypted, otpEnabled: "false" })
-      .where(eq(users.id, session.user.id));
+      .where(eq(users.id, user.id));
 
     return NextResponse.json({ 
       uri, 

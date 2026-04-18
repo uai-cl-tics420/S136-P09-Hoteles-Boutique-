@@ -102,3 +102,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+// Exportar authOptions para uso en getServerSession
+export const authOptions = {
+  ...authConfig,
+  providers,
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account }: any) {
+      if (account?.provider === "google" && user.email) {
+        const existing = await db.query.users.findFirst({
+          where: eq(users.email, user.email),
+        });
+
+        if (!existing) {
+          await db.insert(users).values({
+            email: user.email,
+            ssoProvider: "google",
+            ssoSubject: account.providerAccountId,
+            role: "GUEST",
+            locale: "es",
+          });
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user }: any) {
+      if (user && user.email) {
+        const dbUser = await db.query.users.findFirst({
+          where: eq(users.email, user.email),
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = (dbUser as any).role;
+          token.locale = (dbUser as any).locale;
+          token.otpEnabled = (dbUser as any).otpEnabled;
+        }
+      }
+      return token;
+    },
+  },
+};

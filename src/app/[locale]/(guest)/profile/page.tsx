@@ -1,4 +1,5 @@
 "use client";
+
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -12,13 +13,21 @@ export default function ProfilePage() {
   const [verifyToken, setVerifyToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [debugCode, setDebugCode] = useState("");
+  const [loadingDebugCode, setLoadingDebugCode] = useState(false);
 
   async function handleGenerateOTP() {
+    if (!session?.user?.email) {
+      toast.error("No hay sesión activa");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/otp/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: session.user.email }),
       });
 
       if (!res.ok) throw new Error("Error generando QR");
@@ -53,11 +62,34 @@ export default function ProfilePage() {
       setVerifyToken("");
       setQrCode("");
       setSecret("");
+      setDebugCode("");
       toast.success("✓ OTP habilitado correctamente");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error verificando OTP");
     } finally {
       setVerifying(false);
+    }
+  }
+
+  async function handleGetDebugCode() {
+    if (!session?.user?.email) {
+      toast.error("No hay sesión activa");
+      return;
+    }
+
+    setLoadingDebugCode(true);
+    try {
+      const res = await fetch(`/api/auth/otp/debug-code?email=${encodeURIComponent(session.user.email)}`);
+      if (!res.ok) throw new Error("Error obteniendo código");
+      
+      const data = await res.json();
+      setDebugCode(data.totpCode);
+      setVerifyToken(data.totpCode);
+      toast.success("Código TOTP copiado (válido 30 segundos)");
+    } catch (err) {
+      toast.error("Error obteniendo código de testing");
+    } finally {
+      setLoadingDebugCode(false);
     }
   }
 
@@ -171,6 +203,22 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                {/* Debug: Botón para obtener código */}
+                <div className="pt-2 border-t border-gray-200">
+                  <button
+                    onClick={handleGetDebugCode}
+                    disabled={loadingDebugCode}
+                    className="w-full text-xs bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white py-2 px-3 rounded transition"
+                  >
+                    {loadingDebugCode ? "Generando..." : "📱 Obtener código para testing"}
+                  </button>
+                  {debugCode && (
+                    <p className="text-xs text-gray-600 mt-2 text-center font-mono">
+                      Código: <span className="font-bold text-gray-900">{debugCode}</span>
+                    </p>
+                  )}
+                </div>
+
                 <button
                   onClick={() => {
                     setShowOtpSetup(false);
@@ -185,9 +233,9 @@ export default function ProfilePage() {
               </div>
             )}
 
-              <p className="text-xs text-gray-500">
-                Abre tu app de autenticación para completar el código.
-              </p>
+            <p className="text-xs text-gray-500 mt-3">
+              Abre tu app de autenticación para completar el código.
+            </p>
           </div>
 
           <button

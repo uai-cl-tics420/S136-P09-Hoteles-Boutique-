@@ -25,28 +25,32 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (!result?.ok) {
+        setError("Credenciales inválidas");
+        setLoading(false);
+        return;
+      }
+
+      // Si necesita OTP, hacer fetch al endpoint
+      const checkRes = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Credenciales inválidas");
-        setLoading(false);
-        return;
-      }
-
-      const data = await res.json();
+      const data = await checkRes.json();
 
       if (data.requiresOtp) {
-        // Usuario tiene OTP habilitado → mostrar pantalla de verificación
         setTempSessionId(data.tempSessionId);
         setStep('otp');
         toast.success("Introduce el código de tu app de autenticación");
       } else {
-        // Login exitoso sin OTP
         toast.success("¡Bienvenido de vuelta!");
         router.push(callbackUrl);
       }

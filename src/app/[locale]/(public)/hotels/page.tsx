@@ -1,6 +1,7 @@
 
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { useSession, signOut } from "next-auth/react";
 import type { Hotel } from "@/types/domain";
 
 type EnrichedHotel = Hotel & {
@@ -35,6 +36,7 @@ function Stars({ n, size = "sm" }: { n: number; size?: "sm" | "xs" }) {
 }
 
 export default function HotelsPage() {
+  const { data: session } = useSession();
   const [hotels, setHotels] = useState<EnrichedHotel[]>([]);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -77,8 +79,18 @@ export default function HotelsPage() {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <a href="/es/hotels" className="text-lg font-semibold text-gray-900">Hoteles Boutique</a>
           <div className="flex gap-4">
-            <a href="/es/bookings" className="text-sm text-gray-500 hover:text-gray-900">Mis reservas</a>
-            <a href="/es/auth/login" className="text-sm text-gray-500 hover:text-gray-900">Cuenta</a>
+            {session && (
+              <>
+                <a href="/es/bookings" className="text-sm text-gray-500 hover:text-gray-900">Mis reservas</a>
+                <a href="/es/profile" className="text-sm text-gray-500 hover:text-gray-900">Mi Perfil</a>
+                <button onClick={() => signOut()} className="text-sm text-gray-500 hover:text-gray-900">Cerrar sesión</button>
+              </>
+            )}
+            {!session && (
+              <>
+                <a href="/es/auth/login" className="text-sm text-gray-500 hover:text-gray-900">Cuenta</a>
+              </>
+            )}
           </div>
         </div>
       </header>
