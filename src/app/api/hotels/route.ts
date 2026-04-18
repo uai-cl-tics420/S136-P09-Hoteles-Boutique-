@@ -8,12 +8,19 @@ import type { HotelCategory } from "@/types/domain";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
+
+    const minStarsRaw = searchParams.get("minStars");
+    const maxPriceRaw = searchParams.get("maxPrice");
+
     const results = await getHotels({
       city: searchParams.get("city") ?? undefined,
       category: (searchParams.get("category") as HotelCategory) ?? undefined,
+      minStars: minStarsRaw ? parseInt(minStarsRaw) : undefined,
+      maxPrice: maxPriceRaw ? parseFloat(maxPriceRaw) : undefined,
       page: parseInt(searchParams.get("page") ?? "1"),
       limit: parseInt(searchParams.get("limit") ?? "12"),
     });
+
     return NextResponse.json({ hotels: results });
   } catch (error) {
     console.error("[GET /api/hotels]", error);
