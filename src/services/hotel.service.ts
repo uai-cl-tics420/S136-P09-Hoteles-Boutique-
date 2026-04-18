@@ -16,7 +16,7 @@ export async function getHotels(filters: HotelFilters = {}) {
   const { city, category, minStars, maxPrice, page = 1, limit = 12 } = filters;
   const offset = (page - 1) * limit;
 
-  const conditions: ReturnType<typeof eq>[] = [eq(hotels.active, true)];
+  const conditions = [eq(hotels.active, true)];
   if (city)     conditions.push(ilike(hotels.locationCity, `%${city}%`));
   if (category) conditions.push(eq(hotels.category, category));
   if (minStars) conditions.push(gte(hotels.starRating, minStars));

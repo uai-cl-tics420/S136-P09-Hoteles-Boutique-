@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ hotels: results });
   } catch (error) {
-    console.error("[GET /api/hotels]", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("[GET /api/hotels]", error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: "Failed to fetch hotels" }, { status: 500 });
   }
 }
 

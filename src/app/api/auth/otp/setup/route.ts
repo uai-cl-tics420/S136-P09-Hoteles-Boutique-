@@ -20,7 +20,13 @@ const setupSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      return NextResponse.json({ error: "Invalid or missing request body" }, { status: 400 });
+    }
+    
     const { email } = setupSchema.parse(body);
 
     // Obtener usuario de la BD

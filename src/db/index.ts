@@ -14,7 +14,12 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set in environment variables");
 }
 
-const queryClient = postgres(connectionString);
+// Configurar pool de conexiones para evitar "too many clients"
+const queryClient = postgres(connectionString, {
+  max: 10, // Máximo 10 conexiones simultáneas
+  idle_timeout: 20,
+  connect_timeout: 10,
+});
 
 // 2. Le inyectamos el esquema a la instancia de Drizzle
 export const db = drizzle(queryClient, { schema });
