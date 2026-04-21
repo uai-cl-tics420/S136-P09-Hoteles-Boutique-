@@ -1,11 +1,12 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+// FIX: useSearchParams() debe estar en un componente hijo envuelto en <Suspense>
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/es/hotels";
@@ -40,11 +41,9 @@ export default function LoginPage() {
       const data = await checkRes.json();
 
       if (data.requiresOtp) {
-        // Usuario ya tiene OTP configurado → pedir código
         setTempSessionId(data.tempSessionId);
         setStep("otp");
       } else if (data.requiresOtpSetup) {
-        // Usuario NO tiene OTP → redirigir a configurarlo (obligatorio)
         toast("Debes configurar la verificación en dos pasos para continuar", {
           description: "Es un requisito de seguridad obligatorio.",
           duration: 5000,
@@ -94,7 +93,6 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 via-amber-50/40 to-stone-100 px-4">
       <div className="w-full max-w-md">
-        {/* Logo / Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-stone-900 rounded-2xl mb-4">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
@@ -107,7 +105,6 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/60 border border-stone-100 overflow-hidden">
-          {/* Step indicator */}
           <div className="flex border-b border-stone-100">
             <div className={`flex-1 py-3 text-xs font-medium text-center transition-colors ${step === "credentials" ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400"}`}>
               1. Credenciales
@@ -127,7 +124,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* PASO 1: CREDENCIALES */}
             {step === "credentials" && (
               <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                 <div>
@@ -191,7 +187,6 @@ export default function LoginPage() {
                   <div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-stone-400">O continúa con</span></div>
                 </div>
 
-                {/* Google con prompt=select_account para forzar selector de cuenta */}
                 <button
                   type="button"
                   onClick={() => signIn("google", { callbackUrl, prompt: "select_account" })}
@@ -208,7 +203,6 @@ export default function LoginPage() {
               </form>
             )}
 
-            {/* PASO 2: VERIFICACIÓN OTP */}
             {step === "otp" && (
               <form onSubmit={handleOtpSubmit} className="space-y-5">
                 <div className="flex items-center gap-3 p-4 bg-violet-50 border border-violet-100 rounded-xl">
@@ -273,5 +267,13 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-stone-50"><div className="animate-pulse text-stone-400">Cargando...</div></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

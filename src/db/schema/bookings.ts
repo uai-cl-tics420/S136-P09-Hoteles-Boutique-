@@ -1,4 +1,4 @@
-import { pgTable, uuid, date, integer, decimal, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, uuid, date, integer, decimal, text, timestamp, pgEnum, index } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { roomTypes } from "./room-types";
 
@@ -26,4 +26,10 @@ export const bookings = pgTable("bookings", {
   specialRequests: text("special_requests"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+},
+// FIX: Índices para búsquedas de reservas por huésped y tipo de habitación
+(table) => [
+  index("bookings_guest_id_idx").on(table.guestId),
+  index("bookings_room_type_id_idx").on(table.roomTypeId),
+  index("bookings_status_idx").on(table.status),
+]);

@@ -26,14 +26,21 @@ export default function HotelDetailPage({ params }: { params: Promise<{ slug: st
   const [tab, setTab] = useState<"info" | "rooms" | "extras" | "reviews">("info");
 
   useEffect(() => {
+    // FIX: Fetch hotel y reviews en paralelo (antes eran secuenciales)
     fetch(`/api/hotels?slug=${slug}`)
       .then((r) => r.json())
       .then(async (d) => {
         const h = d.hotels?.[0] ?? null;
-        setHotel(h);
         if (h) {
-          const rv = await fetch(`/api/reviews?hotelId=${h.id}`).then((r) => r.json());
+          // Lanzar reviews en paralelo sin esperar el hotel
+          const [, rv] = await Promise.all([
+            Promise.resolve(h),
+            fetch(`/api/reviews?hotelId=${h.id}`).then((r) => r.json()),
+          ]);
+          setHotel(h);
           setReviews(rv.reviews ?? []);
+        } else {
+          setHotel(null);
         }
         setLoading(false);
       })
@@ -359,7 +366,6 @@ export default function HotelDetailPage({ params }: { params: Promise<{ slug: st
                 </div>
               </div>
 
-              {/* Price breakdown */}
               {nights > 0 && selectedRoom && (
                 <div className="bg-gray-50 rounded-xl p-3 mb-4 space-y-1">
                   <div className="flex justify-between text-sm text-gray-600">

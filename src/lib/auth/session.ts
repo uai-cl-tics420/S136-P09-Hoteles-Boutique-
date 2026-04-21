@@ -1,7 +1,14 @@
 import { redis } from "@/lib/redis/client";
 import { randomBytes } from "crypto";
 
-const SESSION_TTL = 7 * 24 * 60 * 60; // 7 días en segundos
+const SESSION_TTL = 7 * 24 * 60 * 60;
+
+type SessionData = {
+  userId: string;
+  role: string;
+  createdAt: number;
+  otpVerified?: boolean;
+};
 
 export async function createSession(userId: string, role: string): Promise<string> {
   const sessionId = randomBytes(32).toString("hex");
@@ -14,10 +21,10 @@ export async function createSession(userId: string, role: string): Promise<strin
   return sessionId;
 }
 
-export async function getSession(sessionId: string) {
+export async function getSession(sessionId: string): Promise<SessionData | null> {
   const data = await redis.get(`session:${sessionId}`);
   if (!data) return null;
-  return JSON.parse(data) as { userId: string; role: string; createdAt: number };
+  return JSON.parse(data) as SessionData;
 }
 
 export async function deleteSession(sessionId: string): Promise<void> {

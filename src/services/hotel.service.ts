@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { hotels, reviews } from "@/db/schema";
-import { eq, ilike, and, asc, gte, sql } from "drizzle-orm";
+import { eq, ilike, and, asc, gte, sql, inArray } from "drizzle-orm";
 import type { HotelCategory } from "@/types/domain";
 
 export interface HotelFilters {
@@ -24,7 +24,7 @@ export async function getHotels(filters: HotelFilters = {}) {
   const hotelRows = await db.query.hotels.findMany({
     where: and(...conditions),
     with: {
-      images:    { orderBy: (img, { asc }) => [asc(img.sortOrder)] },
+      images:    { orderBy: (img, { asc }) => [asc(img.sortOrder)], limit: 1 },
       roomTypes: true,
     },
     limit,
@@ -32,34 +32,40 @@ export async function getHotels(filters: HotelFilters = {}) {
     orderBy: [asc(hotels.name)],
   });
 
-  const enriched = await Promise.all(
-    hotelRows.map(async (hotel) => {
-      const minPricePerNight =
-        hotel.roomTypes.length > 0
-          ? Math.min(...hotel.roomTypes.map((rt) => parseFloat(rt.pricePerNight)))
-          : null;
+  if (hotelRows.length === 0) return [];
 
-      // Filtro de precio máximo: descartamos si ninguna habitación entra en presupuesto
-      if (maxPrice !== undefined && minPricePerNight !== null && minPricePerNight > maxPrice) {
-        return null;
-      }
-
-      const [ratingRow] = await db
-        .select({
-          avg:        sql<string>`ROUND(AVG(${reviews.ratingOverall})::numeric, 1)`,
-          avgService: sql<string>`ROUND(AVG(${reviews.ratingService})::numeric, 1)`,
-        })
-        .from(reviews)
-        .where(eq(reviews.hotelId, hotel.id));
-
-      return {
-        ...hotel,
-        minPricePerNight,
-        avgRating:  ratingRow?.avg        ? parseFloat(ratingRow.avg)        : null,
-        avgService: ratingRow?.avgService ? parseFloat(ratingRow.avgService) : null,
-      };
+  // FIX: Una sola query para todos los ratings (antes era N+1 query por hotel)
+  const hotelIds = hotelRows.map((h) => h.id);
+  const ratingRows = await db
+    .select({
+      hotelId:    reviews.hotelId,
+      avg:        sql<string>`ROUND(AVG(${reviews.ratingOverall})::numeric, 1)`,
+      avgService: sql<string>`ROUND(AVG(${reviews.ratingService})::numeric, 1)`,
     })
-  );
+    .from(reviews)
+    .where(inArray(reviews.hotelId, hotelIds))
+    .groupBy(reviews.hotelId);
+
+  const ratingMap = new Map(ratingRows.map((r) => [r.hotelId, r]));
+
+  const enriched = hotelRows.map((hotel) => {
+    const minPricePerNight =
+      hotel.roomTypes.length > 0
+        ? Math.min(...hotel.roomTypes.map((rt) => parseFloat(rt.pricePerNight)))
+        : null;
+
+    if (maxPrice !== undefined && minPricePerNight !== null && minPricePerNight > maxPrice) {
+      return null;
+    }
+
+    const ratingRow = ratingMap.get(hotel.id);
+    return {
+      ...hotel,
+      minPricePerNight,
+      avgRating:  ratingRow?.avg        ? parseFloat(ratingRow.avg)        : null,
+      avgService: ratingRow?.avgService ? parseFloat(ratingRow.avgService) : null,
+    };
+  });
 
   return enriched.filter((h) => h !== null);
 }

@@ -1,4 +1,4 @@
-import { pgTable, uuid, integer, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, integer, text, timestamp, index } from "drizzle-orm/pg-core";
 import { users } from "./users";
 import { hotels } from "./hotels";
 import { bookings } from "./bookings";
@@ -20,4 +20,9 @@ export const reviews = pgTable("reviews", {
   ratingLocation: integer("rating_location").notNull(),
   comment: text("comment"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+},
+// FIX: Índice en hotelId — la query de ratings lo usa constantemente
+(table) => [
+  index("reviews_hotel_id_idx").on(table.hotelId),
+  index("reviews_guest_id_idx").on(table.guestId),
+]);

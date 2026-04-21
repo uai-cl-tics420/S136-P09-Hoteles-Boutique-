@@ -8,7 +8,7 @@ if (!redisUrl) {
 
 export const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: 3,
-  lazyConnect: true,
+  lazyConnect: true,  // no conecta hasta el primer comando — no bloquea el arranque
 });
 
 redis.on("error", (err) => {

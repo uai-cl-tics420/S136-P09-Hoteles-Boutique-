@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getHotels } from "@/services/hotel.service";
+import { getHotels, getHotelBySlug } from "@/services/hotel.service";
 import { db } from "@/db";
 import { hotels } from "@/db/schema";
 import { auth } from "@/lib/auth/nextauth.config";
@@ -8,6 +8,14 @@ import type { HotelCategory } from "@/types/domain";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
+
+    // FIX: Si se pide por slug, retornar directamente sin cargar todo
+    const slug = searchParams.get("slug");
+    if (slug) {
+      const hotel = await getHotelBySlug(slug);
+      if (!hotel) return NextResponse.json({ hotels: [] });
+      return NextResponse.json({ hotels: [hotel] });
+    }
 
     const minStarsRaw = searchParams.get("minStars");
     const maxPriceRaw = searchParams.get("maxPrice");

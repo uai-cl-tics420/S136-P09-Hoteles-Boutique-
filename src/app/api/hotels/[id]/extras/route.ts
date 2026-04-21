@@ -51,7 +51,7 @@ export async function POST(
       .returning();
     return NextResponse.json({ extra }, { status: 201 });
   } catch (error: any) {
-    if (error?.errors) return NextResponse.json({ error: error.errors }, { status: 400 });
+    if (error?.errors) return NextResponse.json({ error: error.issues }, { status: 400 });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

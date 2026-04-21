@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, decimal, integer, boolean, timestamp, pgEnum, real } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, decimal, integer, boolean, timestamp, pgEnum, real, index } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 export const hotelCategoryEnum = pgEnum("hotel_category", [
@@ -28,4 +28,12 @@ export const hotels = pgTable("hotels", {
   active: boolean("active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+},
+// FIX: Índices para las columnas más usadas en filtros y búsquedas
+(table) => [
+  index("hotels_active_idx").on(table.active),
+  index("hotels_city_idx").on(table.locationCity),
+  index("hotels_category_idx").on(table.category),
+  index("hotels_star_rating_idx").on(table.starRating),
+  index("hotels_owner_idx").on(table.ownerId),
+]);

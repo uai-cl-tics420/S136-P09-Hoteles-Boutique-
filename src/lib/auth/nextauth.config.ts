@@ -2,7 +2,7 @@
 import NextAuth, { DefaultSession } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { authConfig } from "./auth.config"; // <-- Importamos la config Edge
+import { authConfig } from "./auth.config";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -19,7 +19,6 @@ declare module "next-auth" {
   }
 }
 
-// Construir proveedores dinámicamente - Google solo si está configurado
 const providers: any[] = [
   CredentialsProvider({
     name: "credentials",
@@ -36,12 +35,11 @@ const providers: any[] = [
 
       if (!user || !user.passwordHash) return null;
 
-      const valid = await verifyPassword(
-        user.passwordHash,
-        credentials.password as string
-      );
+      const valid = await verifyPassword(user.passwordHash, credentials.password as string);
       if (!valid) return null;
 
+      // FIX: Devolver todos los datos necesarios aquí para que jwt() los guarde
+      // en el token y NO tenga que ir a la DB en cada request posterior.
       return {
         id: user.id.toString(),
         email: user.email,
@@ -53,7 +51,6 @@ const providers: any[] = [
   }),
 ];
 
-// Añadir Google solo si está configurado
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   providers.push(
     GoogleProvider({
@@ -64,16 +61,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  ...authConfig, // Esparcimos la configuración básica
+  ...authConfig,
   providers,
   callbacks: {
-    ...authConfig.callbacks, // Mantenemos el session()
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       if (account?.provider === "google" && user.email) {
         const existing = await db.query.users.findFirst({
           where: eq(users.email, user.email),
         });
-
         if (!existing) {
           await db.insert(users).values({
             email: user.email,
@@ -86,10 +82,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true;
     },
-    async jwt({ token, user }) {
-      if (user && user.email) {
+    async jwt({ token, user, trigger }) {
+      // FIX: Solo consultar la DB al hacer login (user existe) o al forzar update.
+      // En requests normales, token ya tiene los datos — no tocar la DB.
+      if (user) {
+        // Login inicial: guardar todo en el token
         const dbUser = await db.query.users.findFirst({
-          where: eq(users.email, user.email),
+          where: eq(users.email, user.email!),
         });
         if (dbUser) {
           token.id = dbUser.id;
@@ -98,12 +97,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.otpEnabled = (dbUser as any).otpEnabled;
         }
       }
+      // En requests subsiguientes: token ya tiene los datos, no hacer nada
       return token;
     },
   },
 });
 
-// Exportar authOptions para uso en getServerSession
 export const authOptions = {
   ...authConfig,
   providers,
@@ -114,7 +113,6 @@ export const authOptions = {
         const existing = await db.query.users.findFirst({
           where: eq(users.email, user.email),
         });
-
         if (!existing) {
           await db.insert(users).values({
             email: user.email,
@@ -128,7 +126,7 @@ export const authOptions = {
       return true;
     },
     async jwt({ token, user }: any) {
-      if (user && user.email) {
+      if (user) {
         const dbUser = await db.query.users.findFirst({
           where: eq(users.email, user.email),
         });
