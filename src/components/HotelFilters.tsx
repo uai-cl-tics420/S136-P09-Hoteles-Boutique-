@@ -34,74 +34,78 @@ export default function HotelFilters() {
   }
 
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 p-4 mb-6 transition-opacity ${isPending ? "opacity-60 pointer-events-none" : ""}`}>
-      {/* Barra de búsqueda */}
-      <div className="flex gap-2 mb-4">
-        <input
-          defaultValue={search}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") applyFilters({ city: (e.target as HTMLInputElement).value });
-          }}
-          className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-          placeholder="Ciudad o nombre del hotel..."
-        />
+    <div className={`bg-white rounded-3xl border border-gray-100 p-6 mb-12 shadow-sm transition-opacity duration-300 ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
+      {/* Barra de búsqueda principal */}
+      <div className="flex gap-3 mb-6">
+        <div className="relative flex-1">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">🔍</span>
+          <input
+            defaultValue={search}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyFilters({ city: (e.target as HTMLInputElement).value });
+            }}
+            className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all"
+            placeholder="¿A dónde quieres ir? Ciudad o nombre del hotel..."
+          />
+        </div>
         <button
           onClick={(e) => {
-            const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+            const input = (e.currentTarget.previousElementSibling?.querySelector("input") as HTMLInputElement);
             applyFilters({ city: input?.value ?? "" });
           }}
-          className="bg-gray-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors"
+          className="bg-gray-900 text-white rounded-2xl px-8 py-3.5 text-sm font-semibold hover:bg-gray-800 transition-all shadow-md hover:shadow-lg"
         >
           Buscar
         </button>
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[140px]">
-          <label className="block text-xs font-medium text-gray-500 mb-1">Categoría</label>
+      {/* Filtros secundarios */}
+      <div className="flex flex-wrap gap-4 items-end">
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Categoría</label>
           <select
             defaultValue={category}
             onChange={(e) => applyFilters({ category: e.target.value })}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all cursor-pointer appearance-none"
           >
-            <option value="">Todas</option>
+            <option value="">Todas las categorías</option>
             {Object.entries(CAT_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
         </div>
-        <div className="flex-1 min-w-[140px]">
-          <label className="block text-xs font-medium text-gray-500 mb-1">Precio máximo/noche</label>
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Precio máximo</label>
           <select
             defaultValue={maxPrice}
             onChange={(e) => applyFilters({ maxPrice: e.target.value })}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all cursor-pointer appearance-none"
           >
-            <option value="">Sin límite</option>
-            <option value="100">Hasta $100</option>
-            <option value="200">Hasta $200</option>
-            <option value="350">Hasta $350</option>
-            <option value="500">Hasta $500</option>
+            <option value="">Cualquier precio</option>
+            <option value="100">Hasta $100 / noche</option>
+            <option value="200">Hasta $200 / noche</option>
+            <option value="350">Hasta $350 / noche</option>
+            <option value="500">Hasta $500 / noche</option>
           </select>
         </div>
-        <div className="flex-1 min-w-[140px]">
-          <label className="block text-xs font-medium text-gray-500 mb-1">Estrellas mínimas</label>
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Calificación</label>
           <select
             defaultValue={minStars}
             onChange={(e) => applyFilters({ minStars: e.target.value })}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all cursor-pointer appearance-none"
           >
-            <option value="">Cualquiera</option>
+            <option value="">Todas las estrellas</option>
             <option value="3">3+ estrellas</option>
             <option value="4">4+ estrellas</option>
-            <option value="5">5 estrellas</option>
+            <option value="5">5 estrellas (Lujo)</option>
           </select>
         </div>
+        
         {(category || maxPrice || minStars || search) && (
           <button
             onClick={clearFilters}
-            className="text-sm text-gray-400 hover:text-gray-700 px-2 py-2"
+            className="text-sm font-medium text-red-500 hover:text-red-600 px-4 py-2.5 rounded-xl hover:bg-red-50 transition-colors"
           >
-            Limpiar
+            Borrar filtros
           </button>
         )}
       </div>

@@ -29,83 +29,87 @@ export default async function HotelDetailPage({ params }: PageProps) {
     : null;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
+    <main className="min-h-screen bg-[#fafafa]">
+      {/* Header Glassmórfico */}
+      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-lg border-b border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
-          <a href={`/${locale}/hotels`} className="text-sm text-gray-400 hover:text-gray-900">← Hoteles</a>
-          <span className="text-gray-200">/</span>
-          <span className="text-sm font-medium text-gray-900">{hotel.name}</span>
+          <a href={`/${locale}/hotels`} className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-2">
+            <span>←</span> Volver a Hoteles
+          </a>
+          <span className="text-gray-300">|</span>
+          <span className="text-sm font-semibold text-gray-900 truncate">{hotel.name}</span>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto px-4 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Contenido principal */}
-          <div className="lg:col-span-2 space-y-5">
-            {/* Hero */}
-            <div className="bg-white rounded-2xl overflow-hidden border border-gray-100">
-              <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200">
+          <div className="lg:col-span-2 space-y-10">
+            {/* Header del Hotel */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-xs font-bold tracking-wide uppercase bg-gray-100 text-gray-600 px-3 py-1 rounded-full">{CAT_LABELS[hotel.category]}</span>
+                <span className="text-sm tracking-widest text-amber-500">{"★".repeat(hotel.starRating)}</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-4">{hotel.name}</h1>
+              <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
+                <p className="flex items-center gap-1.5"><span className="text-lg">📍</span> {hotel.locationCity}, {hotel.locationCountry}</p>
+                {avgRating && <p className="flex items-center gap-1.5"><span className="text-amber-500 font-bold">★ {avgRating}</span> ({reviews.length} reseñas)</p>}
+              </div>
+            </div>
+
+            {/* Galería Principal Inmersiva */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="md:col-span-4 h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-sm group">
                 {hotel.images?.[0] && (
                   <img
                     src={hotel.images[0].url}
                     alt={hotel.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="eager"
                   />
                 )}
               </div>
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-1">
-                  <h1 className="text-2xl font-semibold text-gray-900">{hotel.name}</h1>
-                  <span className="text-sm text-gray-300">{"★".repeat(hotel.starRating)}</span>
-                </div>
-                <div className="flex items-center gap-3 mb-3">
-                  <p className="text-sm text-gray-400">{hotel.locationCity}, {hotel.locationCountry}</p>
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{CAT_LABELS[hotel.category]}</span>
-                  {avgRating && <span className="text-xs text-amber-500 font-medium">{avgRating} ★ ({reviews.length} reseñas)</span>}
-                </div>
-                {hotel.description && (
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    {hotel.description.replace(/\[GUEST_CONFIG\][\s\S]*?\[\/GUEST_CONFIG\]/g, "").trim()}
-                  </p>
-                )}
-              </div>
             </div>
 
-            {/* Galería de imágenes adicionales */}
+            {/* Galería secundaria y Descripción */}
+            {hotel.description && (
+              <div className="prose prose-gray max-w-none text-gray-600 leading-relaxed font-light">
+                <p>{hotel.description.replace(/\[GUEST_CONFIG\][\s\S]*?\[\/GUEST_CONFIG\]/g, "").trim()}</p>
+              </div>
+            )}
+
             {hotel.images?.length > 1 && (
-              <div className="grid grid-cols-3 gap-2">
-                {hotel.images.slice(1, 4).map((img: any) => (
-                  <div key={img.id} className="h-24 bg-gray-100 rounded-xl overflow-hidden">
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
+                {hotel.images.slice(1).map((img: any) => (
+                  <div key={img.id} className="min-w-[200px] h-32 md:min-w-[280px] md:h-48 rounded-2xl overflow-hidden snap-center flex-shrink-0">
                     <img src={img.url} alt={hotel.name} className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Tipos de habitación */}
             {hotel.roomTypes?.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <h2 className="font-semibold text-gray-900 mb-4">Tipos de habitación</h2>
-                <div className="space-y-3">
+              <div className="pt-8 border-t border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Habitaciones disponibles</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {hotel.roomTypes.map((rt: any) => (
-                    <div key={rt.id} className="p-4 rounded-xl border border-gray-100">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-gray-900 text-sm">{rt.name}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">Capacidad: {rt.capacity} personas</p>
-                          {rt.description && <p className="text-xs text-gray-500 mt-1">{rt.description}</p>}
-                          {rt.amenities?.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {rt.amenities.slice(0, 4).map((a: string) => (
-                                <span key={a} className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{a}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                    <div key={rt.id} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="mb-4">
+                        <p className="text-lg font-bold text-gray-900">{rt.name}</p>
+                        <p className="text-sm text-gray-400 mt-1">Hasta {rt.capacity} personas</p>
+                      </div>
+                      {rt.description && <p className="text-sm text-gray-500 mb-4 font-light">{rt.description}</p>}
+                      
+                      <div className="flex items-end justify-between mt-auto pt-4 border-t border-gray-50">
+                        {rt.amenities?.length > 0 ? (
+                          <div className="flex gap-2">
+                            <span className="text-lg" title={rt.amenities.join(", ")}>✨</span>
+                          </div>
+                        ) : <div />}
                         <div className="text-right">
-                          <p className="font-semibold text-gray-900">${parseFloat(rt.pricePerNight).toLocaleString()}</p>
-                          <p className="text-xs text-gray-400">por noche</p>
+                          <p className="text-xl font-bold text-gray-900">${parseFloat(rt.pricePerNight).toLocaleString()}</p>
+                          <p className="text-xs text-gray-400 font-medium">por noche</p>
                         </div>
                       </div>
                     </div>
@@ -114,47 +118,67 @@ export default async function HotelDetailPage({ params }: PageProps) {
               </div>
             )}
 
+            {/* Ubicación */}
+            {hotel.address && (
+              <div className="pt-8 border-t border-gray-100">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Ubicación</h2>
+                <div className="bg-gray-100 rounded-3xl p-6 md:p-8 flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-xl shadow-sm">📍</div>
+                  <div>
+                    <p className="text-gray-900 font-medium">{hotel.address}</p>
+                    <p className="text-sm text-gray-500">{hotel.locationCity}, {hotel.locationCountry}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Reseñas */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-gray-900">Reseñas de huéspedes ({reviews.length})</h2>
+            <div className="pt-8 border-t border-gray-100">
+              <div className="flex items-end justify-between mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">Reseñas de huéspedes</h2>
                 {avgRating && (
                   <div className="text-right">
-                    <p className="text-2xl font-semibold text-gray-900">{avgRating}</p>
-                    <p className="text-xs text-gray-400">{reviews.length} reseñas</p>
+                    <p className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+                      <span className="text-amber-400 text-2xl">★</span> {avgRating}
+                    </p>
+                    <p className="text-sm text-gray-400 font-medium">De {reviews.length} reseñas verificadas</p>
                   </div>
                 )}
               </div>
               {reviews.length === 0 ? (
-                <p className="text-sm text-gray-400">Sé el primero en dejar una reseña</p>
+                <div className="text-center py-12 bg-white rounded-3xl border border-gray-100">
+                  <p className="text-gray-400">Este hotel aún no tiene reseñas. ¡Sé el primero!</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {reviews.map((r: any) => (
-                    <div key={r.id} className="border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600">
-                            {r.guestId?.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Huésped verificado</p>
-                            <p className="text-xs text-gray-400">
-                              {new Date(r.createdAt).toLocaleDateString("es", { month: "long", year: "numeric" })}
-                            </p>
-                          </div>
+                    <div key={r.id} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-gray-200 to-gray-100 flex items-center justify-center text-sm font-bold text-gray-600">
+                          {r.guestId?.slice(0, 2).toUpperCase()}
                         </div>
-                        <span className="text-amber-400 text-sm">{"★".repeat(r.ratingOverall)}</span>
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">Huésped verificado</p>
+                          <p className="text-xs text-gray-400 font-medium">
+                            {new Date(r.createdAt).toLocaleDateString("es", { month: "long", year: "numeric" })}
+                          </p>
+                        </div>
+                        <div className="ml-auto flex">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <span key={s} className={`text-sm ${s <= r.ratingOverall ? "text-amber-400" : "text-gray-200"}`}>★</span>
+                          ))}
+                        </div>
                       </div>
-                      {r.comment && <p className="text-sm text-gray-600 leading-relaxed mb-2">{r.comment}</p>}
+                      {r.comment && <p className="text-sm text-gray-600 leading-relaxed font-light mb-4">"{r.comment}"</p>}
                       <div className="grid grid-cols-3 gap-2">
                         {[
-                          { label: "Atención",  val: r.ratingService },
+                          { label: "Servicio",  val: r.ratingService },
                           { label: "Limpieza",  val: r.ratingCleanliness },
                           { label: "Ubicación", val: r.ratingLocation },
                         ].map(({ label, val }) => (
-                          <div key={label} className="text-center bg-gray-50 rounded-lg p-2">
-                            <p className="text-xs text-gray-400">{label}</p>
-                            <p className="text-sm font-medium text-gray-900">{val}/5</p>
+                          <div key={label} className="bg-gray-50 rounded-xl p-2 text-center">
+                            <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">{label}</p>
+                            <p className="text-sm font-bold text-gray-900">{val}<span className="text-xs text-gray-400 font-normal">/5</span></p>
                           </div>
                         ))}
                       </div>
@@ -163,15 +187,6 @@ export default async function HotelDetailPage({ params }: PageProps) {
                 </div>
               )}
             </div>
-
-            {/* Ubicación */}
-            {hotel.address && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <h2 className="font-semibold text-gray-900 mb-3">Ubicación</h2>
-                <p className="text-sm text-gray-500">{hotel.address}</p>
-                <p className="text-sm text-gray-500">{hotel.locationCity}, {hotel.locationCountry}</p>
-              </div>
-            )}
           </div>
 
           {/* Widget de reserva — Client Component */}

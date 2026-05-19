@@ -55,31 +55,38 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
   ]);
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-20">
+    <main className="min-h-screen bg-[#fafafa]">
+      {/* Header Glassmórfico */}
+      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-lg border-b border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <a href={`/${locale}/hotels`} className="text-lg font-semibold text-gray-900">Hoteles Boutique</a>
-          <div className="flex gap-4">
-            {session?.user && (
+          <a href={`/${locale}/hotels`} className="text-xl font-bold tracking-tight text-gray-900">
+            Hoteles<span className="text-gray-400 font-light">Boutique</span>
+          </a>
+          <div className="flex gap-6 items-center">
+            {session?.user ? (
               <>
-                <a href={`/${locale}/bookings`} className="text-sm text-gray-500 hover:text-gray-900">Mis reservas</a>
-                <a href={`/${locale}/profile`}  className="text-sm text-gray-500 hover:text-gray-900">Mi Perfil</a>
-                <a href="/api/auth/signout"       className="text-sm text-gray-500 hover:text-gray-900">Cerrar sesión</a>
+                <a href={`/${locale}/bookings`} className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Mis reservas</a>
+                <a href={`/${locale}/profile`}  className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Mi Perfil</a>
+                <a href="/api/auth/signout"       className="text-sm font-medium bg-gray-100 text-gray-600 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors">Cerrar sesión</a>
               </>
-            )}
-            {!session?.user && (
-              <a href={`/${locale}/auth/login`} className="text-sm text-gray-500 hover:text-gray-900">Cuenta</a>
+            ) : (
+              <a href={`/${locale}/auth/login`} className="text-sm font-medium bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition-all shadow-md hover:shadow-lg">
+                Iniciar sesión
+              </a>
             )}
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Hero */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Encuentra tu hotel ideal</h1>
-          <p className="text-gray-400 mb-6">Experiencias exclusivas y personalizadas</p>
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Hero Section Premium */}
+        <div className="text-center mb-12 max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-4">
+            Encuentra tu hotel ideal
+          </h1>
+          <p className="text-lg text-gray-500 font-light">
+            Experiencias exclusivas, arquitectura única y atención personalizada en los destinos más hermosos.
+          </p>
         </div>
 
         {/* Filtros (Client Component pequeño) */}
@@ -87,54 +94,68 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
           <HotelFilters />
         </Suspense>
 
-        {/* Grid de hoteles — renderizado en el servidor */}
+        {/* Grid de hoteles */}
         {hotels.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-gray-400 mb-4">No se encontraron hoteles con estos filtros</p>
-            <a href={`/${locale}/hotels`} className="text-sm text-gray-900 underline">
-              Ver todos los hoteles
+          <div className="text-center py-24 bg-white rounded-3xl border border-gray-100 shadow-sm">
+            <p className="text-gray-500 text-lg mb-4">No se encontraron hoteles con estos filtros.</p>
+            <a href={`/${locale}/hotels`} className="text-sm font-medium text-gray-900 underline hover:text-gray-600 transition-colors">
+              Borrar filtros
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {hotels.map((hotel) => (
-              <div
+              <a 
                 key={hotel.id}
-                className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-md transition-all group"
+                href={`/${locale}/hotels/${hotel.slug}`} 
+                className="group block bg-white rounded-3xl overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300"
               >
-                <a href={`/${locale}/hotels/${hotel.slug}`} className="block">
-                  <div className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
-                    {hotel.images?.[0] && (
-                      <img
-                        src={hotel.images[0].url}
-                        alt={hotel.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    )}
-                    <span className={`absolute top-3 right-3 text-xs px-2.5 py-1 rounded-full border font-medium ${CAT_COLORS[hotel.category] ?? "bg-gray-100 text-gray-600 border-gray-200"}`}>
+                <div className="h-64 bg-gray-100 relative overflow-hidden">
+                  {hotel.images?.[0] && (
+                    <img
+                      src={hotel.images[0].url}
+                      alt={hotel.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  )}
+                  {/* Badge Categoría */}
+                  <div className="absolute top-4 right-4 backdrop-blur-md bg-white/70 shadow-sm px-3 py-1.5 rounded-full border border-white/50">
+                    <span className={`text-xs font-semibold tracking-wide uppercase ${CAT_COLORS[hotel.category] ?? "text-gray-600"}`}>
                       {CAT_LABELS[hotel.category] ?? hotel.category}
                     </span>
                   </div>
-                  <div className="p-5">
-                    <h2 className="font-semibold text-gray-900 mb-0.5">{hotel.name}</h2>
-                    <p className="text-xs text-gray-400 mb-2">{hotel.locationCity}, {hotel.locationCountry}</p>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Stars n={hotel.starRating} size="xs" />
-                        {hotel.avgRating && (
-                          <span className="text-xs text-gray-500">{hotel.avgRating} ★</span>
-                        )}
-                      </div>
-                      {hotel.minPricePerNight && (
-                        <span className="text-sm font-semibold text-gray-900">
-                          ${hotel.minPricePerNight.toLocaleString()}
-                          <span className="text-xs font-normal text-gray-400">/noche</span>
-                        </span>
-                      )}
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h2 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-gray-700 transition-colors">{hotel.name}</h2>
+                    <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg">
+                      <span className="text-amber-400 text-sm">★</span>
+                      <span className="text-sm font-bold text-gray-900">{hotel.avgRating ?? hotel.starRating}</span>
                     </div>
                   </div>
-                </a>
-              </div>
+                  
+                  <p className="text-sm text-gray-500 mb-6 font-medium">{hotel.locationCity}, {hotel.locationCountry}</p>
+                  
+                  <div className="flex items-end justify-between pt-4 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium mb-0.5">Desde</p>
+                      {hotel.minPricePerNight ? (
+                        <p className="text-lg font-bold text-gray-900">
+                          ${hotel.minPricePerNight.toLocaleString()}
+                          <span className="text-sm font-normal text-gray-500"> /noche</span>
+                        </p>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-400">Consultar</p>
+                      )}
+                    </div>
+                    
+                    <div className="bg-gray-900 text-white w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-gray-800 transition-colors">
+                      <span className="text-lg leading-none">→</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
             ))}
           </div>
         )}
