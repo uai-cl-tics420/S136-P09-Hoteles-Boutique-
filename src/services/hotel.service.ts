@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { hotels, reviews, roomTypes } from "@/db/schema";
-import { eq, ilike, and, asc, gte, lte, sql, inArray } from "drizzle-orm";
+import { hotels, reviews } from "@/db/schema";
+import { eq, ilike, and, asc, gte, sql, inArray } from "drizzle-orm";
 import type { HotelCategory } from "@/types/domain";
 
 export interface HotelFilters {
@@ -20,21 +20,17 @@ export async function getHotels(filters: HotelFilters = {}) {
   if (city)     conditions.push(ilike(hotels.locationCity, `%${city}%`));
   if (category) conditions.push(eq(hotels.category, category));
   if (minStars) conditions.push(gte(hotels.starRating, minStars));
-
-  // Filtro maxPrice en SQL: subquery que obtiene el precio mínimo por hotel
-  // y lo compara antes de devolver resultados (evita traer todos los hoteles en memoria)
+  
   if (maxPrice !== undefined) {
-    conditions.push(
-      lte(
-        sql<number>`(
-          SELECT MIN(CAST(rt.price_per_night AS NUMERIC))
-          FROM room_types rt
-          WHERE rt.hotel_id = ${hotels.id}
-        )`,
-        maxPrice
-      )
-    );
+    // Buscar los IDs de los hoteles que tienen al menos un tipo de habitación que cumple la condición de maxPrice
+    const validHotelIdsQuery = db
+      .select({ hotelId: roomTypes.hotelId })
+      .from(roomTypes)
+      .where(lte(sql`CAST(${roomTypes.pricePerNight} AS NUMERIC)`, maxPrice));
+      
+    conditions.push(inArray(hotels.id, validHotelIdsQuery));
   }
+
 
   const hotelRows = await db.query.hotels.findMany({
     where: and(...conditions),
@@ -63,7 +59,7 @@ export async function getHotels(filters: HotelFilters = {}) {
 
   const ratingMap = new Map(ratingRows.map((r) => [r.hotelId, r]));
 
-  return hotelRows.map((hotel) => {
+  const enriched = hotelRows.map((hotel) => {
     const minPricePerNight =
       hotel.roomTypes.length > 0
         ? Math.min(...hotel.roomTypes.map((rt) => parseFloat(rt.pricePerNight)))
@@ -77,6 +73,8 @@ export async function getHotels(filters: HotelFilters = {}) {
       avgService: ratingRow?.avgService ? parseFloat(ratingRow.avgService) : null,
     };
   });
+
+  return enriched;
 }
 
 
