@@ -5,16 +5,20 @@ import { hotels } from "@/db/schema";
 import { auth } from "@/lib/auth/nextauth.config";
 import type { HotelCategory } from "@/types/domain";
 
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+};
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
 
-    // FIX: Si se pide por slug, retornar directamente sin cargar todo
+    // Si se pide por slug, retornar directamente sin cargar todo
     const slug = searchParams.get("slug");
     if (slug) {
       const hotel = await getHotelBySlug(slug);
-      if (!hotel) return NextResponse.json({ hotels: [] });
-      return NextResponse.json({ hotels: [hotel] });
+      if (!hotel) return NextResponse.json({ hotels: [] }, { headers: CACHE_HEADERS });
+      return NextResponse.json({ hotels: [hotel] }, { headers: CACHE_HEADERS });
     }
 
     const minStarsRaw = searchParams.get("minStars");
@@ -29,7 +33,7 @@ export async function GET(request: NextRequest) {
       limit: parseInt(searchParams.get("limit") ?? "12"),
     });
 
-    return NextResponse.json({ hotels: results });
+    return NextResponse.json({ hotels: results }, { headers: CACHE_HEADERS });
   } catch (error) {
     console.error("[GET /api/hotels]", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "Failed to fetch hotels" }, { status: 500 });

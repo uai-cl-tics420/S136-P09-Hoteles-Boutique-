@@ -6,6 +6,10 @@ import { reviews, hotels } from "@/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { createReview, getReviewsByHotel } from "@/services/review.service";
 
+const CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+};
+
 const reviewSchema = z.object({
   bookingId: z.string().uuid(),
   hotelId: z.string().uuid(),
@@ -45,13 +49,13 @@ export async function GET(request: NextRequest) {
         .having(sql`COUNT(${reviews.id}) > 0`)
         .orderBy(desc(sql`AVG(${reviews.ratingOverall})`));
 
-      return NextResponse.json({ ranking: rankingData });
+      return NextResponse.json({ ranking: rankingData }, { headers: CACHE_HEADERS });
     }
 
     if (!hotelId) return NextResponse.json({ error: "hotelId required" }, { status: 400 });
 
     const hotelReviews = await getReviewsByHotel(hotelId);
-    return NextResponse.json({ reviews: hotelReviews });
+    return NextResponse.json({ reviews: hotelReviews }, { headers: CACHE_HEADERS });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

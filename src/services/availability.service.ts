@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { availability } from "@/db/schema";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 
 export async function getAvailability(roomTypeId: string, from: string, to: string) {
   return db.query.availability.findMany({
@@ -19,22 +19,18 @@ export async function setAvailability(
   roomsAvailable: number,
   priceOverride?: string
 ) {
-  const existing = await db.query.availability.findFirst({
-    where: and(eq(availability.roomTypeId, roomTypeId), eq(availability.date, date)),
-  });
-
-  if (existing) {
-    const [updated] = await db
-      .update(availability)
-      .set({ roomsAvailable, priceOverride: priceOverride ?? null })
-      .where(eq(availability.id, existing.id))
-      .returning();
-    return updated;
-  }
-
-  const [created] = await db
+  // Upsert atómico: una sola query en vez de SELECT + UPDATE/INSERT separados.
+  // ON CONFLICT garantiza que no hay race condition con requests concurrentes.
+  const [result] = await db
     .insert(availability)
     .values({ roomTypeId, date, roomsAvailable, priceOverride: priceOverride ?? null })
+    .onConflictDoUpdate({
+      target: [availability.roomTypeId, availability.date],
+      set: {
+        roomsAvailable,
+        priceOverride: priceOverride ?? null,
+      },
+    })
     .returning();
-  return created;
+  return result;
 }
