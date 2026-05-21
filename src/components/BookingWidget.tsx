@@ -29,9 +29,10 @@ interface Props {
   roomTypes: RoomType[];
   extraServices: ExtraService[];
   locale: string;
+  isLoggedIn?: boolean;
 }
 
-export default function BookingWidget({ hotelSlug, roomTypes, extraServices, locale }: Props) {
+export default function BookingWidget({ hotelSlug, roomTypes, extraServices, locale, isLoggedIn = false }: Props) {
   const [checkIn, setCheckIn]           = useState("");
   const [checkOut, setCheckOut]         = useState("");
   const [selectedRoom, setSelectedRoom] = useState("");
@@ -79,12 +80,36 @@ export default function BookingWidget({ hotelSlug, roomTypes, extraServices, loc
           extras: [...selectedExtras].map((id) => ({ extraServiceId: id, quantity: 1 })),
         }),
       });
+
+      // 401 → no hay sesión, redirigir al login
+      if (res.status === 401) {
+        toast.error("Debes iniciar sesión para reservar", {
+          description: "Te redirigiremos al inicio de sesión...",
+          duration: 3000,
+        });
+        setTimeout(() => {
+          window.location.href = `/${locale}/auth/login`;
+        }, 1800);
+        return;
+      }
+
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error ?? "Error al reservar"); return; }
-      toast.success("¡Reserva confirmada!");
-      window.location.href = `/${locale}/bookings`;
-    } catch { toast.error("Error de conexión"); }
-    finally { setBooking(false); }
+      if (!res.ok) {
+        toast.error(data.error ?? "Error al procesar la reserva");
+        return;
+      }
+
+      toast.success("¡Reserva confirmada! 🎉", {
+        description: "Puedes ver los detalles en Mis Reservas.",
+      });
+      setTimeout(() => {
+        window.location.href = `/${locale}/bookings`;
+      }, 1500);
+    } catch {
+      toast.error("Error de conexión. Por favor intenta nuevamente.");
+    } finally {
+      setBooking(false);
+    }
   }
 
   return (
@@ -203,12 +228,34 @@ export default function BookingWidget({ hotelSlug, roomTypes, extraServices, loc
         </div>
       )}
 
+      {/* Banner de sesión requerida */}
+      {!isLoggedIn && (
+        <div className="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
+          <span className="text-amber-500 text-lg shrink-0 mt-0.5">⚠️</span>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-amber-800">
+              Necesitas una cuenta para reservar
+            </p>
+            <a
+              href={`/${locale}/auth/login`}
+              className="text-xs text-amber-700 underline hover:text-amber-900 font-medium"
+            >
+              Inicia sesión o regístrate gratis →
+            </a>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={handleBook}
         disabled={booking || !selectedRoom || !checkIn || !checkOut || nights <= 0}
         className="w-full bg-gray-900 text-white rounded-2xl py-4 text-sm font-bold tracking-wide hover:bg-gray-800 transition-all disabled:opacity-50 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
       >
-        {booking ? "Procesando..." : "Confirmar reserva"}
+        {booking
+          ? "Procesando..."
+          : isLoggedIn
+            ? "Confirmar reserva"
+            : "Iniciar sesión para reservar"}
       </button>
       <p className="text-[11px] font-medium text-gray-400 text-center mt-4">
         No se te cobrará ningún cargo por ahora.

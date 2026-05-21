@@ -1,21 +1,41 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useCallback, useTransition, useState, useEffect } from "react";
 
-const CAT_LABELS: Record<string, string> = {
-  LUXURY: "Lujo", BOUTIQUE: "Boutique", ECO: "Eco",
-  BEACH: "Playa", MOUNTAIN: "Montaña", CITY: "Ciudad",
-};
+const CATEGORIES = [
+  { value: "LUXURY",   label: "Lujo",     icon: "💎" },
+  { value: "BOUTIQUE", label: "Boutique", icon: "🌸" },
+  { value: "ECO",      label: "Eco",      icon: "🌿" },
+  { value: "BEACH",    label: "Playa",    icon: "🏖️" },
+  { value: "MOUNTAIN", label: "Montaña",  icon: "🏔️" },
+  { value: "CITY",     label: "Ciudad",   icon: "🏙️" },
+];
+
+const SELECT_CLASS = [
+  "w-full bg-white border border-[var(--border)] rounded-xl px-4 py-2.5",
+  "text-sm font-medium text-[var(--text-primary)]",
+  "focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/30 focus:border-[var(--gold)]",
+  "transition-all duration-200 cursor-pointer appearance-none",
+  "hover:border-[var(--gold)]/50",
+].join(" ");
 
 export default function HotelFilters() {
   const router = useRouter();
   const params = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const search   = params.get("city") ?? "";
+  // Estado local de la barra de búsqueda para reflejar el valor actual
+  const [inputValue, setInputValue] = useState(params.get("city") ?? "");
+
   const category = params.get("category") ?? "";
   const maxPrice = params.get("maxPrice") ?? "";
   const minStars = params.get("minStars") ?? "";
+  const hasFilters = !!(params.get("city") || category || maxPrice || minStars);
+
+  // Sync input cuando los params cambien (ej. al borrar filtros)
+  useEffect(() => {
+    setInputValue(params.get("city") ?? "");
+  }, [params]);
 
   const applyFilters = useCallback(
     (overrides: Record<string, string>) => {
@@ -24,36 +44,60 @@ export default function HotelFilters() {
         if (v) next.set(k, v);
         else next.delete(k);
       }
+      // Reset page on filter change
+      next.delete("page");
       startTransition(() => router.push(`?${next.toString()}`));
     },
     [params, router]
   );
 
   function clearFilters() {
+    setInputValue("");
     startTransition(() => router.push("?"));
   }
 
+  function handleSearch() {
+    applyFilters({ city: inputValue });
+  }
+
   return (
-    <div className={`bg-white rounded-3xl border border-gray-100 p-6 mb-12 shadow-sm transition-opacity duration-300 ${isPending ? "opacity-50 pointer-events-none" : ""}`}>
-      {/* Barra de búsqueda principal */}
-      <div className="flex gap-3 mb-6">
+    <div
+      className={[
+        "rounded-2xl border border-[var(--border)] bg-white p-6 mb-10",
+        "shadow-[var(--shadow-sm)] transition-all duration-300",
+        "animate-slide-up",
+        isPending ? "opacity-60 pointer-events-none scale-[0.995]" : "",
+      ].join(" ")}
+    >
+      {/* Barra de búsqueda */}
+      <div className="flex gap-3 mb-5">
         <div className="relative flex-1">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">🔍</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none select-none">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </span>
           <input
-            defaultValue={search}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") applyFilters({ city: (e.target as HTMLInputElement).value });
-            }}
-            className="w-full bg-gray-50 border border-gray-100 rounded-2xl pl-11 pr-4 py-3.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all"
-            placeholder="¿A dónde quieres ir? Ciudad o nombre del hotel..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+            className={[
+              "w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl",
+              "pl-11 pr-4 py-3 text-sm font-medium text-[var(--text-primary)]",
+              "placeholder:text-[var(--text-muted)]",
+              "focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/30 focus:border-[var(--gold)]",
+              "transition-all duration-200",
+            ].join(" ")}
+            placeholder="Ciudad, nombre del hotel o destino..."
           />
         </div>
         <button
-          onClick={(e) => {
-            const input = (e.currentTarget.previousElementSibling?.querySelector("input") as HTMLInputElement);
-            applyFilters({ city: input?.value ?? "" });
-          }}
-          className="bg-gray-900 text-white rounded-2xl px-8 py-3.5 text-sm font-semibold hover:bg-gray-800 transition-all shadow-md hover:shadow-lg"
+          onClick={handleSearch}
+          className={[
+            "bg-[var(--text-primary)] text-white rounded-xl px-7 py-3 text-sm font-semibold",
+            "hover:bg-[var(--gold)] hover:shadow-[var(--shadow-gold)]",
+            "active:scale-95 transition-all duration-200 whitespace-nowrap",
+          ].join(" ")}
         >
           Buscar
         </button>
@@ -61,54 +105,125 @@ export default function HotelFilters() {
 
       {/* Filtros secundarios */}
       <div className="flex flex-wrap gap-4 items-end">
+        {/* Categoría */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Categoría</label>
-          <select
-            defaultValue={category}
-            onChange={(e) => applyFilters({ category: e.target.value })}
-            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all cursor-pointer appearance-none"
-          >
-            <option value="">Todas las categorías</option>
-            {Object.entries(CAT_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select>
+          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+            Categoría
+          </label>
+          <div className="relative">
+            <select
+              value={category}
+              onChange={(e) => applyFilters({ category: e.target.value })}
+              className={SELECT_CLASS}
+            >
+              <option value="">Todas las categorías</option>
+              {CATEGORIES.map(({ value, label, icon }) => (
+                <option key={value} value={value}>{icon} {label}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
         </div>
+
+        {/* Precio máximo */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Precio máximo</label>
-          <select
-            defaultValue={maxPrice}
-            onChange={(e) => applyFilters({ maxPrice: e.target.value })}
-            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all cursor-pointer appearance-none"
-          >
-            <option value="">Cualquier precio</option>
-            <option value="100">Hasta $100 / noche</option>
-            <option value="200">Hasta $200 / noche</option>
-            <option value="350">Hasta $350 / noche</option>
-            <option value="500">Hasta $500 / noche</option>
-          </select>
+          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+            Precio / noche
+          </label>
+          <div className="relative">
+            <select
+              value={maxPrice}
+              onChange={(e) => applyFilters({ maxPrice: e.target.value })}
+              className={SELECT_CLASS}
+            >
+              <option value="">Cualquier precio</option>
+              <option value="150000">Hasta $150.000</option>
+              <option value="300000">Hasta $300.000</option>
+              <option value="500000">Hasta $500.000</option>
+              <option value="800000">Hasta $800.000</option>
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
         </div>
+
+        {/* Estrellas */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Calificación</label>
-          <select
-            defaultValue={minStars}
-            onChange={(e) => applyFilters({ minStars: e.target.value })}
-            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all cursor-pointer appearance-none"
-          >
-            <option value="">Todas las estrellas</option>
-            <option value="3">3+ estrellas</option>
-            <option value="4">4+ estrellas</option>
-            <option value="5">5 estrellas (Lujo)</option>
-          </select>
+          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+            Estrellas mínimas
+          </label>
+          <div className="relative">
+            <select
+              value={minStars}
+              onChange={(e) => applyFilters({ minStars: e.target.value })}
+              className={SELECT_CLASS}
+            >
+              <option value="">Cualquier calificación</option>
+              <option value="3">⭐⭐⭐ 3+ estrellas</option>
+              <option value="4">⭐⭐⭐⭐ 4+ estrellas</option>
+              <option value="5">⭐⭐⭐⭐⭐ Solo 5 estrellas</option>
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
         </div>
-        
-        {(category || maxPrice || minStars || search) && (
+
+        {/* Limpiar */}
+        {hasFilters && (
           <button
             onClick={clearFilters}
-            className="text-sm font-medium text-red-500 hover:text-red-600 px-4 py-2.5 rounded-xl hover:bg-red-50 transition-colors"
+            className={[
+              "flex items-center gap-1.5 text-sm font-medium",
+              "text-[var(--text-muted)] hover:text-red-500",
+              "px-4 py-2.5 rounded-xl hover:bg-red-50",
+              "transition-all duration-200",
+            ].join(" ")}
           >
-            Borrar filtros
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            Limpiar filtros
           </button>
         )}
       </div>
+
+      {/* Chips de filtros activos */}
+      {hasFilters && (
+        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--border)]">
+          <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold self-center mr-1">Activos:</span>
+          {params.get("city") && (
+            <Chip label={`Ciudad: ${params.get("city")}`} onRemove={() => applyFilters({ city: "" })} />
+          )}
+          {category && (
+            <Chip label={`Cat: ${CATEGORIES.find(c => c.value === category)?.label}`} onRemove={() => applyFilters({ category: "" })} />
+          )}
+          {maxPrice && (
+            <Chip label={`Máx: $${Number(maxPrice).toLocaleString("es-CL")}`} onRemove={() => applyFilters({ maxPrice: "" })} />
+          )}
+          {minStars && (
+            <Chip label={`${minStars}+ ⭐`} onRemove={() => applyFilters({ minStars: "" })} />
+          )}
+        </div>
+      )}
+
+      {/* Loading bar */}
+      {isPending && (
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full overflow-hidden">
+          <div className="h-full bg-[var(--gold)] animate-pulse" />
+        </div>
+      )}
     </div>
+  );
+}
+
+function Chip({ label, onRemove }: { label?: string; onRemove: () => void }) {
+  if (!label) return null;
+  return (
+    <span className="inline-flex items-center gap-1.5 bg-[var(--gold-light)] text-[var(--gold-dark)] text-xs font-semibold px-3 py-1 rounded-full">
+      {label}
+      <button onClick={onRemove} className="hover:text-red-500 transition-colors leading-none">×</button>
+    </span>
   );
 }

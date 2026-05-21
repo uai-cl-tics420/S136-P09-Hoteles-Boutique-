@@ -4,162 +4,316 @@ import { auth } from "@/lib/auth/nextauth.config";
 import HotelFilters from "@/components/HotelFilters";
 import type { HotelCategory } from "@/types/domain";
 
-// Server Component: los datos se cargan en el servidor —
-// el browser recibe HTML completo sin skeleton de carga.
-export const dynamic = "force-dynamic"; // revalidar en cada request (filtros por URL)
+export const dynamic = "force-dynamic";
 
 const CAT_LABELS: Record<string, string> = {
   LUXURY: "Lujo", BOUTIQUE: "Boutique", ECO: "Eco",
   BEACH: "Playa", MOUNTAIN: "Montaña", CITY: "Ciudad",
 };
 
-const CAT_COLORS: Record<string, string> = {
-  LUXURY: "bg-purple-50 text-purple-700 border-purple-200",
-  BOUTIQUE: "bg-pink-50 text-pink-700 border-pink-200",
-  ECO: "bg-green-50 text-green-700 border-green-200",
-  BEACH: "bg-blue-50 text-blue-700 border-blue-200",
-  MOUNTAIN: "bg-amber-50 text-amber-700 border-amber-200",
-  CITY: "bg-gray-100 text-gray-600 border-gray-200",
+const CAT_GRADIENT: Record<string, string> = {
+  LUXURY:   "from-purple-600/80 to-indigo-800/80",
+  BOUTIQUE: "from-rose-500/80 to-pink-700/80",
+  ECO:      "from-emerald-600/80 to-teal-800/80",
+  BEACH:    "from-sky-500/80 to-blue-700/80",
+  MOUNTAIN: "from-amber-600/80 to-orange-800/80",
+  CITY:     "from-gray-600/80 to-slate-800/80",
 };
 
-function Stars({ n, size = "sm" }: { n: number; size?: "sm" | "xs" }) {
-  const cls = size === "xs" ? "text-xs" : "text-sm";
-  return (
-    <span className={`${cls} text-amber-400`}>
-      {"★".repeat(Math.round(n))}
-      <span className="text-gray-200">{"★".repeat(5 - Math.round(n))}</span>
-    </span>
-  );
-}
+const CAT_BADGE: Record<string, string> = {
+  LUXURY:   "bg-purple-50 text-purple-700 border-purple-200/80",
+  BOUTIQUE: "bg-rose-50 text-rose-700 border-rose-200/80",
+  ECO:      "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+  BEACH:    "bg-sky-50 text-sky-700 border-sky-200/80",
+  MOUNTAIN: "bg-amber-50 text-amber-700 border-amber-200/80",
+  CITY:     "bg-gray-100 text-gray-600 border-gray-200/80",
+};
 
 interface PageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ city?: string; category?: string; maxPrice?: string; minStars?: string; page?: string }>;
+  searchParams: Promise<{
+    city?: string; category?: string;
+    maxPrice?: string; minStars?: string; page?: string;
+  }>;
 }
 
 export default async function HotelsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const sp = await searchParams;
 
-  // Carga de datos directamente en el servidor — sin fetch round-trip
   const [session, hotels] = await Promise.all([
     auth(),
     getHotels({
-      city:      sp.city,
-      category:  sp.category as HotelCategory | undefined,
-      maxPrice:  sp.maxPrice  ? parseFloat(sp.maxPrice)  : undefined,
-      minStars:  sp.minStars  ? parseInt(sp.minStars)    : undefined,
-      page:      sp.page      ? parseInt(sp.page)        : 1,
-      limit:     12,
+      city:     sp.city,
+      category: sp.category as HotelCategory | undefined,
+      maxPrice: sp.maxPrice ? parseFloat(sp.maxPrice) : undefined,
+      minStars: sp.minStars ? parseInt(sp.minStars)   : undefined,
+      page:     sp.page     ? parseInt(sp.page)       : 1,
+      limit:    12,
     }),
   ]);
 
+  const isFiltered = !!(sp.city || sp.category || sp.maxPrice || sp.minStars);
+
   return (
-    <main className="min-h-screen bg-[#fafafa]">
-      {/* Header Glassmórfico */}
-      <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-lg border-b border-white/20 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <a href={`/${locale}/hotels`} className="text-xl font-bold tracking-tight text-gray-900">
-            Hoteles<span className="text-gray-400 font-light">Boutique</span>
+    <div className="min-h-screen bg-[var(--background)]">
+
+      {/* ── Navbar ───────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
+        <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <a href={`/${locale}/hotels`} className="flex items-center gap-2 group">
+            <span className="w-8 h-8 rounded-lg bg-[var(--text-primary)] flex items-center justify-center text-white text-sm font-black group-hover:bg-[var(--gold)] transition-colors duration-300">
+              HB
+            </span>
+            <span className="text-[15px] font-bold text-[var(--text-primary)] tracking-tight">
+              Hoteles<span className="font-light text-[var(--text-muted)]">Boutique</span>
+            </span>
           </a>
-          <div className="flex gap-6 items-center">
+
+          {/* Nav */}
+          <nav className="flex items-center gap-2">
             {session?.user ? (
               <>
-                <a href={`/${locale}/bookings`} className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Mis reservas</a>
-                <a href={`/${locale}/profile`}  className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">Mi Perfil</a>
-                <a href="/api/auth/signout"       className="text-sm font-medium bg-gray-100 text-gray-600 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors">Cerrar sesión</a>
+                <NavLink href={`/${locale}/bookings`} label="Mis reservas" />
+                <NavLink href={`/${locale}/profile`}  label="Mi perfil" />
+                <a
+                  href="/api/auth/signout"
+                  className="text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] px-4 py-1.5 rounded-full hover:border-red-300 hover:text-red-500 transition-all duration-200"
+                >
+                  Salir
+                </a>
               </>
             ) : (
-              <a href={`/${locale}/auth/login`} className="text-sm font-medium bg-gray-900 text-white px-5 py-2 rounded-full hover:bg-gray-800 transition-all shadow-md hover:shadow-lg">
+              <a
+                href={`/${locale}/auth/login`}
+                className="text-sm font-semibold bg-[var(--text-primary)] text-white px-5 py-2 rounded-full hover:bg-[var(--gold)] hover:shadow-[var(--shadow-gold)] transition-all duration-300"
+              >
                 Iniciar sesión
               </a>
             )}
-          </div>
+          </nav>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        {/* Hero Section Premium */}
-        <div className="text-center mb-12 max-w-2xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight mb-4">
-            Encuentra tu hotel ideal
+      {/* ── Hero ─────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-[var(--text-primary)] text-white">
+        {/* Fondo con patrón sutil */}
+        <div className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+            backgroundSize: "32px 32px",
+          }}
+        />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--text-primary)] via-[#1a1917] to-[#2d2820]" />
+
+        <div className="relative max-w-7xl mx-auto px-5 pt-16 pb-14 text-center">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/80 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 animate-fade-in">
+            <span className="w-1.5 h-1.5 bg-[var(--gold)] rounded-full" />
+            Experiencias de lujo boutique
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 animate-slide-up leading-[1.1]">
+            Tu próxima<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--gold)] to-[var(--gold-light)]">
+              aventura única
+            </span>
           </h1>
-          <p className="text-lg text-gray-500 font-light">
-            Experiencias exclusivas, arquitectura única y atención personalizada en los destinos más hermosos.
+          <p className="text-white/60 text-lg font-light max-w-xl mx-auto animate-slide-up-delay">
+            Propiedades cuidadosamente seleccionadas. Atención personalizada. Momentos inolvidables.
           </p>
+
+          {/* Stats */}
+          <div className="flex items-center justify-center gap-8 mt-10 animate-fade-in">
+            {[
+              { value: "8+",    label: "Hoteles" },
+              { value: "100%",  label: "Boutique" },
+              { value: "4.8★",  label: "Calificación" },
+            ].map(({ value, label }) => (
+              <div key={label} className="text-center">
+                <p className="text-2xl font-black text-[var(--gold)]">{value}</p>
+                <p className="text-xs text-white/50 font-medium uppercase tracking-widest mt-0.5">{label}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Filtros (Client Component pequeño) */}
-        <Suspense>
-          <HotelFilters />
-        </Suspense>
+        {/* Wave bottom */}
+        <div className="relative h-10">
+          <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 w-full" preserveAspectRatio="none">
+            <path d="M0 40 Q360 0 720 20 Q1080 40 1440 10 L1440 40 Z" fill="var(--background)"/>
+          </svg>
+        </div>
+      </section>
+
+      {/* ── Contenido ────────────────────────────────────────── */}
+      <main className="max-w-7xl mx-auto px-5 py-10">
+
+        {/* Filtros */}
+        <div className="relative">
+          <Suspense>
+            <HotelFilters />
+          </Suspense>
+        </div>
+
+        {/* Cabecera de resultados */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-sm text-[var(--text-muted)] font-medium">
+              {isFiltered
+                ? `${hotels.length} resultado${hotels.length !== 1 ? "s" : ""} encontrado${hotels.length !== 1 ? "s" : ""}`
+                : `${hotels.length} hoteles disponibles`
+              }
+            </p>
+          </div>
+          <div className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-widest">
+            Orden: A – Z
+          </div>
+        </div>
 
         {/* Grid de hoteles */}
         {hotels.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-3xl border border-gray-100 shadow-sm">
-            <p className="text-gray-500 text-lg mb-4">No se encontraron hoteles con estos filtros.</p>
-            <a href={`/${locale}/hotels`} className="text-sm font-medium text-gray-900 underline hover:text-gray-600 transition-colors">
-              Borrar filtros
-            </a>
-          </div>
+          <EmptyState locale={locale} />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
             {hotels.map((hotel) => (
-              <a 
-                key={hotel.id}
-                href={`/${locale}/hotels/${hotel.slug}`} 
-                className="group block bg-white rounded-3xl overflow-hidden border border-gray-100 hover:border-gray-200 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300"
-              >
-                <div className="h-64 bg-gray-100 relative overflow-hidden">
-                  {hotel.images?.[0] && (
-                    <img
-                      src={hotel.images[0].url}
-                      alt={hotel.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  )}
-                  {/* Badge Categoría */}
-                  <div className="absolute top-4 right-4 backdrop-blur-md bg-white/70 shadow-sm px-3 py-1.5 rounded-full border border-white/50">
-                    <span className={`text-xs font-semibold tracking-wide uppercase ${CAT_COLORS[hotel.category] ?? "text-gray-600"}`}>
-                      {CAT_LABELS[hotel.category] ?? hotel.category}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h2 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-gray-700 transition-colors">{hotel.name}</h2>
-                    <div className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-lg">
-                      <span className="text-amber-400 text-sm">★</span>
-                      <span className="text-sm font-bold text-gray-900">{hotel.avgRating ?? hotel.starRating}</span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-gray-500 mb-6 font-medium">{hotel.locationCity}, {hotel.locationCountry}</p>
-                  
-                  <div className="flex items-end justify-between pt-4 border-t border-gray-100">
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium mb-0.5">Desde</p>
-                      {hotel.minPricePerNight ? (
-                        <p className="text-lg font-bold text-gray-900">
-                          ${hotel.minPricePerNight.toLocaleString()}
-                          <span className="text-sm font-normal text-gray-500"> /noche</span>
-                        </p>
-                      ) : (
-                        <p className="text-sm font-medium text-gray-400">Consultar</p>
-                      )}
-                    </div>
-                    
-                    <div className="bg-gray-900 text-white w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-gray-800 transition-colors">
-                      <span className="text-lg leading-none">→</span>
-                    </div>
-                  </div>
-                </div>
-              </a>
+              <HotelCard key={hotel.id} hotel={hotel} locale={locale} />
             ))}
           </div>
         )}
+      </main>
+
+      {/* ── Footer mínimo ────────────────────────────────────── */}
+      <footer className="border-t border-[var(--border)] mt-20 py-8">
+        <div className="max-w-7xl mx-auto px-5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
+          <p>© {new Date().getFullYear()} HotelesBoutique. Experiencias exclusivas.</p>
+          <div className="flex gap-5 font-medium">
+            <a href="#" className="hover:text-[var(--gold)] transition-colors">Términos</a>
+            <a href="#" className="hover:text-[var(--gold)] transition-colors">Privacidad</a>
+            <a href="#" className="hover:text-[var(--gold)] transition-colors">Contacto</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ── Sub-components ──────────────────────────────────────── */
+
+function NavLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded-lg hover:bg-[var(--surface-2)] transition-all duration-200"
+    >
+      {label}
+    </a>
+  );
+}
+
+function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
+  const gradient = CAT_GRADIENT[hotel.category] ?? "from-gray-600/80 to-slate-800/80";
+  const badge    = CAT_BADGE[hotel.category]    ?? "bg-gray-100 text-gray-600 border-gray-200";
+
+  return (
+    <a
+      href={`/${locale}/hotels/${hotel.slug}`}
+      className="group block bg-white rounded-2xl overflow-hidden border border-[var(--border)] card-lift animate-slide-up"
+    >
+      {/* Imagen */}
+      <div className="relative h-60 overflow-hidden bg-[var(--surface-2)]">
+        {hotel.images?.[0] ? (
+          <img
+            src={hotel.images[0].url}
+            alt={hotel.name}
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">🏨</div>
+        )}
+
+        {/* Overlay gradiente en hover */}
+        <div className={`absolute inset-0 bg-gradient-to-t ${gradient} opacity-0 group-hover:opacity-40 transition-opacity duration-500`} />
+
+        {/* Badge categoría */}
+        <div className="absolute top-3 left-3">
+          <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border backdrop-blur-sm bg-white/80 ${badge}`}>
+            {CAT_LABELS[hotel.category] ?? hotel.category}
+          </span>
+        </div>
+
+        {/* Rating badge */}
+        {(hotel.avgRating || hotel.starRating) && (
+          <div className="absolute top-3 right-3 glass rounded-full px-2.5 py-1 flex items-center gap-1">
+            <span className="text-[var(--gold)] text-xs">★</span>
+            <span className="text-xs font-bold text-[var(--text-primary)]">
+              {hotel.avgRating ?? hotel.starRating}
+            </span>
+          </div>
+        )}
       </div>
-    </main>
+
+      {/* Contenido */}
+      <div className="p-5">
+        <div className="mb-3">
+          <h2 className="text-base font-bold text-[var(--text-primary)] leading-tight group-hover:text-[var(--gold-dark)] transition-colors duration-200 line-clamp-1">
+            {hotel.name}
+          </h2>
+          <p className="text-sm text-[var(--text-muted)] font-medium mt-0.5 flex items-center gap-1">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-60">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            {hotel.locationCity}, {hotel.locationCountry}
+          </p>
+        </div>
+
+        {/* Estrellas */}
+        <div className="flex items-center gap-0.5 mb-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span key={i} className={`text-xs ${i < hotel.starRating ? "text-[var(--gold)]" : "text-[var(--border)]"}`}>★</span>
+          ))}
+        </div>
+
+        {/* Precio + CTA */}
+        <div className="flex items-end justify-between pt-3.5 border-t border-[var(--border)]">
+          <div>
+            <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest mb-0.5">Desde</p>
+            {hotel.minPricePerNight ? (
+              <p className="text-lg font-black text-[var(--text-primary)]">
+                ${hotel.minPricePerNight.toLocaleString("es-CL")}
+                <span className="text-xs font-normal text-[var(--text-muted)] ml-1">/noche</span>
+              </p>
+            ) : (
+              <p className="text-sm font-medium text-[var(--text-muted)]">Consultar precio</p>
+            )}
+          </div>
+
+          <div className="w-9 h-9 rounded-full bg-[var(--text-primary)] flex items-center justify-center group-hover:bg-[var(--gold)] transition-all duration-300 group-hover:shadow-[var(--shadow-gold)] group-hover:scale-110">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </a>
+  );
+}
+
+function EmptyState({ locale }: { locale: string }) {
+  return (
+    <div className="text-center py-24 bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-xs)] animate-fade-in">
+      <div className="text-5xl mb-4 opacity-30">🔍</div>
+      <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">Sin resultados</h3>
+      <p className="text-[var(--text-muted)] text-sm mb-6 max-w-xs mx-auto">
+        No encontramos hoteles con esos filtros. Prueba con otros criterios o explora todos.
+      </p>
+      <a
+        href={`/${locale}/hotels`}
+        className="inline-flex items-center gap-2 text-sm font-semibold bg-[var(--text-primary)] text-white px-6 py-2.5 rounded-full hover:bg-[var(--gold)] hover:shadow-[var(--shadow-gold)] transition-all duration-300"
+      >
+        Ver todos los hoteles
+      </a>
+    </div>
   );
 }

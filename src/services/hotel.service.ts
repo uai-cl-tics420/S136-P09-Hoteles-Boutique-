@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { hotels, reviews } from "@/db/schema";
-import { eq, ilike, and, asc, gte, sql, inArray } from "drizzle-orm";
+import { hotels, reviews, roomTypes } from "@/db/schema";
+import { eq, ilike, and, asc, gte, lte, sql, inArray } from "drizzle-orm";
 import type { HotelCategory } from "@/types/domain";
 
 export interface HotelFilters {
