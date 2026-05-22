@@ -25,78 +25,107 @@ export default function AdminDashboardPage() {
     .reduce((acc, b) => acc + parseFloat(b.totalPrice ?? "0"), 0);
 
   const statusColor: Record<string, string> = {
-    CONFIRMED: "bg-green-50 text-green-700",
-    PENDING: "bg-amber-50 text-amber-700",
-    CANCELLED: "bg-red-50 text-red-500",
-    COMPLETED: "bg-gray-100 text-gray-600",
+    CONFIRMED: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+    CANCELLED: "bg-red-50 text-red-500 border-red-200",
+    COMPLETED: "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]",
   };
   const statusLabel: Record<string, string> = {
     CONFIRMED: "Confirmada", PENDING: "Pendiente", CANCELLED: "Cancelada", COMPLETED: "Completada",
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12 max-w-6xl">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-400 mt-1">Resumen de tu operación</p>
+        <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Centro de Control</h1>
+        <p className="text-sm font-medium text-[var(--text-muted)] mt-2">Visión global del rendimiento de tu colección de propiedades.</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 stagger-children">
         {[
-          { label: "Hoteles activos", value: hotels.length, icon: "🏨" },
-          { label: "Confirmadas", value: confirmed, icon: "✅" },
-          { label: "Pendientes", value: pending, icon: "⏳" },
-          { label: "Ingresos confirmados", value: `$${totalRevenue.toLocaleString()}`, icon: "💰" },
+          { label: "Propiedades Activas", value: hotels.length, icon: "🏨" },
+          { label: "Reservas Confirmadas", value: confirmed, icon: "✅" },
+          { label: "Pendientes por Revisar", value: pending, icon: "⏳" },
+          { label: "Ingresos Generados", value: `$${totalRevenue.toLocaleString()}`, icon: "💰" },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-xl mb-1">{stat.icon}</p>
-            <p className="text-xs text-gray-400 mb-1">{stat.label}</p>
-            <p className="text-2xl font-semibold text-gray-900">{loading ? "—" : stat.value}</p>
+          <div key={stat.label} className="bg-white rounded-3xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)] relative overflow-hidden group hover:border-[var(--gold)] transition-colors">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-[var(--surface-hover)] rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+            <p className="text-2xl mb-3">{stat.icon}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{stat.label}</p>
+            <p className="text-3xl font-black text-[var(--text-primary)]">{loading ? "—" : stat.value}</p>
           </div>
         ))}
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { href: "/es/admin/hotels", label: "Gestionar hoteles", desc: "Crear y editar tus propiedades", icon: "🏨" },
-          { href: "/es/hotels/reviews", label: "Ver reseñas", desc: "Rankings y feedback de huéspedes", icon: "⭐" },
-          { href: "/es/hotels", label: "Vista del huésped", desc: "Ve tu hotel como lo ven los clientes", icon: "👁️" },
+          { href: "/es/admin/hotels", label: "Gestionar Propiedades", desc: "Añadir o editar detalles del catálogo", icon: "🗝️" },
+          { href: "/es/hotels/reviews", label: "Análisis de Reseñas", desc: "Monitoriza el feedback de los huéspedes", icon: "⭐" },
+          { href: "/es/hotels", label: "Auditoría Visual", desc: "Navega como un cliente exclusivo", icon: "👁️" },
         ].map((a) => (
           <a key={a.href} href={a.href}
-            className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-sm transition-shadow">
-            <p className="text-2xl mb-2">{a.icon}</p>
-            <p className="text-sm font-medium text-gray-900">{a.label}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{a.desc}</p>
+            className="group bg-white rounded-3xl border border-[var(--border)] p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+            <div className="w-14 h-14 bg-[var(--surface)] rounded-2xl flex items-center justify-center text-2xl mb-5 border border-[var(--border)] group-hover:border-[var(--gold)] transition-colors">
+              {a.icon}
+            </div>
+            <p className="text-lg font-bold text-[var(--text-primary)]">{a.label}</p>
+            <p className="text-sm font-medium text-[var(--text-muted)] mt-1">{a.desc}</p>
           </a>
         ))}
       </div>
 
       {/* Recent bookings */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-gray-900">Reservas recientes</h2>
-          <span className="text-xs text-gray-400">{bookings.length} total</span>
+      <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-black text-[var(--text-primary)]">Últimos Movimientos</h2>
+          <span className="text-[10px] font-bold uppercase tracking-widest bg-[var(--surface)] text-[var(--text-muted)] px-3 py-1 rounded-full border border-[var(--border)]">
+            {bookings.length} Registros
+          </span>
         </div>
+        
         {loading ? (
-          <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-12 bg-gray-50 rounded-lg animate-pulse" />)}</div>
+          <div className="space-y-4">{[...Array(4)].map((_, i) => <div key={i} className="h-16 bg-[var(--surface)] rounded-2xl animate-shimmer" />)}</div>
         ) : bookings.length === 0 ? (
-          <p className="text-sm text-gray-400">No hay reservas aún</p>
+          <div className="text-center py-12 border-2 border-dashed border-[var(--border)] rounded-2xl">
+            <span className="text-3xl mb-2 block opacity-50">📂</span>
+            <p className="text-sm font-bold text-[var(--text-primary)]">No hay operaciones recientes</p>
+          </div>
         ) : (
-          <div className="space-y-2">
-            {bookings.slice(0, 8).map((b: any) => (
-              <div key={b.id} className="flex items-center gap-4 py-2.5 border-b border-gray-50 last:border-0">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{b.roomType?.hotel?.name}</p>
-                  <p className="text-xs text-gray-400">{b.checkIn} → {b.checkOut} · {b.guestsCount} huéspedes</p>
-                </div>
-                <p className="text-sm font-medium text-gray-900 flex-shrink-0">${parseFloat(b.totalPrice ?? "0").toLocaleString()}</p>
-                <span className={`text-xs px-2.5 py-1 rounded-full flex-shrink-0 ${statusColor[b.status] ?? "bg-gray-100 text-gray-500"}`}>
-                  {statusLabel[b.status] ?? b.status}
-                </span>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="border-b-2 border-[var(--border-soft)]">
+                  <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Propiedad & Detalle</th>
+                  <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Fechas</th>
+                  <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] text-right">Importe</th>
+                  <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] text-right">Estado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-soft)]">
+                {bookings.slice(0, 8).map((b: any) => (
+                  <tr key={b.id} className="hover:bg-[var(--surface-hover)] transition-colors group">
+                    <td className="py-4 pr-4">
+                      <p className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors">{b.roomType?.hotel?.name}</p>
+                      <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">{b.roomType?.name} · {b.guestsCount} pers.</p>
+                    </td>
+                    <td className="py-4 px-4 align-middle">
+                      <p className="text-xs font-bold text-[var(--text-primary)]">{b.checkIn}</p>
+                      <p className="text-[10px] font-medium text-[var(--text-muted)]">al {b.checkOut}</p>
+                    </td>
+                    <td className="py-4 px-4 text-right align-middle">
+                      <p className="text-sm font-black text-[var(--text-primary)]">${parseFloat(b.totalPrice ?? "0").toLocaleString()}</p>
+                    </td>
+                    <td className="py-4 pl-4 text-right align-middle">
+                      <span className={`inline-block text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest border ${statusColor[b.status] ?? "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]"}`}>
+                        {statusLabel[b.status] ?? b.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

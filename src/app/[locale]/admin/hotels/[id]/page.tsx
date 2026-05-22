@@ -47,7 +47,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: hotel.name, description: hotel.description, starRating: hotel.starRating }),
       });
-      if (res.ok) toast.success("Hotel actualizado");
+      if (res.ok) toast.success("Información actualizada");
       else toast.error("Error al guardar");
     } catch { toast.error("Error de conexión"); }
     finally { setSaving(false); }
@@ -61,7 +61,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hotelId: id, config: guestConfig }),
       });
-      if (res.ok) toast.success("Configuración guardada");
+      if (res.ok) toast.success("Configuración de experiencia guardada");
       else toast.error("Error al guardar");
     } catch { toast.error("Error de conexión"); }
     finally { setSavingConfig(false); }
@@ -77,9 +77,8 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
         body: JSON.stringify({ ...newExtra, price: parseFloat(newExtra.price) }),
       });
       if (res.ok) {
-        toast.success("Servicio extra agregado");
+        toast.success("Servicio exclusivo añadido");
         setNewExtra({ name: "", description: "", price: "", category: "SPA" });
-        // Refresh hotel
         fetch(`/api/hotels/${id}`).then((r) => r.json()).then((d) => setHotel(d.hotel));
       } else toast.error("Error al agregar");
     } catch { toast.error("Error de conexión"); }
@@ -95,97 +94,109 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
     }));
   }
 
-  if (loading) return <div className="animate-pulse text-gray-400 py-8">Cargando...</div>;
+  if (loading) return <div className="animate-shimmer h-64 bg-white rounded-3xl border border-[var(--border)] max-w-4xl" />;
   if (!hotel) return (
-    <div>
-      <a href="/es/admin/hotels" className="text-sm text-gray-400 hover:text-gray-900">← Volver</a>
-      <p className="mt-4 text-gray-500">Hotel no encontrado</p>
+    <div className="text-center py-20 bg-white rounded-3xl border border-[var(--border)] max-w-4xl">
+      <p className="text-sm font-bold text-[var(--text-primary)] mb-4">Propiedad no encontrada</p>
+      <a href="/es/admin/hotels" className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)]">← Volver al catálogo</a>
     </div>
   );
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="flex items-center gap-3">
-        <a href="/es/admin/hotels" className="text-sm text-gray-400 hover:text-gray-900">← Hoteles</a>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm font-medium text-gray-900">{hotel.name}</span>
+    <div className="space-y-8 max-w-4xl animate-fade-in">
+      <div className="flex items-center gap-3 bg-[var(--surface)] p-2 rounded-full border border-[var(--border)] w-max">
+        <a href="/es/admin/hotels" className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-hover)]">← Catálogo</a>
+        <span className="text-[var(--border)]">|</span>
+        <span className="px-4 text-sm font-black text-[var(--text-primary)]">{hotel.name}</span>
       </div>
 
       {/* Quick links */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-6">
         <a href={`/es/admin/hotels/${id}/availability`}
-          className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-sm transition-shadow text-center">
-          <p className="text-lg mb-1">📅</p>
-          <p className="text-sm font-medium text-gray-900">Disponibilidad</p>
-          <p className="text-xs text-gray-400 mt-0.5">Gestionar fechas y precios</p>
+          className="group bg-white rounded-3xl border border-[var(--border)] p-6 hover:shadow-lg transition-all duration-300 flex items-center gap-5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--surface)] rounded-full -mr-8 -mt-8 opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+          <div className="w-14 h-14 bg-[var(--surface)] rounded-2xl flex items-center justify-center text-2xl border border-[var(--border)] group-hover:border-[var(--gold)] transition-colors">
+            📅
+          </div>
+          <div>
+            <p className="text-lg font-black text-[var(--text-primary)]">Disponibilidad</p>
+            <p className="text-xs font-medium text-[var(--text-muted)] mt-1">Gestionar fechas y precios de la propiedad</p>
+          </div>
         </a>
         <a href={`/es/admin/hotels/${id}/bookings`}
-          className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-sm transition-shadow text-center">
-          <p className="text-lg mb-1">📋</p>
-          <p className="text-sm font-medium text-gray-900">Reservas</p>
-          <p className="text-xs text-gray-400 mt-0.5">Ver reservas de este hotel</p>
+          className="group bg-white rounded-3xl border border-[var(--border)] p-6 hover:shadow-lg transition-all duration-300 flex items-center gap-5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--surface)] rounded-full -mr-8 -mt-8 opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+          <div className="w-14 h-14 bg-[var(--surface)] rounded-2xl flex items-center justify-center text-2xl border border-[var(--border)] group-hover:border-[var(--gold)] transition-colors">
+            📋
+          </div>
+          <div>
+            <p className="text-lg font-black text-[var(--text-primary)]">Libro de Reservas</p>
+            <p className="text-xs font-medium text-[var(--text-muted)] mt-1">Revisar agenda de huéspedes exclusivos</p>
+          </div>
         </a>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl">
+      <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full shadow-[var(--shadow-xs)] w-max">
         {(["edit", "extras", "guest-config"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${tab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            {{ edit: "Información", extras: "Servicios extra", "guest-config": "Experiencia del huésped" }[t]}
+            className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${tab === t ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
+            {{ edit: "Detalles", extras: "Exclusividades", "guest-config": "Experiencia" }[t]}
           </button>
         ))}
       </div>
 
       {/* Tab: edit */}
       {tab === "edit" && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Editar información</h2>
-          <form onSubmit={handleSave} className="space-y-4">
+        <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] animate-slide-up">
+          <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Detalles de la Propiedad</h2>
+          <form onSubmit={handleSave} className="space-y-6">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Nombre del hotel</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Nombre Comercial</label>
               <input type="text" value={hotel.name}
                 onChange={(e) => setHotel((h: any) => ({ ...h, name: e.target.value }))}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Descripción pública</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Manifiesto Público</label>
               <textarea
                 value={(hotel.description ?? "").replace(/\[GUEST_CONFIG\][\s\S]*?\[\/GUEST_CONFIG\]/g, "").trim()}
                 onChange={(e) => setHotel((h: any) => ({ ...h, description: e.target.value }))}
-                rows={4}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none" />
+                rows={5}
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors resize-none leading-relaxed" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Estrellas</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Clasificación Estrellas</label>
               <input type="number" min={1} max={5} value={hotel.starRating}
                 onChange={(e) => setHotel((h: any) => ({ ...h, starRating: parseInt(e.target.value) }))}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
             </div>
-            <button type="submit" disabled={saving}
-              className="bg-gray-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors">
-              {saving ? "Guardando..." : "Guardar cambios"}
-            </button>
+            <div className="pt-4 border-t border-[var(--border-soft)]">
+              <button type="submit" disabled={saving}
+                className="bg-[var(--gold)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all shadow-md disabled:opacity-50">
+                {saving ? "Guardando..." : "Confirmar Cambios"}
+              </button>
+            </div>
           </form>
         </div>
       )}
 
       {/* Tab: extras */}
       {tab === "extras" && (
-        <div className="space-y-4">
+        <div className="space-y-6 animate-slide-up">
           {/* Existing extras */}
           {hotel.extraServices?.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Servicios configurados</h2>
-              <div className="space-y-2">
+            <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
+              <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Servicios Exclusivos Configurados</h2>
+              <div className="space-y-3 stagger-children">
                 {hotel.extraServices.map((s: any) => (
-                  <div key={s.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{s.name}</p>
-                      <p className="text-xs text-gray-400">{EXTRA_CAT_LABELS[s.category]} · ${parseFloat(s.price).toLocaleString()}</p>
+                  <div key={s.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl">
+                    <div className="mb-3 sm:mb-0">
+                      <p className="text-base font-bold text-[var(--text-primary)]">{s.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">{EXTRA_CAT_LABELS[s.category]} <span className="text-[var(--gold)] mx-1">◆</span> <span className="text-[var(--text-primary)]">${parseFloat(s.price).toLocaleString()}</span></p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${s.available ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                      {s.available ? "Activo" : "Inactivo"}
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded border w-max ${s.available ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-[var(--surface-hover)] text-[var(--text-muted)] border-[var(--border)]"}`}>
+                      {s.available ? "Disponible" : "Pausado"}
                     </span>
                   </div>
                 ))}
@@ -194,44 +205,46 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
           )}
 
           {/* Add new extra */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Agregar servicio extra</h2>
-            <form onSubmit={addExtra} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
+            <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Añadir Nuevo Servicio</h2>
+            <form onSubmit={addExtra} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Nombre</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Nombre Comercial</label>
                   <input type="text" required value={newExtra.name}
                     onChange={(e) => setNewExtra((x) => ({ ...x, name: e.target.value }))}
-                    placeholder="Ej: Cena privada"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                    placeholder="Ej: Cena Degustación"
+                    className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Categoría</label>
                   <select value={newExtra.category}
                     onChange={(e) => setNewExtra((x) => ({ ...x, category: e.target.value }))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
+                    className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors">
                     {EXTRA_CATEGORIES.map((c) => <option key={c} value={c}>{EXTRA_CAT_LABELS[c]}</option>)}
                   </select>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Detalles del Servicio</label>
                 <input type="text" value={newExtra.description}
                   onChange={(e) => setNewExtra((x) => ({ ...x, description: e.target.value }))}
-                  placeholder="Descripción breve del servicio"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  placeholder="Descripción de la experiencia para el huésped"
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Precio ($)</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Inversión ($)</label>
                 <input type="number" required min={0} value={newExtra.price}
                   onChange={(e) => setNewExtra((x) => ({ ...x, price: e.target.value }))}
                   placeholder="0.00"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
               </div>
-              <button type="submit" disabled={savingExtra}
-                className="bg-gray-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors">
-                {savingExtra ? "Agregando..." : "Agregar servicio"}
-              </button>
+              <div className="pt-4 border-t border-[var(--border-soft)]">
+                <button type="submit" disabled={savingExtra}
+                  className="bg-[var(--text-primary)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md disabled:opacity-50">
+                  {savingExtra ? "Configurando..." : "Activar Servicio"}
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -239,28 +252,28 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
 
       {/* Tab: guest config */}
       {tab === "guest-config" && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-1">Personalización del huésped</h2>
-          <p className="text-xs text-gray-400 mb-5">Configura cómo se prepara la experiencia antes de la llegada del huésped</p>
+        <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] animate-slide-up">
+          <h2 className="text-xl font-black text-[var(--text-primary)] mb-2">Diseño de Experiencia</h2>
+          <p className="text-xs font-medium text-[var(--text-muted)] mb-8">Personaliza el recorrido digital del huésped previo a su llegada.</p>
 
-          <div className="space-y-4">
+          <div className="space-y-8">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Mensaje de bienvenida</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Manifiesto de Bienvenida</label>
               <textarea
                 value={guestConfig.welcomeMessage}
                 onChange={(e) => setGuestConfig((c) => ({ ...c, welcomeMessage: e.target.value }))}
-                rows={3}
-                placeholder="Ej: Estimado huésped, nos complace recibirle..."
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+                rows={4}
+                placeholder="Ej: Nos complace prepararnos para su llegada..."
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors resize-none leading-relaxed"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2">Preferencias que ofrecerás a los huéspedes</label>
-              <div className="flex flex-wrap gap-2">
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">Carta de Preferencias (Concierge)</label>
+              <div className="flex flex-wrap gap-3">
                 {PREF_OPTIONS.map((p) => (
                   <button key={p} type="button" onClick={() => togglePref(p)}
-                    className={`px-3 py-1.5 rounded-full text-xs border transition-colors ${guestConfig.defaultPreferences.includes(p) ? "bg-gray-900 text-white border-gray-900" : "border-gray-200 text-gray-600 hover:border-gray-400"}`}>
+                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border transition-all ${guestConfig.defaultPreferences.includes(p) ? "bg-[var(--gold)]/10 text-[var(--gold)] border-[var(--gold)] shadow-sm" : "bg-white border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]"}`}>
                     {p}
                   </button>
                 ))}
@@ -268,22 +281,24 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Hora de check-in estándar</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Protocolo de Check-in</label>
               <select value={guestConfig.checkInTime}
                 onChange={(e) => setGuestConfig((c) => ({ ...c, checkInTime: e.target.value }))}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
-                <option value="12:00">12:00 — Early check-in</option>
-                <option value="13:00">13:00</option>
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors">
+                <option value="12:00">12:00 — Early Check-in Premium</option>
+                <option value="13:00">13:00 — Anticipado</option>
                 <option value="14:00">14:00 — Estándar</option>
-                <option value="15:00">15:00</option>
-                <option value="16:00">16:00</option>
+                <option value="15:00">15:00 — Tarde</option>
+                <option value="16:00">16:00 — Sunset</option>
               </select>
             </div>
 
-            <button onClick={saveGuestConfig} disabled={savingConfig}
-              className="bg-gray-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors">
-              {savingConfig ? "Guardando..." : "Guardar configuración"}
-            </button>
+            <div className="pt-6 border-t border-[var(--border-soft)]">
+              <button onClick={saveGuestConfig} disabled={savingConfig}
+                className="bg-[var(--text-primary)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md disabled:opacity-50">
+                {savingConfig ? "Aplicando..." : "Sincronizar Experiencia"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -16,21 +16,24 @@ type RankedHotel = {
 function RankingTable({ title, data, sortKey }: { title: string; data: RankedHotel[]; sortKey: keyof RankedHotel }) {
   const sorted = [...data].sort((a, b) => Number(b[sortKey]) - Number(a[sortKey])).slice(0, 5);
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-6">
-      <h2 className="font-semibold text-gray-900 mb-4">{title}</h2>
-      <div className="space-y-3">
+    <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] relative overflow-hidden group hover:shadow-lg transition-all duration-500">
+      <div className="absolute top-0 left-0 w-1 h-full bg-[var(--gold)] transform origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
+      <h2 className="text-sm font-black uppercase tracking-widest text-[var(--text-primary)] mb-6 flex items-center gap-3">
+        {title}
+      </h2>
+      <div className="space-y-1">
         {sorted.map((h, i) => (
-          <a key={h.id} href={`/es/hotels/${h.slug}`} className="flex items-center gap-3 hover:bg-gray-50 -mx-2 px-2 py-2 rounded-xl transition-colors">
-            <span className={`text-lg font-bold min-w-[28px] ${i === 0 ? "text-amber-500" : i === 1 ? "text-gray-400" : "text-gray-300"}`}>
-              #{i + 1}
+          <a key={h.id} href={`/es/hotels/${h.slug}`} className="flex items-center gap-4 hover:bg-[var(--surface-hover)] p-3 rounded-2xl transition-all">
+            <span className={`text-2xl font-black w-8 text-center ${i === 0 ? "text-[var(--gold)]" : i === 1 ? "text-gray-400" : "text-[var(--border)]"}`}>
+              {i + 1}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-gray-900 text-sm truncate">{h.name}</p>
-              <p className="text-xs text-gray-400">{h.locationCity} · {h.reviewCount} reseñas</p>
+              <p className="font-bold text-[var(--text-primary)] text-sm truncate">{h.name}</p>
+              <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">{h.locationCity} · {h.reviewCount} reseñas</p>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-sm font-semibold text-amber-500">{Number(h[sortKey]).toFixed(1)} ★</p>
-              <p className="text-xs text-gray-400">{CAT_LABELS[h.category]}</p>
+              <p className="text-sm font-black text-[var(--gold)]">{Number(h[sortKey]).toFixed(1)} <span className="text-xs">★</span></p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-0.5">{CAT_LABELS[h.category]}</p>
             </div>
           </a>
         ))}
@@ -48,7 +51,6 @@ export default function ReviewsPage() {
   const [activeTab, setActiveTab] = useState<"ranking" | "reviews">("ranking");
 
   useEffect(() => {
-    // FIX: Una sola petición en vez de dos (/api/reviews?ranking=true ya incluye todo)
     fetch("/api/reviews?ranking=true")
       .then((r) => r.json())
       .then((rv) => {
@@ -67,91 +69,130 @@ export default function ReviewsPage() {
       .catch(() => setReviewsLoading(false));
   }, [selectedHotel]);
 
-  // Derivar lista de hoteles del ranking (ya los tenemos, sin fetch extra)
   const hotels = ranking.map((h) => ({ id: h.id, name: h.name }));
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <a href="/es/hotels" className="text-sm text-gray-400 hover:text-gray-900">← Hoteles</a>
-          <span className="text-gray-200">/</span>
-          <span className="text-sm font-medium text-gray-900">Rankings y Reseñas</span>
+    <main className="min-h-screen bg-[var(--background)]">
+      {/* Header Premium */}
+      <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
+        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <a href="/es/hotels" className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+              ← Explorar hoteles
+            </a>
+            <span className="text-[var(--border)]">|</span>
+            <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">La Guía de Excelencia</span>
+          </div>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl max-w-xs mb-8">
-          {(["ranking", "reviews"] as const).map((t) => (
-            <button key={t} onClick={() => setActiveTab(t)}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}>
-              {{ ranking: "Rankings", reviews: "Reseñas" }[t]}
-            </button>
-          ))}
+      <div className="max-w-6xl mx-auto px-5 py-12">
+        
+        {/* Titulo principal (estilo editorial) */}
+        <div className="text-center mb-12 animate-slide-up">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)] mb-3">Selección Anual</p>
+          <h1 className="text-4xl md:text-5xl font-black text-[var(--text-primary)] tracking-tight mb-4">Rankings & Reseñas</h1>
+          <p className="text-sm font-medium text-[var(--text-muted)] max-w-xl mx-auto">
+            Descubre las propiedades mejor valoradas por nuestra comunidad exclusiva de viajeros. La excelencia reconocida a través de experiencias reales.
+          </p>
+        </div>
+
+        {/* Tabs Elegantes */}
+        <div className="flex justify-center mb-12">
+          <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full shadow-[var(--shadow-xs)]">
+            {(["ranking", "reviews"] as const).map((t) => (
+              <button key={t} onClick={() => setActiveTab(t)}
+                className={`px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${activeTab === t ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
+                {{ ranking: "Clasificación Global", reviews: "Leer Reseñas" }[t]}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 animate-pulse h-48" />
+              <div key={i} className="bg-white rounded-3xl border border-[var(--border)] p-8 animate-shimmer h-64" />
             ))}
           </div>
         ) : activeTab === "ranking" ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <RankingTable title="🏆 Mejor calificación general" data={ranking} sortKey="avgOverall" />
-            <RankingTable title="💼 Mejor atención al cliente" data={ranking} sortKey="avgService" />
-            <RankingTable title="✨ Mejor limpieza" data={ranking} sortKey="avgCleanliness" />
-            <RankingTable title="📍 Mejor ubicación" data={ranking} sortKey="avgLocation" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 stagger-children">
+            <RankingTable title="🏆 La Más Alta Distinción" data={ranking} sortKey="avgOverall" />
+            <RankingTable title="💼 Excelencia en Servicio" data={ranking} sortKey="avgService" />
+            <RankingTable title="✨ Estándares de Limpieza" data={ranking} sortKey="avgCleanliness" />
+            <RankingTable title="📍 Ubicación Privilegiada" data={ranking} sortKey="avgLocation" />
           </div>
         ) : (
-          <div className="space-y-5">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Selecciona un hotel</label>
-              <select
-                value={selectedHotel}
-                onChange={(e) => setSelectedHotel(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-              >
-                <option value="">— Elige un hotel —</option>
-                {hotels.map((h) => (
-                  <option key={h.id} value={h.id}>{h.name}</option>
-                ))}
-              </select>
+          <div className="max-w-3xl mx-auto space-y-8 animate-slide-up">
+            
+            {/* Selector de Hotel */}
+            <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] relative z-10">
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">Selecciona una propiedad</label>
+              <div className="relative">
+                <select
+                  value={selectedHotel}
+                  onChange={(e) => setSelectedHotel(e.target.value)}
+                  className="w-full appearance-none bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--text-primary)] rounded-xl px-5 py-4 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-all cursor-pointer"
+                >
+                  <option value="">— Colección Completa —</option>
+                  {hotels.map((h) => (
+                    <option key={h.id} value={h.id}>{h.name}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-5 flex items-center pointer-events-none text-[var(--text-muted)]">
+                  ▼
+                </div>
+              </div>
             </div>
 
             {reviewsLoading && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 animate-pulse h-24" />
+                  <div key={i} className="bg-white rounded-3xl border border-[var(--border)] p-8 animate-shimmer h-32" />
                 ))}
               </div>
             )}
 
             {!reviewsLoading && selectedHotel && reviews.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-8">Este hotel aún no tiene reseñas</p>
+              <div className="text-center py-20 bg-white rounded-3xl border border-[var(--border)]">
+                <span className="text-4xl mb-4 block opacity-50">✍️</span>
+                <p className="text-sm font-bold text-[var(--text-primary)] mb-1">Aún no hay reseñas</p>
+                <p className="text-xs text-[var(--text-muted)]">Sé el primero en compartir tu experiencia en esta propiedad.</p>
+              </div>
             )}
 
-            {!reviewsLoading && reviews.map((r: any) => (
-              <div key={r.id} className="bg-white rounded-2xl border border-gray-100 p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-amber-400">{"★".repeat(r.ratingOverall)}</span>
-                  <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString("es", { month: "long", year: "numeric" })}</span>
-                </div>
-                {r.comment && <p className="text-sm text-gray-600 mb-3">{r.comment}</p>}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Atención", val: r.ratingService },
-                    { label: "Limpieza", val: r.ratingCleanliness },
-                    { label: "Ubicación", val: r.ratingLocation },
-                  ].map(({ label, val }) => (
-                    <div key={label} className="text-center bg-gray-50 rounded-lg p-2">
-                      <p className="text-xs text-gray-400">{label}</p>
-                      <p className="text-sm font-medium text-gray-900">{val}/5</p>
+            {!reviewsLoading && (
+              <div className="space-y-6 stagger-children">
+                {reviews.map((r: any) => (
+                  <div key={r.id} className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-5 border-b border-[var(--border-soft)] pb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg text-[var(--gold)] tracking-[0.2em]">{"★".repeat(r.ratingOverall)}</span>
+                        <span className="text-lg text-[var(--surface-hover)] tracking-[0.2em]">{"★".repeat(5 - r.ratingOverall)}</span>
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                        {new Date(r.createdAt).toLocaleDateString("es", { month: "long", year: "numeric" })}
+                      </span>
                     </div>
-                  ))}
-                </div>
+                    
+                    {r.comment && <p className="text-[15px] leading-relaxed text-[var(--text-primary)] mb-6 font-medium">"{r.comment}"</p>}
+                    
+                    <div className="grid grid-cols-3 gap-4 bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
+                      {[
+                        { label: "Servicio", val: r.ratingService },
+                        { label: "Limpieza", val: r.ratingCleanliness },
+                        { label: "Ubicación", val: r.ratingLocation },
+                      ].map(({ label, val }) => (
+                        <div key={label} className="text-center">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{label}</p>
+                          <p className="text-sm font-black text-[var(--text-primary)]">{val}<span className="text-xs font-medium text-[var(--text-muted)]">/5</span></p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>

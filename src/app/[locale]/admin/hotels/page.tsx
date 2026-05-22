@@ -26,7 +26,7 @@ export default function AdminHotelsPage() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error ?? "Error"); return; }
-      toast.success("Hotel creado");
+      toast.success("Propiedad añadida al catálogo");
       setHotels(h => [data.hotel, ...h]);
       setShowForm(false);
       setForm({ name: "", locationCity: "", locationCountry: "Chile", category: "BOUTIQUE", starRating: 3, description: "" });
@@ -35,61 +35,62 @@ export default function AdminHotelsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 max-w-6xl animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Mis hoteles</h1>
-          <p className="text-sm text-gray-500 mt-1">{hotels.length} hoteles registrados</p>
+          <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Mis Propiedades</h1>
+          <p className="text-sm font-medium text-[var(--text-muted)] mt-2">{hotels.length} propiedades en tu colección exclusiva.</p>
         </div>
         <button onClick={() => setShowForm(!showForm)}
-          className="bg-gray-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-800 transition-colors">
-          + Nuevo hotel
+          className="bg-[var(--text-primary)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md">
+          {showForm ? "Cancelar Registro" : "+ Nueva Propiedad"}
         </button>
       </div>
 
       {/* Create form */}
       {showForm && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h2 className="font-semibold text-gray-900 mb-4">Nuevo hotel</h2>
-          <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] animate-slide-up relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-[var(--gold)]" />
+          <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Añadir al Catálogo</h2>
+          <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {[
-              { label: "Nombre", key: "name", type: "text", required: true },
+              { label: "Nombre del Hotel", key: "name", type: "text", required: true },
               { label: "Ciudad", key: "locationCity", type: "text", required: true },
               { label: "País", key: "locationCountry", type: "text", required: true },
             ].map(f => (
               <div key={f.key}>
-                <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{f.label}</label>
                 <input type={f.type} required={f.required}
                   value={(form as any)[f.key]} onChange={e => setForm(x => ({ ...x, [f.key]: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
               </div>
             ))}
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Categoría</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Categoría</label>
               <select value={form.category} onChange={e => setForm(x => ({ ...x, category: e.target.value }))}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900">
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors">
                 {["LUXURY","BOUTIQUE","ECO","BEACH","MOUNTAIN","CITY"].map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Estrellas</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Clasificación Estrellas</label>
               <input type="number" min={1} max={5} value={form.starRating}
                 onChange={e => setForm(x => ({ ...x, starRating: parseInt(e.target.value) }))}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900" />
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
-              <textarea value={form.description} onChange={e => setForm(x => ({ ...x, description: e.target.value }))} rows={3}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none" />
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Descripción Premium</label>
+              <textarea value={form.description} onChange={e => setForm(x => ({ ...x, description: e.target.value }))} rows={4}
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors resize-none leading-relaxed" />
             </div>
-            <div className="sm:col-span-2 flex gap-3">
+            <div className="sm:col-span-2 flex items-center gap-4 pt-4 border-t border-[var(--border-soft)]">
               <button type="submit" disabled={saving}
-                className="bg-gray-900 text-white rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50">
-                {saving ? "Guardando..." : "Crear hotel"}
+                className="bg-[var(--gold)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all shadow-md disabled:opacity-50">
+                {saving ? "Registrando..." : "Confirmar Registro"}
               </button>
               <button type="button" onClick={() => setShowForm(false)}
-                className="border border-gray-200 text-gray-600 rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-50">
-                Cancelar
+                className="text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors px-4 py-4">
+                Cancelar Operación
               </button>
             </div>
           </form>
@@ -98,19 +99,29 @@ export default function AdminHotelsPage() {
 
       {/* Hotels list */}
       {loading ? (
-        <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="bg-white rounded-2xl h-20 border border-gray-100 animate-pulse" />)}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[...Array(4)].map((_, i) => <div key={i} className="bg-white rounded-3xl h-32 border border-[var(--border)] animate-shimmer" />)}
+        </div>
       ) : hotels.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 text-sm">No tienes hoteles. Crea el primero.</div>
+        <div className="text-center py-20 border-2 border-dashed border-[var(--border)] rounded-3xl bg-white">
+          <span className="text-4xl mb-4 block opacity-50">🏨</span>
+          <p className="text-lg font-black text-[var(--text-primary)] mb-1">Catálogo Vacío</p>
+          <p className="text-sm font-medium text-[var(--text-muted)]">No tienes propiedades registradas aún. Comienza añadiendo una.</p>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 stagger-children">
           {hotels.map((h: any) => (
-            <div key={h.id} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900">{h.name}</p>
-                <p className="text-sm text-gray-400">{h.locationCity}, {h.locationCountry} · {h.category} · {"★".repeat(h.starRating)}</p>
+            <div key={h.id} className="group bg-white rounded-3xl border border-[var(--border)] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-sm hover:shadow-lg transition-all duration-300">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest bg-[var(--surface)] text-[var(--gold)] px-2 py-1 rounded border border-[var(--border)]">{h.category}</span>
+                  <span className="text-xs text-[var(--gold)]">{"★".repeat(h.starRating)}</span>
+                </div>
+                <p className="text-xl font-black text-[var(--text-primary)] truncate group-hover:text-[var(--gold)] transition-colors">{h.name}</p>
+                <p className="text-sm font-medium text-[var(--text-muted)] mt-1 truncate">{h.locationCity}, {h.locationCountry}</p>
               </div>
               <a href={`/es/admin/hotels/${h.id}`}
-                className="text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors">
+                className="flex-shrink-0 text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-6 py-3 hover:bg-[var(--text-primary)] hover:text-white transition-all text-center">
                 Gestionar
               </a>
             </div>
