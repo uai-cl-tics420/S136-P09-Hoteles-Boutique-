@@ -1,6 +1,7 @@
 "use client";
 
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { logoutAction } from "@/lib/auth/auth-actions";
 import { useState } from "react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -184,7 +185,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Cerrar sesión */}
-        <button onClick={() => signOut({ callbackUrl: "/es/auth/login" })} className="w-full flex items-center justify-center gap-2 py-4 bg-white rounded-2xl border border-red-100 text-sm font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors shadow-sm">
+        <button onClick={() => logoutAction()} className="w-full flex items-center justify-center gap-2 py-4 bg-white rounded-2xl border border-red-100 text-sm font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors shadow-sm">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
           </svg>

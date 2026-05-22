@@ -35,7 +35,7 @@ export async function getHotels(filters: HotelFilters = {}) {
   const hotelRows = await db.query.hotels.findMany({
     where: and(...conditions),
     with: {
-      images:    { orderBy: (img, { asc }) => [asc(img.sortOrder)], limit: 1 },
+      images:    { orderBy: (img, { asc }) => [asc(img.sortOrder)] },
       roomTypes: true,
     },
     limit,

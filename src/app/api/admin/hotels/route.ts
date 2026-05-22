@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
       with: {
         images: {
           where: eq(hotelImages.isCover, true),
-          limit: 1,
         },
       },
       limit,

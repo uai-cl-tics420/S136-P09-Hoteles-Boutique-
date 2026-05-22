@@ -3,6 +3,10 @@ import { getHotelBySlug } from "@/services/hotel.service";
 import { getReviewsByHotel } from "@/services/review.service";
 import { auth } from "@/lib/auth/nextauth.config";
 import BookingWidget from "@/components/BookingWidget";
+import ReviewForm from "@/components/ReviewForm";
+import { db } from "@/db";
+import { bookings, roomTypes } from "@/db/schema";
+import { eq, inArray } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +42,26 @@ export default async function HotelDetailPage({ params }: PageProps) {
   ]);
 
   const isLoggedIn = !!session?.user;
+  const userId = (session?.user as any)?.id ?? null;
+
+  // Check if logged-in user has a completed booking here (to show review form)
+  let canReview = false;
+  let reviewableBookingId: string | null = null;
+  if (userId) {
+    const hotelRoomIds = (hotel.roomTypes ?? []).map((r: any) => r.id);
+    if (hotelRoomIds.length > 0) {
+      const completedBooking = await db.query.bookings.findFirst({
+        where: (b, { and, eq, inArray }) =>
+          and(
+            eq(b.guestId, userId),
+            eq(b.status, "COMPLETED"),
+            inArray(b.roomTypeId, hotelRoomIds)
+          ),
+      });
+      canReview = !!completedBooking;
+      reviewableBookingId = completedBooking?.id ?? null;
+    }
+  }
 
   const avgRating = reviews.length
     ? (reviews.reduce((a, r) => a + r.ratingOverall, 0) / reviews.length).toFixed(1)
@@ -206,6 +230,17 @@ export default async function HotelDetailPage({ params }: PageProps) {
                   </div>
                 )}
               </div>
+
+              {/* Review form for guests with completed bookings */}
+              {canReview && reviewableBookingId && (
+                <div className="mb-6">
+                  <ReviewForm
+                    hotelId={hotel.id}
+                    bookingId={reviewableBookingId}
+                    locale={locale}
+                  />
+                </div>
+              )}
 
               {reviews.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-xs)]">

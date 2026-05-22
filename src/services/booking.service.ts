@@ -46,7 +46,10 @@ export async function createBooking(guestId: string, data: CreateBookingRequest)
 export async function getBookingsByGuest(guestId: string) {
   return db.query.bookings.findMany({
     where: eq(bookings.guestId, guestId),
-    with: { roomType: { with: { hotel: true } } },
+    with: {
+      roomType: { with: { hotel: { with: { images: true } } } },
+      extras: { with: { extraService: true } },
+    },
     orderBy: (b, { desc }) => [desc(b.createdAt)],
   });
 }
@@ -66,6 +69,18 @@ export async function cancelBooking(id: string, guestId: string) {
     .update(bookings)
     .set({ status: "CANCELLED", updatedAt: new Date() })
     .where(and(eq(bookings.id, id), eq(bookings.guestId, guestId)))
+    .returning();
+  return updated;
+}
+
+export async function updateBookingStatus(
+  id: string,
+  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED"
+) {
+  const [updated] = await db
+    .update(bookings)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(bookings.id, id))
     .returning();
   return updated;
 }

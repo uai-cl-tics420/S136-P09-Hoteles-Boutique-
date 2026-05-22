@@ -8,12 +8,13 @@ import { z } from "zod";
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  name: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = registerSchema.parse(body);
+    const { email, password, name } = registerSchema.parse(body);
 
     const existing = await db.query.users.findFirst({
       where: eq(users.email, email),
@@ -30,7 +31,13 @@ export async function POST(request: NextRequest) {
 
     const [user] = await db
       .insert(users)
-      .values({ email, passwordHash, role: "GUEST", locale: "es" })
+      .values({
+        email,
+        passwordHash,
+        role: "GUEST",
+        locale: "es",
+        ssoSubject: name || null,
+      })
       .returning({ id: users.id, email: users.email, role: users.role });
 
     return NextResponse.json({ user }, { status: 201 });

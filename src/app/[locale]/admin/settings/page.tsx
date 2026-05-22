@@ -1,5 +1,5 @@
 "use client";
-import { signOut } from "next-auth/react";
+import { logoutAction } from "@/lib/auth/auth-actions";
 
 export default function AdminSettingsPage() {
   return (
@@ -41,7 +41,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          <button onClick={() => signOut({ callbackUrl: "/es/auth/login" })}
+          <button onClick={() => logoutAction()}
             className="flex items-center justify-center gap-2 px-8 py-4 bg-white border border-red-200 text-sm font-bold uppercase tracking-widest text-red-500 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all shadow-sm">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />

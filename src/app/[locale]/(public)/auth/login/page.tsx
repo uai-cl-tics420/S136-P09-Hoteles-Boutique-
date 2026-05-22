@@ -27,7 +27,7 @@ function LoginForm() {
 
     try {
       const result = await signIn("credentials", { email, password, redirect: false });
-      if (!result?.ok) {
+      if (!result || result.error) {
         setError("Correo o contraseña incorrectos");
         setLoading(false);
         return;
@@ -51,6 +51,7 @@ function LoginForm() {
         router.push(`/es/auth/otp-setup?session=${data.tempSessionId}`);
       } else {
         toast.success("¡Bienvenido de vuelta!");
+        router.refresh();
         router.push(callbackUrl);
       }
     } catch {
@@ -81,6 +82,7 @@ function LoginForm() {
       }
 
       toast.success("¡Autenticación exitosa!");
+      router.refresh();
       router.push(callbackUrl);
     } catch {
       toast.error("Error verificando OTP");

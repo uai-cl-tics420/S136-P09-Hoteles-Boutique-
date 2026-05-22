@@ -185,13 +185,17 @@ export default function BookingsPage() {
                           </p>
                         </div>
                         
-                        <div className="flex gap-3">
+                        <div className="flex items-center gap-3">
+                          <a href={`/es/bookings/${b.id}`}
+                            className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-4 py-2 hover:border-[var(--text-primary)] transition-all">
+                            Ver Detalle →
+                          </a>
                           {b.status === "COMPLETED" && (
                             <a href={`/es/hotels/${b.roomType?.hotel?.slug}`} className="text-sm font-bold text-[var(--gold)] hover:text-yellow-600 transition-colors underline underline-offset-4">
-                              Calificar estancia
+                              Calificar
                             </a>
                           )}
-                          {b.status === "CONFIRMED" && (
+                          {(b.status === "CONFIRMED" || b.status === "PENDING") && (
                             <button
                               onClick={() => cancelBooking(b.id)}
                               className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"

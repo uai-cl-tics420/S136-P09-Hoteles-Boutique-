@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getHotels } from "@/services/hotel.service";
 import { auth } from "@/lib/auth/nextauth.config";
+import { logoutAction } from "@/lib/auth/auth-actions";
 import HotelFilters from "@/components/HotelFilters";
 import type { HotelCategory } from "@/types/domain";
 
@@ -77,12 +78,14 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
               <>
                 <NavLink href={`/${locale}/bookings`} label="Mis reservas" />
                 <NavLink href={`/${locale}/profile`}  label="Mi perfil" />
-                <a
-                  href="/api/auth/signout"
-                  className="text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] px-4 py-1.5 rounded-full hover:border-red-300 hover:text-red-500 transition-all duration-200"
-                >
-                  Salir
-                </a>
+                <form action={logoutAction}>
+                  <button
+                    type="submit"
+                    className="text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] px-4 py-1.5 rounded-full hover:border-red-300 hover:text-red-500 transition-all duration-200"
+                  >
+                    Salir
+                  </button>
+                </form>
               </>
             ) : (
               <a

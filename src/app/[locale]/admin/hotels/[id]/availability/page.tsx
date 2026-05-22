@@ -118,11 +118,11 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
     return dow === 0 || dow === 6;
   });
 
-  const statusColors: Record<DayStatus, string> = {
-    available: "bg-green-50 text-green-700 hover:bg-green-100",
-    partial: "bg-amber-50 text-amber-700 hover:bg-amber-100",
-    full: "bg-red-50 text-red-600 hover:bg-red-100",
-    closed: "bg-gray-100 text-gray-400",
+  const statusBg: Record<DayStatus, string> = {
+    available: "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-100",
+    partial: "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-100",
+    full: "bg-red-50 text-red-600 hover:bg-red-100 border-red-100",
+    closed: "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]",
   };
 
   function prevMonth() {
@@ -136,39 +136,80 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
     setSelectedDay(null);
   }
 
+  const occupiedDays = availability.filter(a => a.roomsAvailable === 0).length;
+  const partialDays = availability.filter(a => a.roomsAvailable > 0 && a.roomsAvailable < totalRooms * 0.4).length;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <a href={`/es/admin/hotels/${id}`} className="text-sm text-gray-400 hover:text-gray-900">← Hotel</a>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm font-medium text-gray-900">Disponibilidad</span>
+    <div className="space-y-8 max-w-6xl animate-fade-in">
+
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-3 bg-[var(--surface)] p-2 rounded-full border border-[var(--border)] w-max">
+        <a href={`/es/admin/hotels/${id}`}
+          className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-hover)]">
+          ← Propiedad
+        </a>
+        <span className="text-[var(--border)]">|</span>
+        <span className="px-4 text-sm font-black text-[var(--text-primary)]">Gestión de Disponibilidad</span>
+      </div>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: "Días Disponibles", value: daysInMonth - occupiedDays - partialDays, icon: "🟢", color: "text-emerald-600" },
+          { label: "Baja Ocupación", value: partialDays, icon: "🟡", color: "text-amber-600" },
+          { label: "Cerrados / Llenos", value: occupiedDays, icon: "🔴", color: "text-red-500" },
+        ].map(stat => (
+          <div key={stat.label} className="bg-white rounded-3xl border border-[var(--border)] p-5 shadow-[var(--shadow-xs)] flex items-center gap-4">
+            <span className="text-2xl">{stat.icon}</span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{stat.label}</p>
+              <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
         {/* Calendar */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
           {/* Month nav */}
-          <div className="flex items-center justify-between mb-5">
-            <button onClick={prevMonth} className="p-2 hover:bg-gray-50 rounded-xl transition-colors text-gray-400 hover:text-gray-700">←</button>
-            <h2 className="font-semibold text-gray-900">{MONTH_NAMES[month]} {year}</h2>
-            <button onClick={nextMonth} className="p-2 hover:bg-gray-50 rounded-xl transition-colors text-gray-400 hover:text-gray-700">→</button>
+          <div className="flex items-center justify-between mb-6">
+            <button onClick={prevMonth}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--text-primary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all font-bold">
+              ←
+            </button>
+            <h2 className="text-xl font-black text-[var(--text-primary)] tracking-tight">
+              {MONTH_NAMES[month]} <span className="text-[var(--text-muted)] font-medium">{year}</span>
+            </h2>
+            <button onClick={nextMonth}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--text-primary)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-all font-bold">
+              →
+            </button>
           </div>
 
           {/* Legend */}
-          <div className="flex gap-4 mb-4 text-xs text-gray-500 flex-wrap">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-100 inline-block"></span>Disponible</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-amber-100 inline-block"></span>Poco disponible</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-100 inline-block"></span>Lleno</span>
+          <div className="flex gap-4 mb-5 flex-wrap">
+            {[
+              { color: "bg-emerald-100 border-emerald-200", label: "Disponible" },
+              { color: "bg-amber-100 border-amber-200", label: "Poco disponible" },
+              { color: "bg-red-100 border-red-200", label: "Lleno / Cerrado" },
+            ].map(l => (
+              <span key={l.label} className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                <span className={`w-3.5 h-3.5 rounded-sm border ${l.color} inline-block`} />
+                {l.label}
+              </span>
+            ))}
           </div>
 
           {loading ? (
             <div className="grid grid-cols-7 gap-1.5">
-              {[...Array(35)].map((_, i) => <div key={i} className="aspect-square bg-gray-50 rounded-xl animate-pulse" />)}
+              {[...Array(35)].map((_, i) => <div key={i} className="aspect-square bg-[var(--surface)] rounded-xl animate-shimmer" />)}
             </div>
           ) : (
             <div className="grid grid-cols-7 gap-1.5">
               {DAY_NAMES.map((d) => (
-                <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+                <div key={d} className="text-center text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] py-1">{d}</div>
               ))}
               {Array.from({ length: firstDay }, (_, i) => (
                 <div key={`empty-${i}`} />
@@ -184,11 +225,15 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
                     key={day}
                     onClick={() => !isPast && selectDay(day)}
                     disabled={isPast}
-                    className={`aspect-square rounded-xl text-sm font-medium transition-all relative ${isPast ? "opacity-30 cursor-not-allowed bg-gray-50 text-gray-400" : statusColors[status]} ${isSelected ? "ring-2 ring-gray-900 ring-offset-1" : ""}`}
+                    className={`aspect-square rounded-xl text-sm font-bold transition-all relative border ${
+                      isPast
+                        ? "opacity-25 cursor-not-allowed bg-[var(--surface)] text-[var(--text-muted)] border-transparent"
+                        : statusBg[status]
+                    } ${isSelected ? "ring-2 ring-[var(--text-primary)] ring-offset-2 scale-105 shadow-md" : ""}`}
                   >
                     {day}
                     {rec?.priceOverride && (
-                      <span className="absolute bottom-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                      <span className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-[var(--gold)]" />
                     )}
                   </button>
                 );
@@ -197,15 +242,15 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
           )}
 
           {/* Bulk actions */}
-          <div className="mt-5 pt-4 border-t border-gray-100">
-            <p className="text-xs font-medium text-gray-500 mb-2">Acciones masivas</p>
-            <div className="flex gap-2 flex-wrap">
+          <div className="mt-6 pt-5 border-t border-[var(--border-soft)]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Acciones Masivas</p>
+            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={() => handleBulkClose(weekendDays)}
                 disabled={saving}
-                className="text-xs border border-gray-200 text-gray-600 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="text-xs font-bold uppercase tracking-widest border border-[var(--border)] text-[var(--text-muted)] rounded-xl px-4 py-2.5 hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all disabled:opacity-50"
               >
-                Cerrar todos los fines de semana
+                Cerrar fines de semana
               </button>
               <button
                 onClick={() => {
@@ -214,7 +259,7 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
                   handleBulkClose(allDays);
                 }}
                 disabled={saving}
-                className="text-xs border border-red-200 text-red-500 rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-50"
+                className="text-xs font-bold uppercase tracking-widest border border-red-200 text-red-500 rounded-xl px-4 py-2.5 hover:bg-red-50 hover:border-red-300 transition-all disabled:opacity-50"
               >
                 Cerrar todo el mes
               </button>
@@ -222,69 +267,94 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
 
-        {/* Edit panel */}
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <p className="text-xs font-medium text-gray-500 mb-3">Total de habitaciones del hotel</p>
+        {/* Right panel */}
+        <div className="space-y-5">
+
+          {/* Total rooms config */}
+          <div className="bg-white rounded-3xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Habitaciones del hotel</p>
             <input
               type="number"
               min={1}
               value={totalRooms}
               onChange={(e) => setTotalRooms(parseInt(e.target.value))}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
             />
-            <p className="text-xs text-gray-400 mt-1">Usado para calcular % de ocupación</p>
+            <p className="text-[10px] font-medium text-[var(--text-muted)] mt-2">Define el total para calcular el % de ocupación</p>
           </div>
 
+          {/* Day editor */}
           {selectedDay !== null ? (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <p className="font-medium text-gray-900 mb-4">
-                {selectedDay} de {MONTH_NAMES[month]}
-              </p>
-              <div className="space-y-3">
+            <div className="bg-white rounded-3xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)] animate-slide-up">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 bg-[var(--text-primary)] rounded-2xl flex items-center justify-center text-white font-black text-sm">
+                  {selectedDay}
+                </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Habitaciones disponibles</label>
+                  <p className="text-sm font-black text-[var(--text-primary)]">{MONTH_NAMES[month]} {year}</p>
+                  <p className="text-[10px] font-medium text-[var(--text-muted)]">Editar disponibilidad</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                    Habitaciones disponibles
+                  </label>
                   <input
                     type="number"
                     min={0}
                     max={totalRooms}
                     value={editRooms}
                     onChange={(e) => setEditRooms(parseInt(e.target.value))}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
                   />
-                  <p className="text-xs text-gray-400 mt-1">
-                    {editRooms === 0 ? "🔴 Cerrado" : editRooms < totalRooms * 0.4 ? "🟡 Poco disponible" : "🟢 Disponible"}
+                  <p className={`text-[10px] font-bold uppercase tracking-widest mt-2 ${
+                    editRooms === 0 ? "text-red-500" : editRooms < totalRooms * 0.4 ? "text-amber-600" : "text-emerald-600"
+                  }`}>
+                    {editRooms === 0 ? "🔴 Cerrado" : editRooms < totalRooms * 0.4 ? "🟡 Baja disponibilidad" : "🟢 Disponible"}
                   </p>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Precio especial/noche (opcional)</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
+                    Precio especial / noche <span className="normal-case font-normal">(opcional)</span>
+                  </label>
                   <input
                     type="number"
                     min={0}
                     value={editPrice}
                     onChange={(e) => setEditPrice(e.target.value)}
-                    placeholder="Dejar vacío para precio base"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    placeholder="Usar precio base"
+                    className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors placeholder:font-normal"
                   />
+                  {editPrice && (
+                    <p className="text-[10px] font-bold text-[var(--gold)] mt-2">◆ Precio especial: ${parseFloat(editPrice).toLocaleString()}</p>
+                  )}
                 </div>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="w-full bg-gray-900 text-white rounded-xl py-2.5 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
-                >
-                  {saving ? "Guardando..." : "Guardar"}
-                </button>
-                <button
-                  onClick={() => setSelectedDay(null)}
-                  className="w-full border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm hover:bg-gray-50 transition-colors"
-                >
-                  Cancelar
-                </button>
+
+                <div className="space-y-2 pt-2">
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="w-full bg-[var(--text-primary)] text-white rounded-xl py-3 text-sm font-bold uppercase tracking-widest hover:bg-black disabled:opacity-50 transition-all shadow-md"
+                  >
+                    {saving ? "Guardando..." : "Confirmar Cambios"}
+                  </button>
+                  <button
+                    onClick={() => setSelectedDay(null)}
+                    className="w-full border border-[var(--border)] text-[var(--text-muted)] rounded-xl py-3 text-sm font-bold uppercase tracking-widest hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
+                  >
+                    Cancelar
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-2xl p-5 text-center">
-              <p className="text-sm text-gray-400">Haz clic en un día del calendario para editar su disponibilidad</p>
+            <div className="bg-[var(--surface)] border-2 border-dashed border-[var(--border)] rounded-3xl p-8 text-center">
+              <span className="text-3xl block mb-3 opacity-50">📅</span>
+              <p className="text-sm font-bold text-[var(--text-primary)] mb-1">Selecciona un día</p>
+              <p className="text-xs font-medium text-[var(--text-muted)]">Haz clic en cualquier día del calendario para editar su disponibilidad y precio.</p>
             </div>
           )}
         </div>

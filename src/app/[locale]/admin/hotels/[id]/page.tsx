@@ -195,9 +195,11 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
                       <p className="text-base font-bold text-[var(--text-primary)]">{s.name}</p>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">{EXTRA_CAT_LABELS[s.category]} <span className="text-[var(--gold)] mx-1">◆</span> <span className="text-[var(--text-primary)]">${parseFloat(s.price).toLocaleString()}</span></p>
                     </div>
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded border w-max ${s.available ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-[var(--surface-hover)] text-[var(--text-muted)] border-[var(--border)]"}`}>
-                      {s.available ? "Disponible" : "Pausado"}
-                    </span>
+                    <ExtraToggleButton
+                      hotelId={id}
+                      extraId={s.id}
+                      available={s.available}
+                    />
                   </div>
                 ))}
               </div>
@@ -303,5 +305,45 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
         </div>
       )}
     </div>
+  );
+}
+
+function ExtraToggleButton({ hotelId, extraId, available }: { hotelId: string; extraId: string; available: boolean }) {
+  const [isAvailable, setIsAvailable] = useState(available);
+  const [loading, setLoading] = useState(false);
+
+  async function toggle() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/hotels/${hotelId}/extras/${extraId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ available: !isAvailable }),
+      });
+      if (res.ok) {
+        setIsAvailable(!isAvailable);
+        toast.success(`Servicio ${!isAvailable ? 'disponible' : 'pausado'}`);
+      } else {
+        toast.error("Error al actualizar");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      disabled={loading}
+      className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded border w-max transition-all disabled:opacity-50 ${isAvailable
+          ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+          : "bg-[var(--surface-hover)] text-[var(--text-muted)] border-[var(--border)] hover:bg-[var(--border)]"
+        }`}
+    >
+      {loading ? "..." : isAvailable ? "Disponible" : "Pausado"}
+    </button>
   );
 }
