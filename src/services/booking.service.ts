@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { bookings, bookingExtras, availability, roomTypes } from "@/db/schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { bookings, bookingExtras, extraServices, roomTypes } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import type { CreateBookingRequest } from "@/types/api";
 
 export async function createBooking(guestId: string, data: CreateBookingRequest) {
@@ -12,7 +12,26 @@ export async function createBooking(guestId: string, data: CreateBookingRequest)
   const nights =
     (new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime()) /
     (1000 * 60 * 60 * 24);
-  const totalPrice = (parseFloat(roomType.pricePerNight) * nights).toFixed(2);
+  const roomTotal = parseFloat(roomType.pricePerNight) * nights;
+
+  // Fetch actual unit prices for requested extras in a single query
+  let extrasTotal = 0;
+  let extraPriceMap: Record<string, string> = {};
+  if (data.extras?.length) {
+    const extraIds = data.extras.map((e) => e.extraServiceId);
+    const fetchedExtras = await db
+      .select({ id: extraServices.id, price: extraServices.price })
+      .from(extraServices)
+      .where(inArray(extraServices.id, extraIds));
+
+    extraPriceMap = Object.fromEntries(fetchedExtras.map((e) => [e.id, e.price]));
+    extrasTotal = data.extras.reduce((acc, e) => {
+      const unitPrice = parseFloat(extraPriceMap[e.extraServiceId] ?? "0");
+      return acc + unitPrice * e.quantity;
+    }, 0);
+  }
+
+  const totalPrice = (roomTotal + extrasTotal).toFixed(2);
 
   const [booking] = await db
     .insert(bookings)
@@ -35,7 +54,7 @@ export async function createBooking(guestId: string, data: CreateBookingRequest)
         bookingId: booking.id,
         extraServiceId: e.extraServiceId,
         quantity: e.quantity,
-        unitPrice: "0",
+        unitPrice: extraPriceMap[e.extraServiceId] ?? "0",
       }))
     );
   }
@@ -54,9 +73,11 @@ export async function getBookingsByGuest(guestId: string) {
   });
 }
 
-export async function getBookingById(id: string) {
+export async function getBookingById(id: string, guestId?: string) {
   return db.query.bookings.findFirst({
-    where: eq(bookings.id, id),
+    where: guestId
+      ? and(eq(bookings.id, id), eq(bookings.guestId, guestId))
+      : eq(bookings.id, id),
     with: {
       roomType: { with: { hotel: { with: { images: true } } } },
       extras: { with: { extraService: true } },

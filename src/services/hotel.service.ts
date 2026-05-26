@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { hotels, reviews, roomTypes } from "@/db/schema";
+import { hotels, hotelImages, reviews, roomTypes, extraServices } from "@/db/schema";
 import { eq, ilike, and, asc, gte, lte, sql, inArray } from "drizzle-orm";
 import type { HotelCategory } from "@/types/domain";
 
@@ -12,6 +12,21 @@ export interface HotelFilters {
   limit?: number;
 }
 
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+function groupBy<T extends { hotelId: string }>(rows: T[]): Map<string, T[]> {
+  const map = new Map<string, T[]>();
+  for (const row of rows) {
+    if (!map.has(row.hotelId)) map.set(row.hotelId, []);
+    map.get(row.hotelId)!.push(row);
+  }
+  return map;
+}
+
+// ─── getHotels ────────────────────────────────────────────────────────────────
+// Usa db.select() explícito en lugar de db.query.* (relational API) para evitar
+// los LATERAL JOINs que son incompatibles con Supabase/PgBouncer (transaction mode).
+
 export async function getHotels(filters: HotelFilters = {}) {
   const { city, category, minStars, maxPrice, page = 1, limit = 12 } = filters;
   const offset = (page - 1) * limit;
@@ -20,94 +35,175 @@ export async function getHotels(filters: HotelFilters = {}) {
   if (city)     conditions.push(ilike(hotels.locationCity, `%${city}%`));
   if (category) conditions.push(eq(hotels.category, category));
   if (minStars) conditions.push(gte(hotels.starRating, minStars));
-  
+
   if (maxPrice !== undefined) {
-    // Buscar los IDs de los hoteles que tienen al menos un tipo de habitación que cumple la condición de maxPrice
     const validHotelIdsQuery = db
       .select({ hotelId: roomTypes.hotelId })
       .from(roomTypes)
       .where(lte(sql`CAST(${roomTypes.pricePerNight} AS NUMERIC)`, maxPrice));
-      
     conditions.push(inArray(hotels.id, validHotelIdsQuery));
   }
 
-
-  const hotelRows = await db.query.hotels.findMany({
-    where: and(...conditions),
-    with: {
-      images:    { orderBy: (img, { asc }) => [asc(img.sortOrder)] },
-      roomTypes: true,
-    },
-    limit,
-    offset,
-    orderBy: [asc(hotels.name)],
-  });
+  // 1. Hoteles paginados
+  const hotelRows = await db
+    .select()
+    .from(hotels)
+    .where(and(...conditions))
+    .orderBy(asc(hotels.name))
+    .limit(limit)
+    .offset(offset);
 
   if (hotelRows.length === 0) return [];
 
-  // Una sola query para todos los ratings (evita N+1 query por hotel)
   const hotelIds = hotelRows.map((h) => h.id);
-  const ratingRows = await db
-    .select({
-      hotelId:    reviews.hotelId,
-      avg:        sql<string>`ROUND(AVG(${reviews.ratingOverall})::numeric, 1)`,
-      avgService: sql<string>`ROUND(AVG(${reviews.ratingService})::numeric, 1)`,
-    })
-    .from(reviews)
-    .where(inArray(reviews.hotelId, hotelIds))
-    .groupBy(reviews.hotelId);
 
-  const ratingMap = new Map(ratingRows.map((r) => [r.hotelId, r]));
+  // 2. Imágenes, tipos de habitación y ratings en paralelo (sin N+1, sin LATERAL)
+  const [imageRows, roomTypeRows, ratingRows] = await Promise.all([
+    db
+      .select()
+      .from(hotelImages)
+      .where(inArray(hotelImages.hotelId, hotelIds))
+      .orderBy(asc(hotelImages.sortOrder)),
 
-  const enriched = hotelRows.map((hotel) => {
+    db
+      .select()
+      .from(roomTypes)
+      .where(inArray(roomTypes.hotelId, hotelIds)),
+
+    db
+      .select({
+        hotelId:    reviews.hotelId,
+        avg:        sql<string>`ROUND(AVG(${reviews.ratingOverall})::numeric, 1)`,
+        avgService: sql<string>`ROUND(AVG(${reviews.ratingService})::numeric, 1)`,
+      })
+      .from(reviews)
+      .where(inArray(reviews.hotelId, hotelIds))
+      .groupBy(reviews.hotelId),
+  ]);
+
+  // 3. Agrupar por hotelId en memoria
+  const imagesMap    = groupBy(imageRows);
+  const roomTypesMap = groupBy(roomTypeRows);
+  const ratingMap    = new Map(ratingRows.map((r) => [r.hotelId, r]));
+
+  return hotelRows.map((hotel) => {
+    const hotelRoomTypes   = roomTypesMap.get(hotel.id) ?? [];
     const minPricePerNight =
-      hotel.roomTypes.length > 0
-        ? Math.min(...hotel.roomTypes.map((rt) => parseFloat(rt.pricePerNight)))
+      hotelRoomTypes.length > 0
+        ? Math.min(...hotelRoomTypes.map((rt) => parseFloat(rt.pricePerNight)))
         : null;
 
     const ratingRow = ratingMap.get(hotel.id);
     return {
       ...hotel,
+      images:            imagesMap.get(hotel.id) ?? [],
+      roomTypes:         hotelRoomTypes,
       minPricePerNight,
       avgRating:  ratingRow?.avg        ? parseFloat(ratingRow.avg)        : null,
       avgService: ratingRow?.avgService ? parseFloat(ratingRow.avgService) : null,
     };
   });
-
-  return enriched;
 }
 
+
+// ─── getHotelBySlug ───────────────────────────────────────────────────────────
 
 export async function getHotelBySlug(slug: string) {
-  const result = await db.query.hotels.findFirst({
-    where: eq(hotels.slug, slug),
-    with: {
-      images:        { orderBy: (img, { asc }) => [asc(img.sortOrder)] },
-      roomTypes:     true,
-      extraServices: true,
-    },
-  });
-  return result ?? null;
+  const [hotel] = await db
+    .select()
+    .from(hotels)
+    .where(eq(hotels.slug, slug))
+    .limit(1);
+
+  if (!hotel) return null;
+
+  const [imageRows, roomTypeRows, extraRows] = await Promise.all([
+    db
+      .select()
+      .from(hotelImages)
+      .where(eq(hotelImages.hotelId, hotel.id))
+      .orderBy(asc(hotelImages.sortOrder)),
+    db
+      .select()
+      .from(roomTypes)
+      .where(eq(roomTypes.hotelId, hotel.id)),
+    db
+      .select()
+      .from(extraServices)
+      .where(eq(extraServices.hotelId, hotel.id)),
+  ]);
+
+  return {
+    ...hotel,
+    images:        imageRows,
+    roomTypes:     roomTypeRows,
+    extraServices: extraRows,
+  };
 }
+
+
+// ─── getHotelById ─────────────────────────────────────────────────────────────
 
 export async function getHotelById(id: string) {
-  const result = await db.query.hotels.findFirst({
-    where: eq(hotels.id, id),
-    with: {
-      images:    { orderBy: (img, { asc }) => [asc(img.sortOrder)] },
-      roomTypes: true,
-    },
-  });
-  return result ?? null;
+  const [hotel] = await db
+    .select()
+    .from(hotels)
+    .where(eq(hotels.id, id))
+    .limit(1);
+
+  if (!hotel) return null;
+
+  const [imageRows, roomTypeRows] = await Promise.all([
+    db
+      .select()
+      .from(hotelImages)
+      .where(eq(hotelImages.hotelId, hotel.id))
+      .orderBy(asc(hotelImages.sortOrder)),
+    db
+      .select()
+      .from(roomTypes)
+      .where(eq(roomTypes.hotelId, hotel.id)),
+  ]);
+
+  return {
+    ...hotel,
+    images:    imageRows,
+    roomTypes: roomTypeRows,
+  };
 }
 
+
+// ─── getHotelsByOwner ─────────────────────────────────────────────────────────
+
 export async function getHotelsByOwner(ownerId: string) {
-  return db.query.hotels.findMany({
-    where: eq(hotels.ownerId, ownerId),
-    with: {
-      images:    { orderBy: (img, { asc }) => [asc(img.sortOrder)] },
-      roomTypes: true,
-    },
-    orderBy: [asc(hotels.name)],
-  });
+  const hotelRows = await db
+    .select()
+    .from(hotels)
+    .where(eq(hotels.ownerId, ownerId))
+    .orderBy(asc(hotels.name));
+
+  if (hotelRows.length === 0) return [];
+
+  const hotelIds = hotelRows.map((h) => h.id);
+
+  const [imageRows, roomTypeRows] = await Promise.all([
+    db
+      .select()
+      .from(hotelImages)
+      .where(inArray(hotelImages.hotelId, hotelIds))
+      .orderBy(asc(hotelImages.sortOrder)),
+    db
+      .select()
+      .from(roomTypes)
+      .where(inArray(roomTypes.hotelId, hotelIds)),
+  ]);
+
+  const imagesMap    = groupBy(imageRows);
+  const roomTypesMap = groupBy(roomTypeRows);
+
+  return hotelRows.map((hotel) => ({
+    ...hotel,
+    images:    imagesMap.get(hotel.id)    ?? [],
+    roomTypes: roomTypesMap.get(hotel.id) ?? [],
+  }));
 }

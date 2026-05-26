@@ -13,14 +13,14 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is not set in environment variables");
 }
 
-// FIX: Pool optimizado — prepare:true activa prepared statements (consultas más rápidas),
-// max reducido a 5 porque Next.js en standalone ya corre múltiples workers
-// y 10 conexiones por worker agota rápido el max_connections de Postgres.
+// FIX: Pool optimizado — prepare:false porque Supabase usa PgBouncer en modo
+// transaction, que NO soporta prepared statements del lado del servidor.
+// Con prepare:true las lateral-join queries de Drizzle (.query.*) fallan en producción.
 const queryClient = postgres(connectionString, {
   max: 5,
   idle_timeout: 30,
   connect_timeout: 10,
-  prepare: true, // prepared statements: reduce parse overhead en queries repetidas
+  prepare: false, // REQUIRED: PgBouncer (transaction mode) no soporta prepared statements
 });
 
 export const db = drizzle(queryClient, { schema });

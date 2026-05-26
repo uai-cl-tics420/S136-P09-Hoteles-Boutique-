@@ -1,14 +1,21 @@
 "use client";
 import { useState, useEffect, use } from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 const EXTRA_CATEGORIES = ["SPA", "DINING", "TRANSPORT", "EXPERIENCE", "OTHER"];
 const EXTRA_CAT_LABELS: Record<string, string> = {
   SPA: "Spa", DINING: "Gastronomía", TRANSPORT: "Transporte", EXPERIENCE: "Experiencia", OTHER: "Otro",
 };
+const PREF_OPTIONS = [
+  "Almohada extra", "Flores frescas", "Minibar vegano", "Cama nido",
+  "Desayuno tardío", "Transfer aeropuerto", "Decoración romántica", "Frigorífico sin alcohol",
+];
 
 export default function AdminHotelDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,11 +28,6 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
   const [savingConfig, setSavingConfig] = useState(false);
   const [newExtra, setNewExtra] = useState({ name: "", description: "", price: "", category: "SPA" });
   const [savingExtra, setSavingExtra] = useState(false);
-
-  const PREF_OPTIONS = [
-    "Almohada extra", "Flores frescas", "Minibar vegano", "Cama nido",
-    "Desayuno tardío", "Transfer aeropuerto", "Decoración romántica", "Frigorífico sin alcohol",
-  ];
 
   useEffect(() => {
     Promise.all([
@@ -49,7 +51,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
       });
       if (res.ok) toast.success("Información actualizada");
       else toast.error("Error al guardar");
-    } catch { toast.error("Error de conexión"); }
+    } catch (_err) { toast.error("Error de conexión"); }
     finally { setSaving(false); }
   }
 
@@ -63,7 +65,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
       });
       if (res.ok) toast.success("Configuración de experiencia guardada");
       else toast.error("Error al guardar");
-    } catch { toast.error("Error de conexión"); }
+    } catch (_err) { toast.error("Error de conexión"); }
     finally { setSavingConfig(false); }
   }
 
@@ -81,7 +83,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
         setNewExtra({ name: "", description: "", price: "", category: "SPA" });
         fetch(`/api/hotels/${id}`).then((r) => r.json()).then((d) => setHotel(d.hotel));
       } else toast.error("Error al agregar");
-    } catch { toast.error("Error de conexión"); }
+    } catch (_err) { toast.error("Error de conexión"); }
     finally { setSavingExtra(false); }
   }
 
@@ -98,21 +100,21 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
   if (!hotel) return (
     <div className="text-center py-20 bg-white rounded-3xl border border-[var(--border)] max-w-4xl">
       <p className="text-sm font-bold text-[var(--text-primary)] mb-4">Propiedad no encontrada</p>
-      <a href="/es/admin/hotels" className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)]">← Volver al catálogo</a>
+      <a href={`/${locale}/admin/hotels`} className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)]">← Volver al catálogo</a>
     </div>
   );
 
   return (
     <div className="space-y-8 max-w-4xl animate-fade-in">
       <div className="flex items-center gap-3 bg-[var(--surface)] p-2 rounded-full border border-[var(--border)] w-max">
-        <a href="/es/admin/hotels" className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-hover)]">← Catálogo</a>
+        <a href={`/${locale}/admin/hotels`} className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-hover)]">← Catálogo</a>
         <span className="text-[var(--border)]">|</span>
         <span className="px-4 text-sm font-black text-[var(--text-primary)]">{hotel.name}</span>
       </div>
 
       {/* Quick links */}
       <div className="grid grid-cols-2 gap-6">
-        <a href={`/es/admin/hotels/${id}/availability`}
+        <a href={`/${locale}/admin/hotels/${id}/availability`}
           className="group bg-white rounded-3xl border border-[var(--border)] p-6 hover:shadow-lg transition-all duration-300 flex items-center gap-5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--surface)] rounded-full -mr-8 -mt-8 opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
           <div className="w-14 h-14 bg-[var(--surface)] rounded-2xl flex items-center justify-center text-2xl border border-[var(--border)] group-hover:border-[var(--gold)] transition-colors">
@@ -123,7 +125,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
             <p className="text-xs font-medium text-[var(--text-muted)] mt-1">Gestionar fechas y precios de la propiedad</p>
           </div>
         </a>
-        <a href={`/es/admin/hotels/${id}/bookings`}
+        <a href={`/${locale}/admin/hotels/${id}/bookings`}
           className="group bg-white rounded-3xl border border-[var(--border)] p-6 hover:shadow-lg transition-all duration-300 flex items-center gap-5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--surface)] rounded-full -mr-8 -mt-8 opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
           <div className="w-14 h-14 bg-[var(--surface)] rounded-2xl flex items-center justify-center text-2xl border border-[var(--border)] group-hover:border-[var(--gold)] transition-colors">
@@ -326,7 +328,7 @@ function ExtraToggleButton({ hotelId, extraId, available }: { hotelId: string; e
       } else {
         toast.error("Error al actualizar");
       }
-    } catch {
+    } catch (_err) {
       toast.error("Error de conexión");
     } finally {
       setLoading(false);

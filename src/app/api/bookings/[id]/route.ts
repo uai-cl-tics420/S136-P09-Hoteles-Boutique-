@@ -10,10 +10,13 @@ export async function GET(
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { id } = await params;
-    const booking = await getBookingById(id);
+    const user = session.user as any;
+    // Guests can only view their own bookings; admins can view any.
+    const guestId = user.role === "GUEST" ? user.id : undefined;
+    const booking = await getBookingById(id, guestId);
     if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({ booking });
-  } catch (error) {
+  } catch (_err) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -27,8 +30,9 @@ export async function DELETE(
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { id } = await params;
     const booking = await cancelBooking(id, (session.user as any).id);
+    if (!booking) return NextResponse.json({ error: "Not found or not authorized" }, { status: 404 });
     return NextResponse.json({ booking });
-  } catch (error) {
+  } catch (_err) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -51,7 +55,7 @@ export async function PATCH(
     const booking = await updateBookingStatus(id, status);
     if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     return NextResponse.json({ booking });
-  } catch (error) {
+  } catch (_err) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

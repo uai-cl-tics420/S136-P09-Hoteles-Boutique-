@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
-import Image from "next/image";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendiente", CONFIRMED: "Confirmada", CANCELLED: "Cancelada", COMPLETED: "Completada",
@@ -20,6 +20,8 @@ const PREF_OPTIONS = [
 ];
 
 export default function BookingsPage() {
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"bookings" | "preferences">("bookings");
@@ -82,13 +84,13 @@ export default function BookingsPage() {
       <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
         <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <a href="/es/hotels" className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+            <a href={`/${locale}/hotels`} className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
               ← Explorar hoteles
             </a>
             <span className="text-[var(--border)]">|</span>
             <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">Mi Espacio</span>
           </div>
-          <a href="/es/profile" className="w-8 h-8 bg-[var(--surface-hover)] rounded-full flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--gold)] hover:text-white transition-all shadow-sm">
+          <a href={`/${locale}/profile`} className="w-8 h-8 bg-[var(--surface-hover)] rounded-full flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--gold)] hover:text-white transition-all shadow-sm">
             <span className="text-sm">👤</span>
           </a>
         </div>
@@ -117,7 +119,7 @@ export default function BookingsPage() {
               <span className="text-5xl mb-6 block opacity-50">🧳</span>
               <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Aún no tienes aventuras</h3>
               <p className="text-[var(--text-muted)] mb-8">Descubre propiedades exclusivas y comienza tu viaje.</p>
-              <a href="/es/hotels" className="inline-block bg-[var(--gold)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-colors shadow-md hover:-translate-y-0.5">
+              <a href={`/${locale}/hotels`} className="inline-block bg-[var(--gold)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-colors shadow-md hover:-translate-y-0.5">
                 Explorar Colección
               </a>
             </div>
@@ -186,12 +188,12 @@ export default function BookingsPage() {
                         </div>
                         
                         <div className="flex items-center gap-3">
-                          <a href={`/es/bookings/${b.id}`}
+                          <a href={`/${locale}/bookings/${b.id}`}
                             className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-4 py-2 hover:border-[var(--text-primary)] transition-all">
                             Ver Detalle →
                           </a>
                           {b.status === "COMPLETED" && (
-                            <a href={`/es/hotels/${b.roomType?.hotel?.slug}`} className="text-sm font-bold text-[var(--gold)] hover:text-yellow-600 transition-colors underline underline-offset-4">
+                            <a href={`/${locale}/hotels/${b.roomType?.hotel?.slug}`} className="text-sm font-bold text-[var(--gold)] hover:text-yellow-600 transition-colors underline underline-offset-4">
                               Calificar
                             </a>
                           )}
@@ -284,6 +286,7 @@ export default function BookingsPage() {
 function RecommendedHotels({ categories, budgetMax }: { categories: string[]; budgetMax?: number }) {
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const localeFromPath = usePathname().split("/")[1] || "es";
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -301,7 +304,7 @@ function RecommendedHotels({ categories, budgetMax }: { categories: string[]; bu
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
       {hotels.map((h: any) => (
-        <a key={h.id} href={`/es/hotels/${h.slug}`}
+        <a key={h.id} href={`/${localeFromPath}/hotels/${h.slug}`}
           className="group flex items-center gap-4 p-3 bg-white rounded-2xl border border-[var(--border)] hover:border-[var(--gold)] transition-all hover:shadow-md">
           <div className="w-20 h-20 rounded-xl bg-[var(--surface)] flex-shrink-0 overflow-hidden relative">
             {h.images?.[0] && <img src={h.images[0].url} alt={h.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />}
