@@ -522,7 +522,233 @@ const HOTEL_DATA = [
     ],
   },
 
-  // ── 8. BOUTIQUE HISTÓRICO ── Cusco, Perú ──────────────────────────────────
+  // ── 8. BOUTIQUE ── Santiago, Chile ───────────────────────────────────────
+  {
+    name: "Lastarria Boutique Hotel",
+    slug: "lastarria-boutique-hotel",
+    description: "En el corazón del barrio más bohemio de Santiago, este hotel boutique de 18 habitaciones ocupa una casona republicana de 1920 completamente restaurada. A pasos del Parque Forestal, el Museo de Bellas Artes y la mejor escena gastronómica capitalina. Sus terrazas con vista al cerro Santa Lucía y sus interiores con arte chileno contemporáneo hacen de este el alojamiento más auténtico de Santiago.",
+    locationCity: "Santiago",
+    locationCountry: "Chile",
+    address: "Calle Lastarria 87, Barrio Lastarria",
+    latitude: -33.4372,
+    longitude: -70.6407,
+    category: "BOUTIQUE" as const,
+    starRating: 4,
+    images: [
+      { url: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=1200&q=80", altText: "Fachada republicana con balcones de hierro forjado en el Barrio Lastarria", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=80", altText: "Patio interior con vegetación y terraza de desayuno", isCover: false, sortOrder: 1 },
+      { url: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1200&q=80", altText: "Habitación con arte chileno contemporáneo y piso de madera nativa", isCover: false, sortOrder: 2 },
+    ],
+    roomTypes: [
+      { name: "Habitación Barrio", description: "Vista al barrio Lastarria con arte original de la escena local.", capacity: 2, pricePerNight: "120000", currency: "CLP", totalRooms: 10, amenities: ["WiFi", "Aire acondicionado", "Smart TV", "Desayuno incluido"] },
+      { name: "Suite Santa Lucía", description: "Suite con terraza privada y vista al cerro Santa Lucía.", capacity: 2, pricePerNight: "210000", currency: "CLP", totalRooms: 4, amenities: ["Terraza privada", "Bañera", "Minibar premium", "Desayuno incluido", "Late checkout"] },
+    ],
+  },
+
+  // ── 9. BOUTIQUE ── Valparaíso, Chile ─────────────────────────────────────
+  {
+    name: "Cerro Alegre House",
+    slug: "cerro-alegre-house",
+    description: "Hotel boutique de 10 habitaciones en una casa victoriana del Cerro Alegre de Valparaíso, Patrimonio de la Humanidad UNESCO. Cada habitación es única, decorada por artistas locales con murales originales. Vistas panorámicas a la bahía de Valparaíso y al Pacífico. El desayuno incluye productos de las ferias locales y pan de campo horneado en casa. A pasos de los mejores restoranes de la ciudad puerto.",
+    locationCity: "Valparaíso",
+    locationCountry: "Chile",
+    address: "Pasaje Dimalow 166, Cerro Alegre",
+    latitude: -33.0465,
+    longitude: -71.6317,
+    category: "BOUTIQUE" as const,
+    starRating: 4,
+    images: [
+      { url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=80", altText: "Casa victoriana con vistas a la bahía de Valparaíso al atardecer", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=1200&q=80", altText: "Habitación con mural original y vista al Pacífico", isCover: false, sortOrder: 1 },
+      { url: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80", altText: "Terraza con desayuno y panorámica a la bahía", isCover: false, sortOrder: 2 },
+    ],
+    roomTypes: [
+      { name: "Habitación Mural", description: "Cada habitación tiene un mural único de artista local porteño.", capacity: 2, pricePerNight: "95000", currency: "CLP", totalRooms: 7, amenities: ["WiFi", "Desayuno incluido", "Arte original"] },
+      { name: "Suite Bahía", description: "Suite con balcón privado y vista panorámica a la bahía.", capacity: 2, pricePerNight: "175000", currency: "CLP", totalRooms: 3, amenities: ["Balcón vista bahía", "Bañera de pie", "Desayuno incluido", "WiFi"] },
+    ],
+  },
+
+  // ── 10. LUXURY ── San Pedro de Atacama, Chile ─────────────────────────────
+  {
+    name: "Altiplanico Atacama",
+    slug: "altiplanico-atacama",
+    description: "Lodge de lujo construido en piedra y adobe en los bordes del Salar de Atacama, integrado completamente al paisaje del desierto más árido del mundo. Sus 23 habitaciones tienen vista directa a los volcanes Licancabur y Juriques. El restaurante sirve cocina atacameña de autor con productos del altiplano. Piscina solar y spa con tratamientos de barro volcánico y sales del salar.",
+    locationCity: "San Pedro de Atacama",
+    locationCountry: "Chile",
+    address: "Ayllu de Yaye s/n, San Pedro de Atacama",
+    latitude: -22.9087,
+    longitude: -68.2023,
+    category: "LUXURY" as const,
+    starRating: 5,
+    images: [
+      { url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80", altText: "Lodge de adobe bajo el volcán Licancabur al atardecer en el Atacama", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1200&q=80", altText: "Cielo estrellado sobre el desierto de Atacama", isCover: false, sortOrder: 1 },
+      { url: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=1200&q=80", altText: "Piscina exterior solar con vista al salar", isCover: false, sortOrder: 2 },
+    ],
+    roomTypes: [
+      { name: "Habitación Desierto", description: "Construcción de adobe con ventana cenital para ver las estrellas.", capacity: 2, pricePerNight: "285000", currency: "CLP", totalRooms: 15, amenities: ["Vista al volcán", "WiFi", "Piscina solar", "Excursión Valle de la Luna"] },
+      { name: "Suite Astronómica", description: "Domo retráctil sobre la cama para dormir bajo las estrellas del Atacama.", capacity: 2, pricePerNight: "490000", currency: "CLP", totalRooms: 4, amenities: ["Domo retráctil", "Astrónomo privado", "Jacuzzi exterior", "All-inclusive"] },
+    ],
+  },
+
+  // ── 11. ECO ── Punta Arenas / Torres del Paine, Chile ────────────────────
+  {
+    name: "Patagonia Wild Lodge",
+    slug: "patagonia-wild-lodge",
+    description: "Eco-lodge de lujo a 20 km de las Torres del Paine, en la ribera del lago Grey con vista directa al glaciar. Construido con madera nativa certificada de lenga y ñirre, con calefacción geotérmica y paneles solares. El punto de partida perfecto para trekking en el Circuito W. Guías certificados para excursiones al glaciar Grey, avistamiento de cóndores y fauna de la estepa patagónica.",
+    locationCity: "Torres del Paine",
+    locationCountry: "Chile",
+    address: "Sector Lago Grey, Parque Nacional Torres del Paine",
+    latitude: -51.0583,
+    longitude: -73.1617,
+    category: "ECO" as const,
+    starRating: 5,
+    images: [
+      { url: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=80", altText: "Eco-lodge de madera lenga frente al glaciar Grey en Torres del Paine", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1200&q=80", altText: "Interior con chimenea a leña y vista al lago Grey", isCover: false, sortOrder: 1 },
+      { url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1200&q=80", altText: "Piscina termal exterior bajo las Torres del Paine", isCover: false, sortOrder: 2 },
+    ],
+    roomTypes: [
+      { name: "Cabaña Glaciar", description: "Cabaña con chimenea y ventanal al glaciar Grey.", capacity: 2, pricePerNight: "320000", currency: "CLP", totalRooms: 8, amenities: ["Chimenea", "Vista al glaciar", "Equipo trekking", "Desayuno incluido"] },
+      { name: "Suite Paine", description: "Suite con bañera termal exterior y vista a las Torres.", capacity: 2, pricePerNight: "540000", currency: "CLP", totalRooms: 3, amenities: ["Bañera termal exterior", "Guía privado", "All-inclusive", "Transfer Puerto Natales"] },
+    ],
+  },
+
+  // ── 12. BOUTIQUE ── Chiloé, Chile ─────────────────────────────────────────
+  {
+    name: "Palafito 1326",
+    slug: "palafito-1326",
+    description: "El hotel más icónico de Chiloé, instalado en uno de los históricos palafitos de Castro que se proyectan sobre el Mar Interior de Chiloé. Declarado monumento histórico, fue restaurado respetando su arquitectura de tablones de alerce teñidos en colores tradicionales. Desde sus ventanas se ve el movimiento de las mareas, los pescadores locales y las embarcaciones. Cocina chilota de temporada con mariscos del día y curanto tradicional.",
+    locationCity: "Castro",
+    locationCountry: "Chile",
+    address: "Pedro Montt 1326, Palafitos de Castro, Chiloé",
+    latitude: -42.4815,
+    longitude: -73.7654,
+    category: "BOUTIQUE" as const,
+    starRating: 4,
+    images: [
+      { url: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=1200&q=80", altText: "Palafitos de colores de Castro reflejados en las aguas del Mar Interior de Chiloé", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=1200&q=80", altText: "Habitación de alerce con vista al mar desde el palafito histórico", isCover: false, sortOrder: 1 },
+    ],
+    roomTypes: [
+      { name: "Habitación Palafito", description: "Habitación sobre el mar con ventana a las mareas de Chiloé.", capacity: 2, pricePerNight: "110000", currency: "CLP", totalRooms: 8, amenities: ["Vista al mar", "Desayuno chilote", "WiFi", "Bicicletas"] },
+      { name: "Suite Alerce", description: "Suite con bañera y terraza privada sobre el agua.", capacity: 2, pricePerNight: "195000", currency: "CLP", totalRooms: 2, amenities: ["Terraza sobre el agua", "Bañera", "Curanto privado", "Paseo en lancha"] },
+    ],
+  },
+
+  // ── 13. MOUNTAIN ── Valle Nevado / Portillo, Chile ───────────────────────
+  {
+    name: "Portillo Lodge Andino",
+    slug: "portillo-lodge-andino",
+    description: "Lodge de montaña a 2.880 msnm en los Andes chilenos, a 145 km de Santiago junto a la laguna del Inca de aguas turquesas. Reconocido internacionalmente como uno de los mejores destinos de ski de Sudamérica. En verano opera como base de trekking de alta montaña, ciclismo de montaña y escalada en los Andes. La laguna del Inca cambia de color con las estaciones: verde esmeralda en primavera, turquesa en verano.",
+    locationCity: "Los Andes",
+    locationCountry: "Chile",
+    address: "Ruta CH-60 km 145, Portillo, Andes",
+    latitude: -32.5586,
+    longitude: -70.1292,
+    category: "MOUNTAIN" as const,
+    starRating: 4,
+    images: [
+      { url: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1200&q=80", altText: "Lodge andino en la nieve con la laguna del Inca turquesa de fondo", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1200&q=80", altText: "Habitación de madera con chimenea y vista a las cumbres nevadas", isCover: false, sortOrder: 1 },
+    ],
+    roomTypes: [
+      { name: "Habitación Andina", description: "Habitación con chimenea y vista a la laguna del Inca.", capacity: 2, pricePerNight: "155000", currency: "CLP", totalRooms: 20, amenities: ["Chimenea", "WiFi", "Desayuno", "Pases de ski"] },
+      { name: "Suite Cumbres", description: "Suite panorámica con jacuzzi y vista a los Andes nevados.", capacity: 4, pricePerNight: "280000", currency: "CLP", totalRooms: 5, amenities: ["Jacuzzi", "Vista panorámica", "Instructor ski privado", "All-inclusive"] },
+    ],
+  },
+
+  // ── 14. LUXURY ── Viña del Mar, Chile ────────────────────────────────────
+  {
+    name: "Casa de Playa Reñaca",
+    slug: "casa-de-playa-renaca",
+    description: "Hotel boutique frente al mar en Reñaca, la playa más exclusiva de la Quinta Región. Arquitectura contemporánea de vidrio y concreto blanco integrada a los acantilados del Pacífico chileno. Piscina infinity que parece fundirse con el océano. A 20 minutos de Valparaíso y del circuito de viñas del Aconcagua. Gastronomía basada en productos del mar de la caleta de pescadores artesanales de Cochoa.",
+    locationCity: "Viña del Mar",
+    locationCountry: "Chile",
+    address: "Av. Los Marineros 156, Reñaca",
+    latitude: -32.9688,
+    longitude: -71.5385,
+    category: "BEACH" as const,
+    starRating: 5,
+    images: [
+      { url: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=1200&q=80", altText: "Hotel blanco sobre los acantilados del Pacífico en Reñaca al atardecer", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=1200&q=80", altText: "Piscina infinity sobre el Pacífico en Reñaca", isCover: false, sortOrder: 1 },
+      { url: "https://images.unsplash.com/photo-1561501900-3701fa6a0864?w=1200&q=80", altText: "Suite con terraza privada y vista al mar de Reñaca", isCover: false, sortOrder: 2 },
+    ],
+    roomTypes: [
+      { name: "Habitación Océano", description: "Vista frontal al Pacífico con terraza privada.", capacity: 2, pricePerNight: "195000", currency: "CLP", totalRooms: 12, amenities: ["Vista al mar", "Terraza privada", "WiFi", "Piscina infinity", "Desayuno"] },
+      { name: "Suite Acantilado", description: "Suite sobre los acantilados con jacuzzi exterior al Pacífico.", capacity: 2, pricePerNight: "380000", currency: "CLP", totalRooms: 4, amenities: ["Jacuzzi exterior", "Vista 180° al mar", "Butler", "Spa incluido"] },
+    ],
+  },
+
+  // ── 15. ECO ── Pucón, Chile ───────────────────────────────────────────────
+  {
+    name: "Villarrica Volcano Lodge",
+    slug: "villarrica-volcano-lodge",
+    description: "Lodge boutique a orillas del lago Villarrica con vista directa al volcán más activo de Sudamérica. Arquitectura en madera larch y piedra volcánica rodeada de araucarias milenarias. Termas privadas con agua volcánica natural. Base ideal para el ascenso al volcán Villarrica, rafting en el río Trancura, canopy en el bosque nativo y esquí en el único volcán ski-able de Chile.",
+    locationCity: "Pucón",
+    locationCountry: "Chile",
+    address: "Camino Internacional km 3.5, orillas lago Villarrica",
+    latitude: -39.2819,
+    longitude: -71.9818,
+    category: "ECO" as const,
+    starRating: 4,
+    images: [
+      { url: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1200&q=80", altText: "Lodge de madera nativa frente al volcán Villarrica y el lago al amanecer", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=1200&q=80", altText: "Termas privadas exteriores con vista al volcán Villarrica", isCover: false, sortOrder: 1 },
+    ],
+    roomTypes: [
+      { name: "Cabaña Araucaria", description: "Cabaña bajo las araucarias con vista al volcán y lago.", capacity: 2, pricePerNight: "130000", currency: "CLP", totalRooms: 10, amenities: ["Vista al volcán", "Termas incluidas", "WiFi", "Desayuno"] },
+      { name: "Suite Lava", description: "Suite con bañera termal interior y deck sobre el lago.", capacity: 2, pricePerNight: "240000", currency: "CLP", totalRooms: 4, amenities: ["Bañera termal", "Deck lago", "Guía ascenso volcán", "All-inclusive"] },
+    ],
+  },
+
+  // ── 16. CITY ── Santiago, Las Condes, Chile ───────────────────────────────
+  {
+    name: "El Mestizo Urban Boutique",
+    slug: "el-mestizo-urban-boutique",
+    description: "Hotel boutique urbano de diseño en el barrio El Golf de Las Condes, el epicentro financiero y gastronómico de Santiago. 20 habitaciones con arte contemporáneo chileno curado por la galería Metropolitana. A pasos de los mejores restaurantes de la ciudad, centros comerciales de lujo y a 40 minutos del aeropuerto. Rooftop bar con vista a la Cordillera de los Andes.",
+    locationCity: "Santiago",
+    locationCountry: "Chile",
+    address: "Av. El Bosque Norte 0430, Las Condes",
+    latitude: -33.4163,
+    longitude: -70.6057,
+    category: "CITY" as const,
+    starRating: 4,
+    images: [
+      { url: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=1200&q=80", altText: "Rooftop bar del El Mestizo con vista a la Cordillera de los Andes", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1200&q=80", altText: "Lobby con arte chileno contemporáneo y patio interior", isCover: false, sortOrder: 1 },
+    ],
+    roomTypes: [
+      { name: "Habitación Andes", description: "Habitación con arte local y vista a los Andes.", capacity: 2, pricePerNight: "135000", currency: "CLP", totalRooms: 14, amenities: ["Vista Cordillera", "WiFi", "Smart TV", "Desayuno", "Gimnasio"] },
+      { name: "Suite Rooftop", description: "Suite con acceso exclusivo al rooftop y vista panorámica.", capacity: 2, pricePerNight: "250000", currency: "CLP", totalRooms: 3, amenities: ["Acceso rooftop VIP", "Minibar premium", "Butler", "Late checkout"] },
+    ],
+  },
+
+  // ── 17. LUXURY VINEYARD ── Valle del Maipo, Chile ────────────────────────
+  {
+    name: "Casa del Vino Maipo",
+    slug: "casa-del-vino-maipo",
+    description: "Boutique hotel en el corazón de la DO Maipo, el valle vitivinícola más antiguo y prestigioso de Chile, a 40 km de Santiago. Instalado en una hacienda colonial del siglo XIX rodeada de 30 hectáreas de carmenère, cabernet sauvignon y syrah. El sommelier residente conduce catas privadas en bodega de ladrillo artesanal. A 15 minutos de Concha y Toro, Santa Rita y las mejores viñas del país.",
+    locationCity: "Isla de Maipo",
+    locationCountry: "Chile",
+    address: "Camino El Huique s/n, Valle del Maipo",
+    latitude: -33.7321,
+    longitude: -70.9019,
+    category: "LUXURY" as const,
+    starRating: 5,
+    images: [
+      { url: "https://images.unsplash.com/photo-1474722883778-792e7990302f?w=1200&q=80", altText: "Hacienda colonial rodeada de viñedos de carmenère con los Andes al fondo", isCover: true, sortOrder: 0 },
+      { url: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=1200&q=80", altText: "Bodega de ladrillo con barricas de carmenère y sommelier", isCover: false, sortOrder: 1 },
+      { url: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1200&q=80", altText: "Piscina entre los viñedos del Valle del Maipo", isCover: false, sortOrder: 2 },
+    ],
+    roomTypes: [
+      { name: "Habitación Viñedo", description: "Vista a los viñedos de carmenère y los Andes.", capacity: 2, pricePerNight: "245000", currency: "CLP", totalRooms: 10, amenities: ["Vista viñedo", "Cata diaria", "Desayuno", "WiFi", "Bicicletas"] },
+      { name: "Suite Carmenère", description: "Suite con bodega personal y terraza sobre el viñedo.", capacity: 2, pricePerNight: "420000", currency: "CLP", totalRooms: 4, amenities: ["Bodega personal", "Sommelier privado", "Spa vinoterapia", "All-inclusive"] },
+    ],
+  },
+
+  // ── 18. BOUTIQUE HISTÓRICO ── Cusco, Perú ──────────────────────────────────
   {
     name: "Casa Wayra Cusco",
     slug: "casa-wayra-cusco",

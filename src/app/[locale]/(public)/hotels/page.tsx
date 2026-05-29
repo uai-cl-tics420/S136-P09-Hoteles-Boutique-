@@ -3,6 +3,9 @@ import { getHotels } from "@/services/hotel.service";
 import { auth } from "@/lib/auth/nextauth.config";
 import { logoutAction } from "@/lib/auth/auth-actions";
 import HotelFilters from "@/components/HotelFilters";
+import FavButton from "@/components/FavButton";
+import CompareButton from "@/components/CompareButton";
+import ComparisonBar from "@/components/ComparisonBar";
 import type { HotelCategory } from "@/types/domain";
 
 export const dynamic = "force-dynamic";
@@ -187,6 +190,7 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
             ))}
           </div>
         )}
+        <ComparisonBar locale={locale} />
       </main>
 
       {/* ── Footer mínimo ────────────────────────────────────── */}
@@ -249,15 +253,23 @@ function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
           </span>
         </div>
 
-        {/* Rating badge */}
-        {(hotel.avgRating || hotel.starRating) && (
-          <div className="absolute top-3 right-3 glass rounded-full px-2.5 py-1 flex items-center gap-1">
-            <span className="text-[var(--gold)] text-xs">★</span>
-            <span className="text-xs font-bold text-[var(--text-primary)]">
-              {hotel.avgRating ?? hotel.starRating}
-            </span>
-          </div>
-        )}
+        {/* Rating + Fav buttons */}
+        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+          {(hotel.avgRating || hotel.starRating) && (
+            <div className="glass rounded-full px-2.5 py-1 flex items-center gap-1">
+              <span className="text-[var(--gold)] text-xs">★</span>
+              <span className="text-xs font-bold text-[var(--text-primary)]">
+                {hotel.avgRating ?? hotel.starRating}
+              </span>
+            </div>
+          )}
+          <FavButton
+            hotelId={hotel.id}
+            hotelSlug={hotel.slug}
+            hotelName={hotel.name}
+            size="sm"
+          />
+        </div>
       </div>
 
       {/* Contenido */}
@@ -295,10 +307,22 @@ function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
             )}
           </div>
 
-          <div className="w-9 h-9 rounded-full bg-[var(--text-primary)] flex items-center justify-center group-hover:bg-[var(--gold)] transition-all duration-300 group-hover:shadow-[var(--shadow-gold)] group-hover:scale-110">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
+          <div className="flex items-center gap-2">
+            <CompareButton hotel={{
+              id: hotel.id,
+              slug: hotel.slug,
+              name: hotel.name,
+              category: hotel.category,
+              starRating: hotel.starRating,
+              locationCity: hotel.locationCity,
+              minPricePerNight: hotel.minPricePerNight ?? null,
+              imageUrl: hotel.images?.[0]?.url,
+            }} />
+            <div className="w-9 h-9 rounded-full bg-[var(--text-primary)] flex items-center justify-center group-hover:bg-[var(--gold)] transition-all duration-300 group-hover:shadow-[var(--shadow-gold)] group-hover:scale-110">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </div>
           </div>
         </div>
       </div>

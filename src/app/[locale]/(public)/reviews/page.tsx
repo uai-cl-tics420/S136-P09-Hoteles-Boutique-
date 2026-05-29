@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 const CAT_LABELS: Record<string, string> = {
   LUXURY: "Lujo", BOUTIQUE: "Boutique", ECO: "Eco",
@@ -49,6 +50,8 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"ranking" | "reviews">("ranking");
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
 
   useEffect(() => {
     fetch("/api/reviews?ranking=true")
@@ -77,7 +80,7 @@ export default function ReviewsPage() {
       <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <a href="/es/hotels" className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+            <a href={`/${locale}/hotels`} className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
               ← Explorar hoteles
             </a>
             <span className="text-[var(--border)]">|</span>

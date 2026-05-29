@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { getFavorites } from "@/components/FavButton";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendiente", CONFIRMED: "Confirmada", CANCELLED: "Cancelada", COMPLETED: "Completada",
@@ -12,7 +13,6 @@ const STATUS_COLOR: Record<string, string> = {
   CANCELLED: "bg-red-50 text-red-600 border-red-200",
   COMPLETED: "bg-gray-100 text-[var(--text-muted)] border-[var(--border)]",
 };
-
 const PREF_OPTIONS = [
   { key: "LUXURY", label: "Lujo" }, { key: "ECO", label: "Eco / Naturaleza" },
   { key: "BEACH", label: "Playa" }, { key: "MOUNTAIN", label: "Montaña" },
@@ -24,12 +24,14 @@ export default function BookingsPage() {
   const locale = pathname.split("/")[1] || "es";
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"bookings" | "preferences">("bookings");
+  const [tab, setTab] = useState<"bookings" | "favorites" | "preferences">("bookings");
   const [prefs, setPrefs] = useState<any>(null);
   const [selectedCats, setSelectedCats] = useState<string[]>([]);
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
   const [savingPrefs, setSavingPrefs] = useState(false);
+  const [favHotels, setFavHotels] = useState<any[]>([]);
+  const [favLoading, setFavLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -46,6 +48,20 @@ export default function BookingsPage() {
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  // Load favorites when tab opens
+  useEffect(() => {
+    if (tab !== "favorites") return;
+    const ids = getFavorites();
+    if (ids.length === 0) { setFavHotels([]); return; }
+    setFavLoading(true);
+    Promise.all(
+      ids.map((id) => fetch(`/api/hotels/${id}`).then((r) => r.json()).then((d) => d.hotel).catch(() => null))
+    ).then((results) => {
+      setFavHotels(results.filter(Boolean));
+      setFavLoading(false);
+    });
+  }, [tab]);
 
   async function cancelBooking(id: string) {
     if (!confirm("¿Cancelar esta reserva?")) return;
@@ -78,9 +94,23 @@ export default function BookingsPage() {
     setSelectedCats((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
   }
 
+  function removeFav(hotelId: string) {
+    const favs: string[] = JSON.parse(localStorage.getItem("hb_favorites") ?? "[]");
+    const updated = favs.filter((id) => id !== hotelId);
+    localStorage.setItem("hb_favorites", JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent("hb:favorites-changed"));
+    setFavHotels((h) => h.filter((x) => x.id !== hotelId));
+    toast.success("Eliminado de favoritos");
+  }
+
+  const tabs = [
+    { key: "bookings", label: "Mis Reservas" },
+    { key: "favorites", label: "❤ Favoritos" },
+    { key: "preferences", label: "Mis Gustos" },
+  ] as const;
+
   return (
     <main className="min-h-screen bg-[var(--background)]">
-      {/* Header Premium */}
       <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
         <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -97,16 +127,17 @@ export default function BookingsPage() {
       </header>
 
       <div className="max-w-3xl mx-auto px-5 py-12">
-        {/* Tabs Elegantes */}
-        <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl max-w-sm mb-10 shadow-[var(--shadow-xs)]">
-          {(["bookings", "preferences"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all duration-300 ${tab === t ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"}`}>
-              {{ bookings: "Mis Reservas", preferences: "Mis Gustos" }[t]}
+        {/* Tabs */}
+        <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-max mb-10 shadow-[var(--shadow-xs)]">
+          {tabs.map((t) => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`flex-1 py-2.5 px-5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap ${tab === t.key ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"}`}>
+              {t.label}
             </button>
           ))}
         </div>
 
+        {/* ── RESERVAS ── */}
         {tab === "bookings" && (
           loading ? (
             <div className="space-y-6">
@@ -129,7 +160,6 @@ export default function BookingsPage() {
                 const hotelImage = b.roomType?.hotel?.images?.[0]?.url;
                 return (
                   <div key={b.id} className="group bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)] overflow-hidden flex flex-col sm:flex-row hover:shadow-xl transition-all duration-300">
-                    {/* Imagen lateral */}
                     <div className="sm:w-48 h-40 sm:h-auto relative bg-[var(--surface)]">
                       {hotelImage ? (
                         <img src={hotelImage} alt="Hotel" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -144,7 +174,6 @@ export default function BookingsPage() {
                       </div>
                     </div>
 
-                    {/* Contenido */}
                     <div className="flex-1 p-6 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-2">
@@ -156,16 +185,10 @@ export default function BookingsPage() {
                             {STATUS_LABEL[b.status] ?? b.status}
                           </span>
                         </div>
-                        
+
                         <div className="flex items-center gap-4 text-sm text-[var(--text-muted)] font-medium mt-4">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-lg">📅</span>
-                            <span>{b.checkIn} a {b.checkOut}</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-lg">👥</span>
-                            <span>{b.guestsCount} {b.guestsCount === 1 ? "huésped" : "huéspedes"}</span>
-                          </div>
+                          <div className="flex items-center gap-1.5"><span className="text-lg">📅</span><span>{b.checkIn} a {b.checkOut}</span></div>
+                          <div className="flex items-center gap-1.5"><span className="text-lg">👥</span><span>{b.guestsCount} {b.guestsCount === 1 ? "huésped" : "huéspedes"}</span></div>
                         </div>
 
                         {b.extras?.length > 0 && (
@@ -186,7 +209,7 @@ export default function BookingsPage() {
                             ${parseFloat(b.totalPrice).toLocaleString()} <span className="text-sm font-medium">{b.currency}</span>
                           </p>
                         </div>
-                        
+
                         <div className="flex items-center gap-3">
                           <a href={`/${locale}/bookings/${b.id}`}
                             className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-4 py-2 hover:border-[var(--text-primary)] transition-all">
@@ -198,10 +221,7 @@ export default function BookingsPage() {
                             </a>
                           )}
                           {(b.status === "CONFIRMED" || b.status === "PENDING") && (
-                            <button
-                              onClick={() => cancelBooking(b.id)}
-                              className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors"
-                            >
+                            <button onClick={() => cancelBooking(b.id)} className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors">
                               Cancelar
                             </button>
                           )}
@@ -215,6 +235,66 @@ export default function BookingsPage() {
           )
         )}
 
+        {/* ── FAVORITOS ── */}
+        {tab === "favorites" && (
+          <div className="space-y-6 animate-slide-up">
+            {favLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {[...Array(4)].map((_, i) => <div key={i} className="h-48 bg-white rounded-3xl border border-[var(--border)] animate-shimmer" />)}
+              </div>
+            ) : favHotels.length === 0 ? (
+              <div className="text-center py-24 bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)]">
+                <span className="text-5xl mb-6 block">♡</span>
+                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Sin favoritos aún</h3>
+                <p className="text-[var(--text-muted)] mb-8">Presiona el corazón en cualquier hotel para guardarlo aquí.</p>
+                <a href={`/${locale}/hotels`} className="inline-block bg-[var(--text-primary)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-[var(--gold)] transition-colors shadow-md">
+                  Explorar Hoteles
+                </a>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">{favHotels.length} propiedad{favHotels.length !== 1 ? "es" : ""} guardada{favHotels.length !== 1 ? "s" : ""}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {favHotels.map((h: any) => (
+                    <div key={h.id} className="group bg-white rounded-3xl border border-[var(--border)] overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                      <div className="relative h-44 overflow-hidden bg-[var(--surface)]">
+                        {h.images?.[0] ? (
+                          <img src={h.images[0].url} alt={h.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl opacity-20">🏨</div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <button
+                          onClick={() => removeFav(h.id)}
+                          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm hover:bg-red-600 transition-colors shadow-md"
+                          title="Quitar de favoritos"
+                        >♥</button>
+                      </div>
+                      <div className="p-5">
+                        <h3 className="text-base font-black text-[var(--text-primary)] truncate">{h.name}</h3>
+                        <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">{h.locationCity}, {h.locationCountry}</p>
+                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border-soft)]">
+                          {h.roomTypes?.[0] && (
+                            <p className="text-sm font-black text-[var(--text-primary)]">
+                              Desde ${parseFloat(h.roomTypes[0].pricePerNight).toLocaleString()}
+                              <span className="text-xs font-normal text-[var(--text-muted)] ml-1">/noche</span>
+                            </p>
+                          )}
+                          <a href={`/${locale}/hotels/${h.slug}`}
+                            className="text-[10px] font-bold uppercase tracking-widest bg-[var(--text-primary)] text-white px-4 py-2 rounded-xl hover:bg-[var(--gold)] transition-colors">
+                            Ver →
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── PREFERENCIAS ── */}
         {tab === "preferences" && (
           <div className="space-y-6 animate-slide-up">
             <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
@@ -225,11 +305,8 @@ export default function BookingsPage() {
                 <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">¿Qué buscas en tu próximo viaje?</label>
                 <div className="flex flex-wrap gap-3">
                   {PREF_OPTIONS.map(({ key, label }) => (
-                    <button
-                      key={key}
-                      onClick={() => toggleCat(key)}
-                      className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border-2 ${selectedCats.includes(key) ? "bg-[var(--text-primary)] text-[var(--gold)] border-[var(--text-primary)] shadow-md translate-y-[-2px]" : "bg-white text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]"}`}
-                    >
+                    <button key={key} onClick={() => toggleCat(key)}
+                      className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border-2 ${selectedCats.includes(key) ? "bg-[var(--text-primary)] text-[var(--gold)] border-[var(--text-primary)] shadow-md translate-y-[-2px]" : "bg-white text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]"}`}>
                       {label}
                     </button>
                   ))}
@@ -239,33 +316,18 @@ export default function BookingsPage() {
               <div className="grid grid-cols-2 gap-6 mb-10">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Presupuesto Mínimo ($)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={budgetMin}
-                    onChange={(e) => setBudgetMin(e.target.value)}
-                    placeholder="0"
-                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all"
-                  />
+                  <input type="number" min={0} value={budgetMin} onChange={(e) => setBudgetMin(e.target.value)} placeholder="0"
+                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Presupuesto Máximo ($)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={budgetMax}
-                    onChange={(e) => setBudgetMax(e.target.value)}
-                    placeholder="Sin límite"
-                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all"
-                  />
+                  <input type="number" min={0} value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} placeholder="Sin límite"
+                    className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all" />
                 </div>
               </div>
 
-              <button
-                onClick={savePreferences}
-                disabled={savingPrefs}
-                className="w-full sm:w-auto bg-[var(--gold)] text-white rounded-full px-8 py-4 text-sm font-bold tracking-widest uppercase hover:bg-yellow-600 disabled:opacity-50 transition-all shadow-md hover:shadow-lg active:scale-95"
-              >
+              <button onClick={savePreferences} disabled={savingPrefs}
+                className="w-full sm:w-auto bg-[var(--gold)] text-white rounded-full px-8 py-4 text-sm font-bold tracking-widest uppercase hover:bg-yellow-600 disabled:opacity-50 transition-all shadow-md hover:shadow-lg active:scale-95">
                 {savingPrefs ? "Actualizando..." : "Guardar Perfil"}
               </button>
             </div>
@@ -273,7 +335,7 @@ export default function BookingsPage() {
             {selectedCats.length > 0 && (
               <div className="bg-transparent mt-10">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-6">Selección Curada Para Ti</h3>
-                <RecommendedHotels categories={selectedCats} budgetMax={budgetMax ? parseInt(budgetMax) : undefined} />
+                <RecommendedHotels categories={selectedCats} budgetMax={budgetMax ? parseInt(budgetMax) : undefined} locale={locale} />
               </div>
             )}
           </div>
@@ -283,10 +345,9 @@ export default function BookingsPage() {
   );
 }
 
-function RecommendedHotels({ categories, budgetMax }: { categories: string[]; budgetMax?: number }) {
+function RecommendedHotels({ categories, budgetMax, locale }: { categories: string[]; budgetMax?: number; locale: string }) {
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const localeFromPath = usePathname().split("/")[1] || "es";
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -304,7 +365,7 @@ function RecommendedHotels({ categories, budgetMax }: { categories: string[]; bu
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
       {hotels.map((h: any) => (
-        <a key={h.id} href={`/${localeFromPath}/hotels/${h.slug}`}
+        <a key={h.id} href={`/${locale}/hotels/${h.slug}`}
           className="group flex items-center gap-4 p-3 bg-white rounded-2xl border border-[var(--border)] hover:border-[var(--gold)] transition-all hover:shadow-md">
           <div className="w-20 h-20 rounded-xl bg-[var(--surface)] flex-shrink-0 overflow-hidden relative">
             {h.images?.[0] && <img src={h.images[0].url} alt={h.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />}

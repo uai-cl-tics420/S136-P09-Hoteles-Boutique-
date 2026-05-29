@@ -25,6 +25,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const hotelId = searchParams.get("hotelId");
     const ranking = searchParams.get("ranking");
+    const myReviews = searchParams.get("myReviews");
+
+    // Mis reseñas — requiere autenticación
+    if (myReviews === "true") {
+      const session = await auth();
+      if (!session?.user?.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      const guestReviews = await db.query.reviews.findMany({
+        where: eq(reviews.guestId, session.user.id),
+        with: { hotel: { columns: { name: true, slug: true, category: true } } },
+        orderBy: (r, { desc }) => [desc(r.createdAt)],
+      });
+      return NextResponse.json({ reviews: guestReviews });
+    }
 
     // FIX: Endpoint de ranking — calcula promedios en una sola query SQL
     // (antes la página cargaba 50 hoteles + N queries de ratings)

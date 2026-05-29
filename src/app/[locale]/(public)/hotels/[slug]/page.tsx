@@ -4,6 +4,7 @@ import { getReviewsByHotel } from "@/services/review.service";
 import { auth } from "@/lib/auth/nextauth.config";
 import BookingWidget from "@/components/BookingWidget";
 import ReviewForm from "@/components/ReviewForm";
+import FavButton from "@/components/FavButton";
 import { db } from "@/db";
 import { bookings, roomTypes } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
@@ -116,13 +117,16 @@ export default async function HotelDetailPage({ params }: PageProps) {
           <h1 className="text-3xl md:text-5xl font-bold text-[var(--text-primary)] tracking-tight mb-3 leading-tight">
             {hotel.name}
           </h1>
-          <p className="flex items-center gap-1.5 text-[var(--text-muted)] text-sm font-medium">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
-            </svg>
-            {hotel.locationCity}, {hotel.locationCountry}
-            {hotel.address && <> · <span className="text-[var(--text-muted)]/70">{hotel.address}</span></>}
-          </p>
+          <div className="flex items-center gap-3">
+            <p className="flex items-center gap-1.5 text-[var(--text-muted)] text-sm font-medium">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {hotel.locationCity}, {hotel.locationCountry}
+              {hotel.address && <><span className="mx-1 text-[var(--border)]">·</span><span className="text-[var(--text-muted)]/70">{hotel.address}</span></>}
+            </p>
+            <FavButton hotelId={hotel.id} hotelSlug={hotel.slug} hotelName={hotel.name} />
+          </div>
         </div>
 
         {/* ── Galería ────────────────────────────────────────── */}

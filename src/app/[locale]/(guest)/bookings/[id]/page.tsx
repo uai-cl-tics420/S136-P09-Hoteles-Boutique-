@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, use } from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 const STATUS_COLOR: Record<string, { badge: string; bg: string; text: string; icon: string }> = {
@@ -27,6 +28,8 @@ function getNights(checkIn: string, checkOut: string) {
 
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
@@ -67,7 +70,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
         <span className="text-4xl block mb-4 opacity-50">🔍</span>
         <p className="text-lg font-black text-[var(--text-primary)] mb-2">Reserva no encontrada</p>
         <p className="text-sm text-[var(--text-muted)] mb-6">El identificador de esta reserva no es válido o no tienes acceso.</p>
-        <a href="/es/bookings"
+        <a href={`/${locale}/bookings`}
           className="inline-block bg-[var(--text-primary)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-black transition-colors shadow-md">
           ← Mis Reservas
         </a>
@@ -88,7 +91,10 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
       <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
         <div className="max-w-3xl mx-auto px-5 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <a href="/es/bookings" className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+            <a
+              href={`/${locale}/bookings`}
+              className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            >
               ← Mis Reservas
             </a>
             <span className="text-[var(--border)]">|</span>
@@ -222,13 +228,13 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <a href="/es/bookings"
+          <a href={`/${locale}/bookings`}
             className="flex-1 text-center bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] rounded-full py-4 text-sm font-bold uppercase tracking-widest hover:bg-[var(--surface-hover)] transition-all">
             ← Mis Reservas
           </a>
 
           {status === "COMPLETED" && (
-            <a href={`/es/hotels/${booking.roomType?.hotel?.slug}`}
+            <a href={`/${locale}/hotels/${booking.roomType?.hotel?.slug}`}
               className="flex-1 text-center bg-[var(--gold)] text-white rounded-full py-4 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all shadow-md">
               ⭐ Calificar Estancia
             </a>
@@ -242,7 +248,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
           )}
 
           {(status === "CONFIRMED" || status === "PENDING") && (
-            <a href={`/es/hotels/${booking.roomType?.hotel?.slug}`}
+            <a href={`/${locale}/hotels/${booking.roomType?.hotel?.slug}`}
               className="flex-1 text-center bg-[var(--text-primary)] text-white rounded-full py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md">
               Ver Hotel →
             </a>

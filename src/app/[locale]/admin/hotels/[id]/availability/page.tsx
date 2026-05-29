@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, use } from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 type DayStatus = "available" | "partial" | "full" | "closed";
@@ -22,6 +23,8 @@ const DAY_NAMES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
 export default function AvailabilityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -144,7 +147,7 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-3 bg-[var(--surface)] p-2 rounded-full border border-[var(--border)] w-max">
-        <a href={`/es/admin/hotels/${id}`}
+        <a href={`/${locale}/admin/hotels/${id}`}
           className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-hover)]">
           ← Propiedad
         </a>

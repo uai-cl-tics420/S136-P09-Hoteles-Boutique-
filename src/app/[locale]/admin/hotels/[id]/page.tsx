@@ -19,7 +19,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<"edit" | "extras" | "guest-config">("edit");
+  const [tab, setTab] = useState<"edit" | "rooms" | "extras" | "guest-config">("edit");
   const [guestConfig, setGuestConfig] = useState({
     welcomeMessage: "",
     defaultPreferences: [] as string[],
@@ -28,14 +28,19 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
   const [savingConfig, setSavingConfig] = useState(false);
   const [newExtra, setNewExtra] = useState({ name: "", description: "", price: "", category: "SPA" });
   const [savingExtra, setSavingExtra] = useState(false);
+  const [roomTypes, setRoomTypes] = useState<any[]>([]);
+  const [newRoom, setNewRoom] = useState({ name: "", capacity: "2", pricePerNight: "", totalRooms: "1", currency: "CLP", description: "", amenities: "" });
+  const [savingRoom, setSavingRoom] = useState(false);
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/hotels/${id}`).then((r) => r.json()),
       fetch(`/api/admin/guest-config?hotelId=${id}`).then((r) => r.json()).catch(() => ({ config: null })),
-    ]).then(([hd, gc]) => {
+      fetch(`/api/admin/hotels/${id}/room-types`).then((r) => r.json()).catch(() => ({ roomTypes: [] })),
+    ]).then(([hd, gc, rt]) => {
       setHotel(hd.hotel);
       if (gc.config) setGuestConfig(gc.config);
+      setRoomTypes(rt.roomTypes ?? []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [id]);
@@ -85,6 +90,34 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
       } else toast.error("Error al agregar");
     } catch (_err) { toast.error("Error de conexión"); }
     finally { setSavingExtra(false); }
+  }
+
+  async function addRoomType(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingRoom(true);
+    try {
+      const amenitiesArr = newRoom.amenities.split(",").map((a) => a.trim()).filter(Boolean);
+      const res = await fetch(`/api/admin/hotels/${id}/room-types`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newRoom.name,
+          capacity: parseInt(newRoom.capacity),
+          pricePerNight: parseFloat(newRoom.pricePerNight),
+          totalRooms: parseInt(newRoom.totalRooms),
+          currency: newRoom.currency,
+          description: newRoom.description || null,
+          amenities: amenitiesArr,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success("Tipo de habitación creado");
+        setRoomTypes((prev) => [...prev, data.roomType]);
+        setNewRoom({ name: "", capacity: "2", pricePerNight: "", totalRooms: "1", currency: "CLP", description: "", amenities: "" });
+      } else toast.error("Error al crear");
+    } catch { toast.error("Error de conexión"); }
+    finally { setSavingRoom(false); }
   }
 
   function togglePref(p: string) {
@@ -139,14 +172,89 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full shadow-[var(--shadow-xs)] w-max">
-        {(["edit", "extras", "guest-config"] as const).map((t) => (
+      <div className="flex flex-wrap gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full shadow-[var(--shadow-xs)] w-max">
+        {(["edit", "rooms", "extras", "guest-config"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${tab === t ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
-            {{ edit: "Detalles", extras: "Exclusividades", "guest-config": "Experiencia" }[t]}
+            {{ edit: "Detalles", rooms: "Habitaciones", extras: "Exclusividades", "guest-config": "Experiencia" }[t]}
           </button>
         ))}
       </div>
+
+      {/* Tab: rooms */}
+      {tab === "rooms" && (
+        <div className="space-y-6 animate-slide-up">
+          {roomTypes.length > 0 && (
+            <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
+              <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Tipos de Habitación</h2>
+              <div className="space-y-3">
+                {roomTypes.map((rt: any) => (
+                  <div key={rt.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl gap-3">
+                    <div>
+                      <p className="text-base font-bold text-[var(--text-primary)]">{rt.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">
+                        {rt.capacity} personas · {rt.totalRooms} hab. ·
+                        <span className="text-[var(--gold)] ml-1">${parseFloat(rt.pricePerNight).toLocaleString()} {rt.currency}/noche</span>
+                      </p>
+                      {rt.amenities?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {rt.amenities.map((a: string) => (
+                            <span key={a} className="text-[10px] bg-white text-[var(--text-muted)] px-2 py-0.5 rounded-full border border-[var(--border)]">{a}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
+            <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Añadir Tipo de Habitación</h2>
+            <form onSubmit={addRoomType} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Nombre</label>
+                  <input required type="text" value={newRoom.name} onChange={(e) => setNewRoom((x) => ({ ...x, name: e.target.value }))}
+                    placeholder="Ej: Suite Deluxe" className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Capacidad (personas)</label>
+                  <input required type="number" min={1} max={20} value={newRoom.capacity} onChange={(e) => setNewRoom((x) => ({ ...x, capacity: e.target.value }))}
+                    className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Precio / Noche ($)</label>
+                  <input required type="number" min={0} value={newRoom.pricePerNight} onChange={(e) => setNewRoom((x) => ({ ...x, pricePerNight: e.target.value }))}
+                    placeholder="0" className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">N° Habitaciones</label>
+                  <input type="number" min={1} value={newRoom.totalRooms} onChange={(e) => setNewRoom((x) => ({ ...x, totalRooms: e.target.value }))}
+                    className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Descripción</label>
+                <input type="text" value={newRoom.description} onChange={(e) => setNewRoom((x) => ({ ...x, description: e.target.value }))}
+                  placeholder="Descripción de la habitación" className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Amenities <span className="normal-case font-normal">(separados por coma)</span></label>
+                <input type="text" value={newRoom.amenities} onChange={(e) => setNewRoom((x) => ({ ...x, amenities: e.target.value }))}
+                  placeholder="WiFi, TV, Jacuzzi, Vista al mar" className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+              </div>
+              <div className="pt-4 border-t border-[var(--border-soft)]">
+                <button type="submit" disabled={savingRoom}
+                  className="bg-[var(--text-primary)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md disabled:opacity-50">
+                  {savingRoom ? "Creando..." : "Crear Habitación"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Tab: edit */}
       {tab === "edit" && (
