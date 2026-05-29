@@ -5,6 +5,8 @@ import { extraServices } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
+const ADMIN_ROLES = ["HOTEL_ADMIN", "SUPER_ADMIN"];
+
 const patchSchema = z.object({
   available: z.boolean().optional(),
   name: z.string().min(1).optional(),
@@ -18,7 +20,8 @@ export async function PATCH(
 ) {
   try {
     const session = await auth();
-    if (!session?.user || (session.user as any).role !== "HOTEL_ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user || !ADMIN_ROLES.includes(role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -60,7 +63,8 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-    if (!session?.user || (session.user as any).role !== "HOTEL_ADMIN") {
+    const role = (session?.user as any)?.role;
+    if (!session?.user || !ADMIN_ROLES.includes(role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

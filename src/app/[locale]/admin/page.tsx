@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function AdminDashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -17,9 +18,22 @@ export default function AdminDashboardPage() {
     }).catch(() => setLoading(false));
   }, []);
 
+  async function updateBookingStatus(id: string, status: string) {
+    const res = await fetch(`/api/admin/bookings/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (res.ok) {
+      toast.success(`Reserva marcada como ${statusLabel[status] ?? status}`);
+      setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
+    } else {
+      toast.error("No se pudo actualizar el estado");
+    }
+  }
+
   const pending = bookings.filter((b) => b.status === "PENDING").length;
   const confirmed = bookings.filter((b) => b.status === "CONFIRMED").length;
-  const completed = bookings.filter((b) => b.status === "COMPLETED").length;
   const totalRevenue = bookings
     .filter((b) => ["CONFIRMED", "COMPLETED"].includes(b.status))
     .reduce((acc, b) => acc + parseFloat(b.totalPrice ?? "0"), 0);
@@ -76,7 +90,7 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      {/* Recent bookings */}
+      {/* Recent bookings with status actions */}
       <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-black text-[var(--text-primary)]">Últimos Movimientos</h2>
@@ -94,17 +108,18 @@ export default function AdminDashboardPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b-2 border-[var(--border-soft)]">
                   <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Propiedad & Detalle</th>
                   <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Fechas</th>
                   <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] text-right">Importe</th>
                   <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] text-right">Estado</th>
+                  <th className="pb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] text-right">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-soft)]">
-                {bookings.slice(0, 8).map((b: any) => (
+                {bookings.slice(0, 10).map((b: any) => (
                   <tr key={b.id} className="hover:bg-[var(--surface-hover)] transition-colors group">
                     <td className="py-4 pr-4">
                       <p className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors">{b.roomType?.hotel?.name}</p>
@@ -117,10 +132,38 @@ export default function AdminDashboardPage() {
                     <td className="py-4 px-4 text-right align-middle">
                       <p className="text-sm font-black text-[var(--text-primary)]">${parseFloat(b.totalPrice ?? "0").toLocaleString()}</p>
                     </td>
-                    <td className="py-4 pl-4 text-right align-middle">
+                    <td className="py-4 px-4 text-right align-middle">
                       <span className={`inline-block text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest border ${statusColor[b.status] ?? "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]"}`}>
                         {statusLabel[b.status] ?? b.status}
                       </span>
+                    </td>
+                    <td className="py-4 pl-4 text-right align-middle">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {b.status === "PENDING" && (
+                          <button
+                            onClick={() => updateBookingStatus(b.id, "CONFIRMED")}
+                            className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors whitespace-nowrap"
+                          >
+                            ✓ Confirmar
+                          </button>
+                        )}
+                        {b.status === "CONFIRMED" && (
+                          <button
+                            onClick={() => updateBookingStatus(b.id, "COMPLETED")}
+                            className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded border bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors whitespace-nowrap"
+                          >
+                            ✓ Completar
+                          </button>
+                        )}
+                        {(b.status === "PENDING" || b.status === "CONFIRMED") && (
+                          <button
+                            onClick={() => updateBookingStatus(b.id, "CANCELLED")}
+                            className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded border bg-red-50 text-red-600 border-red-200 hover:bg-red-100 transition-colors whitespace-nowrap"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

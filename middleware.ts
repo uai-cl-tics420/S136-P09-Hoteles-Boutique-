@@ -18,8 +18,8 @@ const PUBLIC_ROUTES: RegExp[] = [
 ];
 
 const ADMIN_ONLY_ROUTES: RegExp[] = [
-  /^(?:\/[a-zA-Z]{2})?\/admin\/.*/,
-  /^\/api\/admin\/.*/,
+  /^(?:\/[a-zA-Z]{2})?\/admin(\/.*)?$/,
+  /^\/api\/admin(\/.*)?$/,
 ];
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -39,9 +39,10 @@ export default auth((request) => {
   const claims = session.user;
 
   if (ADMIN_ONLY_ROUTES.some((pattern) => pattern.test(pathname))) {
-    if (claims.role === "GUEST") {
+    const role = claims.role;
+    if (role !== "HOTEL_ADMIN" && role !== "SUPER_ADMIN") {
       const localeMatch = request.nextUrl.pathname.match(/^\/([a-zA-Z]{2})\//);
-      const localePrefix = localeMatch ? `/${localeMatch[1]}` : '';
+      const localePrefix = localeMatch ? `/${localeMatch[1]}` : '/es';
       return NextResponse.redirect(new URL(`${localePrefix}/403`, request.url));
     }
   }

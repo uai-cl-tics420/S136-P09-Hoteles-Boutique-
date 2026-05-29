@@ -19,7 +19,7 @@ export default function AdminHotelsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/hotels", {
+      const res = await fetch("/api/admin/hotels", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

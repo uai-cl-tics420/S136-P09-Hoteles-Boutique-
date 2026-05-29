@@ -35,7 +35,7 @@ export default function AdminHotelBookingsPage({ params }: { params: Promise<{ i
   async function updateStatus(bookingId: string, newStatus: string) {
     setChangingStatus(bookingId);
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
+      const res = await fetch(`/api/admin/bookings/${bookingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),

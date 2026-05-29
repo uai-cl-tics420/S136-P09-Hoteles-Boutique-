@@ -78,6 +78,9 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
               <>
                 <NavLink href={`/${locale}/bookings`} label="Mis reservas" />
                 <NavLink href={`/${locale}/profile`}  label="Mi perfil" />
+                {(["HOTEL_ADMIN", "SUPER_ADMIN"] as const).includes((session.user as any).role) && (
+                  <NavLink href={`/${locale}/admin`} label="⚙ Admin" />
+                )}
                 <form action={logoutAction}>
                   <button
                     type="submit"
