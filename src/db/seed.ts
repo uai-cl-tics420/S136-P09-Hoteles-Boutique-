@@ -1,6 +1,6 @@
 import { db } from "./index";
 import { hotels, hotelImages, roomTypes, users } from "./schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // URLs de Unsplash — formato estable sin API key:
@@ -877,7 +877,7 @@ async function seed() {
       // Insertar imágenes si no existen ya para este hotel
       for (const img of data.images) {
         const existingImg = await db.query.hotelImages.findFirst({
-          where: eq(hotelImages.url, img.url),
+          where: (i) => and(eq(i.hotelId, hotelId), eq(i.url, img.url)),
         });
 
         if (!existingImg) {

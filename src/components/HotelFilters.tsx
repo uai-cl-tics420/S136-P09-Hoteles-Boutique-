@@ -25,16 +25,16 @@ export default function HotelFilters() {
   const [isPending, startTransition] = useTransition();
 
   // Estado local de la barra de búsqueda para reflejar el valor actual
-  const [inputValue, setInputValue] = useState(params.get("city") ?? "");
+  const [inputValue, setInputValue] = useState(params.get("query") ?? "");
 
   const category = params.get("category") ?? "";
   const maxPrice = params.get("maxPrice") ?? "";
   const minStars = params.get("minStars") ?? "";
-  const hasFilters = !!(params.get("city") || category || maxPrice || minStars);
+  const hasFilters = !!(params.get("query") || category || maxPrice || minStars);
 
   // Sync input cuando los params cambien (ej. al borrar filtros)
   useEffect(() => {
-    setInputValue(params.get("city") ?? "");
+    setInputValue(params.get("query") ?? "");
   }, [params]);
 
   const applyFilters = useCallback(
@@ -57,7 +57,7 @@ export default function HotelFilters() {
   }
 
   function handleSearch() {
-    applyFilters({ city: inputValue });
+    applyFilters({ query: inputValue });
   }
 
   return (
@@ -193,8 +193,8 @@ export default function HotelFilters() {
       {hasFilters && (
         <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--border)]">
           <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold self-center mr-1">Activos:</span>
-          {params.get("city") && (
-            <Chip label={`Ciudad: ${params.get("city")}`} onRemove={() => applyFilters({ city: "" })} />
+          {params.get("query") && (
+            <Chip label={`Búsqueda: ${params.get("query")}`} onRemove={() => applyFilters({ query: "" })} />
           )}
           {category && (
             <Chip label={`Cat: ${CATEGORIES.find(c => c.value === category)?.label}`} onRemove={() => applyFilters({ category: "" })} />

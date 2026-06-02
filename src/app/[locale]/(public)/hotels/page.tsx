@@ -36,7 +36,7 @@ const CAT_BADGE: Record<string, string> = {
 interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
-    city?: string; category?: string;
+    query?: string; category?: string;
     maxPrice?: string; minStars?: string; page?: string;
   }>;
 }
@@ -45,19 +45,37 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
   const { locale } = await params;
   const sp = await searchParams;
 
-  const [session, hotels] = await Promise.all([
-    auth(),
-    getHotels({
-      city:     sp.city,
-      category: sp.category as HotelCategory | undefined,
-      maxPrice: sp.maxPrice ? parseFloat(sp.maxPrice) : undefined,
-      minStars: sp.minStars ? parseInt(sp.minStars)   : undefined,
-      page:     sp.page     ? parseInt(sp.page)       : 1,
-      limit:    12,
-    }),
-  ]);
+  // Fetch session first — needed to know if we should load preferences
+  const session = await auth();
+  const userId = (session?.user as any)?.id ?? null;
 
-  const isFiltered = !!(sp.city || sp.category || sp.maxPrice || sp.minStars);
+  // Load preferences directly from DB (avoid internal HTTP round-trip)
+  let preferredCategories: string[] = [];
+  if (userId) {
+    try {
+      const { db } = await import("@/db");
+      const { guestPreferences } = await import("@/db/schema");
+      const { eq } = await import("drizzle-orm");
+      const pref = await db.query.guestPreferences.findFirst({
+        where: eq(guestPreferences.guestId, userId),
+        columns: { preferredCategories: true },
+      });
+      preferredCategories = (pref?.preferredCategories as string[]) ?? [];
+    } catch { /* silently ignore — preferences are best-effort */ }
+  }
+
+  const hotels = await getHotels({
+    query:               sp.query,
+    category:            sp.category as HotelCategory | undefined,
+    maxPrice:            sp.maxPrice ? parseFloat(sp.maxPrice) : undefined,
+    minStars:            sp.minStars ? parseInt(sp.minStars)   : undefined,
+    page:                sp.page     ? parseInt(sp.page)       : 1,
+    limit:               12,
+    preferredCategories: preferredCategories.length > 0 ? preferredCategories : undefined,
+  });
+
+  const isFiltered       = !!(sp.query || sp.category || sp.maxPrice || sp.minStars);
+  const isPersonalised   = !isFiltered && preferredCategories.length > 0;
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -77,12 +95,13 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
 
           {/* Nav */}
           <nav className="flex items-center gap-2">
+            <NavLink href={`/${locale}/reviews`} label="⭐ Rankings" />
             {session?.user ? (
               <>
                 <NavLink href={`/${locale}/bookings`} label="Mis reservas" />
                 <NavLink href={`/${locale}/profile`}  label="Mi perfil" />
                 {(["HOTEL_ADMIN", "SUPER_ADMIN"] as const).includes((session.user as any).role) && (
-                  <NavLink href={`/${locale}/admin`} label="⚙ Admin" />
+                  <NavLink href={`/${locale}/admin`} label="⚙ Panel Admin" />
                 )}
                 <form action={logoutAction}>
                   <button
@@ -175,8 +194,15 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
               }
             </p>
           </div>
-          <div className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-widest">
-            Orden: A – Z
+          <div className="flex items-center gap-3">
+            {isPersonalised && (
+              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--gold-light)] text-[var(--gold-dark)] px-3 py-1.5 rounded-full border border-[var(--gold)]/30">
+                ✨ Personalizado para ti
+              </span>
+            )}
+            <div className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-widest">
+              {isPersonalised ? "Relevancia" : "Orden: A – Z"}
+            </div>
           </div>
         </div>
 

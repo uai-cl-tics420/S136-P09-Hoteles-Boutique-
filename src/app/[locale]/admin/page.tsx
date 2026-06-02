@@ -1,22 +1,38 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
 export default function AdminDashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/bookings").then((r) => r.json()),
-      fetch("/api/hotels").then((r) => r.json()),
-    ]).then(([b, h]) => {
+  const fetchData = useCallback(async (showSpinner = false) => {
+    if (showSpinner) setRefreshing(true);
+    try {
+      const [b, h] = await Promise.all([
+        fetch("/api/admin/bookings").then((r) => r.json()),
+        fetch("/api/hotels").then((r) => r.json()),
+      ]);
       setBookings(b.bookings ?? []);
       setHotels(h.hotels ?? []);
+      setLastUpdated(new Date());
+    } catch {
+      if (showSpinner) toast.error("Error al actualizar datos");
+    } finally {
       setLoading(false);
-    }).catch(() => setLoading(false));
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchData();
+    // Auto-refresh cada 30 segundos
+    const interval = setInterval(() => fetchData(), 30_000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   async function updateBookingStatus(id: string, status: string) {
     const res = await fetch(`/api/admin/bookings/${id}`, {
@@ -50,9 +66,32 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-12 max-w-6xl">
-      <div>
-        <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Centro de Control</h1>
-        <p className="text-sm font-medium text-[var(--text-muted)] mt-2">Visión global del rendimiento de tu colección de propiedades.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Centro de Control</h1>
+          <p className="text-sm font-medium text-[var(--text-muted)] mt-2">Visión global del rendimiento de tu colección de propiedades.</p>
+        </div>
+        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+          <button
+            onClick={() => fetchData(true)}
+            disabled={refreshing}
+            className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white hover:border-[var(--gold)] hover:text-[var(--gold)] text-[var(--text-muted)] transition-all duration-200 disabled:opacity-50 shadow-[var(--shadow-xs)]"
+          >
+            <svg
+              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              className={refreshing ? "animate-spin" : ""}
+            >
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            {refreshing ? "Actualizando..." : "Actualizar"}
+          </button>
+          {lastUpdated && (
+            <p className="text-[10px] text-[var(--text-muted)] font-medium">
+              Última actualización: {lastUpdated.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Stats */}

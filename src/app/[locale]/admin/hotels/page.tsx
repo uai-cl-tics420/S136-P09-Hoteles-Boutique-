@@ -10,7 +10,7 @@ export default function AdminHotelsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/hotels").then(r => r.json())
+    fetch("/api/admin/hotels").then(r => r.json())
       .then(d => { setHotels(d.hotels ?? []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);

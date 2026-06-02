@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const maxPriceRaw = searchParams.get("maxPrice");
 
     const results = await getHotels({
-      city: searchParams.get("city") ?? undefined,
+      query: searchParams.get("query") ?? undefined,
       category: (searchParams.get("category") as HotelCategory) ?? undefined,
       minStars: minStarsRaw ? parseInt(minStarsRaw) : undefined,
       maxPrice: maxPriceRaw ? parseFloat(maxPriceRaw) : undefined,

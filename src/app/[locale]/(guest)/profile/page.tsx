@@ -17,7 +17,7 @@ export default function ProfilePage() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "es";
 
-  const [tab, setTab] = useState<"account" | "reviews">("account");
+  const [tab, setTab] = useState<"account" | "preferences" | "reviews">("account");
   const [showOtpSetup, setShowOtpSetup] = useState(false);
   const [qrCode, setQrCode] = useState("");
   const [secret, setSecret] = useState("");
@@ -57,6 +57,75 @@ export default function ProfilePage() {
       .then((d) => { setMyReviews(d.reviews ?? []); setReviewsLoading(false); })
       .catch(() => setReviewsLoading(false));
   }, [tab]);
+
+  // Preferences
+  const [prefs, setPrefs] = useState<{
+    preferredCategories: string[];
+    preferredAmenities: string[];
+    preferredLocation: string;
+    budgetMin: string;
+    budgetMax: string;
+  }>({
+    preferredCategories: [],
+    preferredAmenities: [],
+    preferredLocation: "",
+    budgetMin: "",
+    budgetMax: "",
+  });
+  const [prefsLoading, setPrefsLoading] = useState(false);
+  const [prefsSaving, setPrefsSaving] = useState(false);
+
+  useEffect(() => {
+    if (tab !== "preferences") return;
+    setPrefsLoading(true);
+    fetch("/api/preferences").then((r) => r.json())
+      .then((d) => {
+        if (d.preferences) {
+          setPrefs({
+            preferredCategories: d.preferences.preferredCategories ?? [],
+            preferredAmenities:  d.preferences.preferredAmenities  ?? [],
+            preferredLocation:   d.preferences.preferredLocation   ?? "",
+            budgetMin:           d.preferences.budgetMin != null ? String(d.preferences.budgetMin) : "",
+            budgetMax:           d.preferences.budgetMax != null ? String(d.preferences.budgetMax) : "",
+          });
+        }
+        setPrefsLoading(false);
+      })
+      .catch(() => setPrefsLoading(false));
+  }, [tab]);
+
+  async function savePreferences() {
+    setPrefsSaving(true);
+    try {
+      const res = await fetch("/api/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          preferredCategories: prefs.preferredCategories,
+          preferredAmenities:  prefs.preferredAmenities,
+          preferredLocation:   prefs.preferredLocation || null,
+          budgetMin:           prefs.budgetMin ? parseFloat(prefs.budgetMin) : null,
+          budgetMax:           prefs.budgetMax ? parseFloat(prefs.budgetMax) : null,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("✨ Preferencias guardadas. ¡Tu feed estará personalizado!");
+    } catch {
+      toast.error("No se pudieron guardar las preferencias");
+    } finally {
+      setPrefsSaving(false);
+    }
+  }
+
+  function toggleCategory(cat: string) {
+    setPrefs((p) => ({
+      ...p,
+      preferredCategories: p.preferredCategories.includes(cat)
+        ? p.preferredCategories.filter((c) => c !== cat)
+        : [...p.preferredCategories, cat],
+    }));
+  }
+
 
   async function handleGenerateOTP() {
     if (!session?.user?.email) { toast.error("No hay sesión activa"); return; }
@@ -145,10 +214,10 @@ export default function ProfilePage() {
 
         {/* Tabs */}
         <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-[var(--shadow-xs)]">
-          {(["account", "reviews"] as const).map((t) => (
+          {(["account", "preferences", "reviews"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all duration-300 ${tab === t ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:bg-[var(--surface-hover)]"}`}>
-              {{ account: "Mi Cuenta", reviews: "Mis Reseñas" }[t]}
+              {{ account: "Mi Cuenta", preferences: "Preferencias", reviews: "Mis Reseñas" }[t]}
             </button>
           ))}
         </div>
@@ -238,6 +307,117 @@ export default function ProfilePage() {
               </svg>
               Finalizar Sesión
             </button>
+          </div>
+        )}
+
+        {/* ── TAB PREFERENCIAS ── */}
+        {tab === "preferences" && (
+          <div className="space-y-6 animate-slide-up">
+
+            {prefsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => <div key={i} className="h-24 bg-white rounded-3xl border border-[var(--border)] animate-shimmer" />)}
+              </div>
+            ) : (
+              <>
+                {/* Categorías preferidas */}
+                <div className="bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)] p-7">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-2xl bg-[var(--gold-light)] flex items-center justify-center text-xl border border-[var(--gold)]/20">🏨</div>
+                    <div>
+                      <p className="text-base font-bold text-[var(--text-primary)]">Tipos de Hotel Preferidos</p>
+                      <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">Personalizamos tu feed según estas categorías.</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2.5">
+                    {[
+                      { value: "LUXURY",   label: "Lujo",     icon: "💎" },
+                      { value: "BOUTIQUE", label: "Boutique", icon: "🌸" },
+                      { value: "ECO",      label: "Eco",      icon: "🌿" },
+                      { value: "BEACH",    label: "Playa",    icon: "🏖️" },
+                      { value: "MOUNTAIN", label: "Montaña",  icon: "🏔️" },
+                      { value: "CITY",     label: "Ciudad",   icon: "🏙️" },
+                    ].map(({ value, label, icon }) => {
+                      const active = prefs.preferredCategories.includes(value);
+                      return (
+                        <button
+                          key={value}
+                          onClick={() => toggleCategory(value)}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all duration-200 ${
+                            active
+                              ? "bg-[var(--text-primary)] text-white border-[var(--text-primary)] shadow-md"
+                              : "bg-white text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--text-primary)] hover:text-[var(--text-primary)]"
+                          }`}
+                        >
+                          <span>{icon}</span> {label}
+                          {active && <span className="ml-1 text-[var(--gold)] text-xs">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Ubicación preferida */}
+                <div className="bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)] p-7">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-2xl bg-[var(--surface)] flex items-center justify-center text-xl border border-[var(--border)]">📍</div>
+                    <div>
+                      <p className="text-base font-bold text-[var(--text-primary)]">Ciudad o Destino Favorito</p>
+                      <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">Usa esto para buscar rápidamente en tu destino habitual.</p>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={prefs.preferredLocation}
+                    onChange={(e) => setPrefs((p) => ({ ...p, preferredLocation: e.target.value }))}
+                    placeholder="Ej: Santiago, Valparaíso, Atacama..."
+                    className="w-full border border-[var(--border)] rounded-xl px-5 py-3.5 text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition-all"
+                  />
+                </div>
+
+                {/* Presupuesto */}
+                <div className="bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)] p-7">
+                  <div className="flex items-center gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-2xl bg-[var(--surface)] flex items-center justify-center text-xl border border-[var(--border)]">💰</div>
+                    <div>
+                      <p className="text-base font-bold text-[var(--text-primary)]">Presupuesto por Noche</p>
+                      <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">En pesos chilenos (CLP).</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Mínimo ($)</label>
+                      <input
+                        type="number" min="0" step="10000"
+                        value={prefs.budgetMin}
+                        onChange={(e) => setPrefs((p) => ({ ...p, budgetMin: e.target.value }))}
+                        placeholder="Ej: 80000"
+                        className="w-full border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Máximo ($)</label>
+                      <input
+                        type="number" min="0" step="10000"
+                        value={prefs.budgetMax}
+                        onChange={(e) => setPrefs((p) => ({ ...p, budgetMax: e.target.value }))}
+                        placeholder="Ej: 400000"
+                        className="w-full border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botón guardar */}
+                <button
+                  onClick={savePreferences}
+                  disabled={prefsSaving}
+                  className="w-full py-4 bg-[var(--text-primary)] text-white rounded-2xl text-sm font-bold uppercase tracking-widest hover:bg-[var(--gold)] hover:shadow-[var(--shadow-gold)] disabled:opacity-50 transition-all duration-300 shadow-md"
+                >
+                  {prefsSaving ? "Guardando..." : "✨ Guardar Preferencias"}
+                </button>
+              </>
+            )}
           </div>
         )}
 

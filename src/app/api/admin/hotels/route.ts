@@ -6,16 +6,24 @@ import { auth } from "@/lib/auth/nextauth.config";
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user || (role !== "HOTEL_ADMIN" && role !== "SUPER_ADMIN")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { searchParams } = request.nextUrl;
     const city = searchParams.get("city");
     const category = searchParams.get("category");
-    const minPrice = searchParams.get("minPrice");
-    const maxPrice = searchParams.get("maxPrice");
     const page = parseInt(searchParams.get("page") ?? "1");
     const limit = parseInt(searchParams.get("limit") ?? "12");
     const offset = (page - 1) * limit;
 
-    const conditions = [eq(hotels.active, true)];
+    const conditions = [];
+    
+    if (role === "HOTEL_ADMIN") {
+      conditions.push(eq(hotels.ownerId, session.user.id));
+    }
 
     if (city) {
       conditions.push(ilike(hotels.locationCity, `%${city}%`));
@@ -24,8 +32,10 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(hotels.category, category as any));
     }
 
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
     const results = await db.query.hotels.findMany({
-      where: and(...conditions),
+      where: whereClause,
       with: {
         images: {
           where: eq(hotelImages.isCover, true),
@@ -38,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ hotels: results, page, limit });
   } catch (error) {
-    console.error("[GET /api/hotels]", error);
+    console.error("[GET /api/admin/hotels]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

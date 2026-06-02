@@ -204,12 +204,38 @@ export default async function HotelDetailPage({ params }: PageProps) {
             {hotel.address && (
               <section className="animate-slide-up">
                 <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4">Ubicación</h2>
-                <div className="bg-white border border-[var(--border)] rounded-2xl p-5 flex items-center gap-4 shadow-[var(--shadow-xs)]">
+                <div className="bg-white border border-[var(--border)] rounded-2xl p-5 flex items-center gap-4 shadow-[var(--shadow-xs)] mb-4">
                   <div className="w-11 h-11 bg-[var(--gold-light)] rounded-xl flex items-center justify-center text-lg shrink-0">📍</div>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold text-[var(--text-primary)] text-sm">{hotel.address}</p>
                     <p className="text-xs text-[var(--text-muted)] mt-0.5">{hotel.locationCity}, {hotel.locationCountry}</p>
                   </div>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${hotel.name} ${hotel.address} ${hotel.locationCity}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 flex items-center gap-1.5 text-xs font-bold text-[var(--gold-dark)] hover:text-[var(--gold)] transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                      <polyline points="15 3 21 3 21 9"/>
+                      <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    Ver en Maps
+                  </a>
+                </div>
+
+                {/* Google Maps iframe embed */}
+                <div className="rounded-2xl overflow-hidden border border-[var(--border)] shadow-[var(--shadow-xs)] h-64">
+                  <iframe
+                    title={`Mapa de ${hotel.name}`}
+                    width="100%"
+                    height="100%"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(`${hotel.name} ${hotel.address} ${hotel.locationCity}`)}&output=embed`}
+                    className="w-full h-full border-0"
+                  />
                 </div>
               </section>
             )}
