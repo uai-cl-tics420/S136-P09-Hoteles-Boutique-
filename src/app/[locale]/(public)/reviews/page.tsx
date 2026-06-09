@@ -14,7 +14,7 @@ type RankedHotel = {
   reviewCount: number;
 };
 
-function RankingTable({ title, data, sortKey }: { title: string; data: RankedHotel[]; sortKey: keyof RankedHotel }) {
+function RankingTable({ title, data, sortKey, locale }: { title: string; data: RankedHotel[]; sortKey: keyof RankedHotel; locale: string }) {
   const sorted = [...data].sort((a, b) => Number(b[sortKey]) - Number(a[sortKey])).slice(0, 5);
   return (
     <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] relative overflow-hidden group hover:shadow-lg transition-all duration-500">
@@ -23,8 +23,10 @@ function RankingTable({ title, data, sortKey }: { title: string; data: RankedHot
         {title}
       </h2>
       <div className="space-y-1">
-        {sorted.map((h, i) => (
-          <a key={h.id} href={`/es/hotels/${h.slug}`} className="flex items-center gap-4 hover:bg-[var(--surface-hover)] p-3 rounded-2xl transition-all">
+        {sorted.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)] text-center py-8">Sin hoteles en esta categoría</p>
+        ) : sorted.map((h, i) => (
+          <a key={h.id} href={`/${locale}/hotels/${h.slug}`} className="flex items-center gap-4 hover:bg-[var(--surface-hover)] p-3 rounded-2xl transition-all">
             <span className={`text-2xl font-black w-8 text-center ${i === 0 ? "text-[var(--gold)]" : i === 1 ? "text-gray-400" : "text-[var(--border)]"}`}>
               {i + 1}
             </span>
@@ -50,8 +52,13 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"ranking" | "reviews">("ranking");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "es";
+
+  const filteredRanking = categoryFilter
+    ? ranking.filter((h) => h.category === categoryFilter)
+    : ranking;
 
   useEffect(() => {
     fetch("/api/reviews?ranking=true")
@@ -112,6 +119,37 @@ export default function ReviewsPage() {
           </div>
         </div>
 
+        {/* Filtro de categoría */}
+        {activeTab === "ranking" && ranking.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            <button
+              onClick={() => setCategoryFilter("")}
+              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border transition-all duration-200 ${
+                !categoryFilter
+                  ? "bg-[var(--text-primary)] text-white border-[var(--text-primary)]"
+                  : "bg-white text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--text-primary)]"
+              }`}
+            >
+              Todos
+            </button>
+            {Object.entries(CAT_LABELS).map(([key, label]) => (
+              ranking.some(h => h.category === key) && (
+                <button
+                  key={key}
+                  onClick={() => setCategoryFilter(key === categoryFilter ? "" : key)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest border transition-all duration-200 ${
+                    categoryFilter === key
+                      ? "bg-[var(--gold)] text-white border-[var(--gold)] shadow-sm"
+                      : "bg-white text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--gold)] hover:text-[var(--gold)]"
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {[...Array(4)].map((_, i) => (
@@ -120,10 +158,10 @@ export default function ReviewsPage() {
           </div>
         ) : activeTab === "ranking" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 stagger-children">
-            <RankingTable title="🏆 La Más Alta Distinción" data={ranking} sortKey="avgOverall" />
-            <RankingTable title="💼 Excelencia en Servicio" data={ranking} sortKey="avgService" />
-            <RankingTable title="✨ Estándares de Limpieza" data={ranking} sortKey="avgCleanliness" />
-            <RankingTable title="📍 Ubicación Privilegiada" data={ranking} sortKey="avgLocation" />
+            <RankingTable title="🏆 La Más Alta Distinción" data={filteredRanking} sortKey="avgOverall" locale={locale} />
+            <RankingTable title="💼 Excelencia en Servicio" data={filteredRanking} sortKey="avgService" locale={locale} />
+            <RankingTable title="✨ Estándares de Limpieza" data={filteredRanking} sortKey="avgCleanliness" locale={locale} />
+            <RankingTable title="📍 Ubicación Privilegiada" data={filteredRanking} sortKey="avgLocation" locale={locale} />
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-8 animate-slide-up">

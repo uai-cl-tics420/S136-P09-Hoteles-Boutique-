@@ -350,35 +350,81 @@ function RecommendedHotels({ categories, budgetMax, locale }: { categories: stri
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (categories.length) params.set("category", categories[0]);
-    if (budgetMax) params.set("maxPrice", budgetMax.toString());
-    params.set("limit", "4");
-    fetch(`/api/hotels?${params}`).then((r) => r.json())
-      .then((d) => { setHotels(d.hotels ?? []); setLoading(false); })
-      .catch(() => setLoading(false));
+    // Fetch hotels for ALL preferred categories, then deduplicate + score
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        const catFetches = categories.map((cat) => {
+          const p = new URLSearchParams({ category: cat, limit: "8" });
+          if (budgetMax) p.set("maxPrice", budgetMax.toString());
+          return fetch(`/api/hotels?${p}`).then((r) => r.json()).then((d) => d.hotels ?? []);
+        });
+        const results: any[][] = await Promise.all(catFetches);
+
+        // Merge, deduplicate by id, compute match score
+        const seen = new Map<string, any>();
+        results.forEach((list, idx) => {
+          list.forEach((h: any) => {
+            if (!seen.has(h.id)) {
+              seen.set(h.id, { ...h, _matchCount: 0, _matchCats: [] });
+            }
+            const entry = seen.get(h.id)!;
+            entry._matchCount += 1;
+            entry._matchCats.push(categories[idx]);
+          });
+        });
+
+        const merged = [...seen.values()]
+          .sort((a, b) => b._matchCount - a._matchCount || (b.avgRating ?? 0) - (a.avgRating ?? 0))
+          .slice(0, 6);
+
+        setHotels(merged);
+      } catch {
+        setHotels([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
   }, [categories.join(","), budgetMax]);
 
-  if (loading) return <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white border border-[var(--border)] rounded-2xl animate-shimmer" />)}</div>;
+  if (loading) return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {[...Array(4)].map((_, i) => <div key={i} className="h-24 bg-white border border-[var(--border)] rounded-2xl animate-shimmer" />)}
+    </div>
+  );
   if (!hotels.length) return <p className="text-sm text-[var(--text-muted)] italic">No encontramos coincidencias exactas por ahora.</p>;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 stagger-children">
-      {hotels.map((h: any) => (
-        <a key={h.id} href={`/${locale}/hotels/${h.slug}`}
-          className="group flex items-center gap-4 p-3 bg-white rounded-2xl border border-[var(--border)] hover:border-[var(--gold)] transition-all hover:shadow-md">
-          <div className="w-20 h-20 rounded-xl bg-[var(--surface)] flex-shrink-0 overflow-hidden relative">
-            {h.images?.[0] && <img src={h.images[0].url} alt={h.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />}
-          </div>
-          <div className="flex-1 min-w-0 pr-2">
-            <p className="text-sm font-bold text-[var(--text-primary)] truncate">{h.name}</p>
-            <p className="text-xs font-medium text-[var(--text-muted)] mt-1">{h.locationCity}</p>
-            {h.minPricePerNight && (
-              <p className="text-xs font-bold text-[var(--gold)] mt-2">Desde ${parseFloat(h.minPricePerNight).toLocaleString()}</p>
-            )}
-          </div>
-        </a>
-      ))}
+      {hotels.map((h: any) => {
+        const matchPct = Math.round((h._matchCount / categories.length) * 100);
+        return (
+          <a key={h.id} href={`/${locale}/hotels/${h.slug}`}
+            className="group flex items-center gap-4 p-3 bg-white rounded-2xl border border-[var(--border)] hover:border-[var(--gold)] transition-all hover:shadow-md relative overflow-hidden">
+            <div className="w-20 h-20 rounded-xl bg-[var(--surface)] flex-shrink-0 overflow-hidden relative">
+              {h.images?.[0] && <img src={h.images[0].url} alt={h.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />}
+            </div>
+            <div className="flex-1 min-w-0 pr-2">
+              <p className="text-sm font-bold text-[var(--text-primary)] truncate">{h.name}</p>
+              <p className="text-xs font-medium text-[var(--text-muted)] mt-1">{h.locationCity}</p>
+              {h.minPricePerNight && (
+                <p className="text-xs font-bold text-[var(--gold)] mt-2">Desde ${parseFloat(h.minPricePerNight).toLocaleString()}</p>
+              )}
+            </div>
+            {/* Match badge */}
+            <div className={`absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+              matchPct === 100
+                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                : matchPct >= 50
+                  ? "bg-[var(--gold-light)] text-[var(--gold-dark)] border border-[var(--gold)]/30"
+                  : "bg-[var(--surface)] text-[var(--text-muted)] border border-[var(--border)]"
+            }`}>
+              {matchPct === 100 ? "✓ " : ""}{matchPct}% match
+            </div>
+          </a>
+        );
+      })}
     </div>
   );
 }

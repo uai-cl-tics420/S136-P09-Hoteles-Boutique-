@@ -3,11 +3,11 @@ import { getHotelBySlug } from "@/services/hotel.service";
 import { getReviewsByHotel } from "@/services/review.service";
 import { auth } from "@/lib/auth/nextauth.config";
 import BookingWidget from "@/components/BookingWidget";
-import ReviewForm from "@/components/ReviewForm";
+import HotelReviews from "@/components/HotelReviews";
 import FavButton from "@/components/FavButton";
 import { db } from "@/db";
-import { bookings, roomTypes } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { bookings } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
@@ -36,11 +36,15 @@ export default async function HotelDetailPage({ params }: PageProps) {
   const hotel = await getHotelBySlug(slug);
   if (!hotel) notFound();
 
-  // Luego en paralelo: reviews y sesión
-  const [reviews, session] = await Promise.all([
+  // Luego en paralelo: reviews (primeras 5) y sesión
+  const PAGE_SIZE = 5;
+  const [allReviews, session] = await Promise.all([
     getReviewsByHotel(hotel.id),
     auth(),
   ]);
+  const initialReviews = allReviews.slice(0, PAGE_SIZE);
+  const initialTotal   = allReviews.length;
+  const initialHasMore = initialTotal > PAGE_SIZE;
 
   const isLoggedIn = !!session?.user;
   const userId = (session?.user as any)?.id ?? null;
@@ -64,8 +68,8 @@ export default async function HotelDetailPage({ params }: PageProps) {
     }
   }
 
-  const avgRating = reviews.length
-    ? (reviews.reduce((a, r) => a + r.ratingOverall, 0) / reviews.length).toFixed(1)
+  const avgRating = allReviews.length
+    ? (allReviews.reduce((a, r) => a + r.ratingOverall, 0) / allReviews.length).toFixed(1)
     : null;
 
   const badge = CAT_BADGE[hotel.category] ?? "bg-gray-100 text-gray-600 border-gray-200";
@@ -110,7 +114,7 @@ export default async function HotelDetailPage({ params }: PageProps) {
             </div>
             {avgRating && (
               <span className="text-sm font-bold text-[var(--text-primary)] bg-[var(--gold-light)] px-2.5 py-0.5 rounded-full text-[var(--gold-dark)]">
-                ★ {avgRating} · {reviews.length} reseñas
+                ★ {avgRating} · {initialTotal} reseñas
               </span>
             )}
           </div>
@@ -242,49 +246,17 @@ export default async function HotelDetailPage({ params }: PageProps) {
 
             <div className="border-t border-[var(--border)]" />
 
-            {/* Reseñas */}
-            <section className="animate-slide-up">
-              <div className="flex items-end justify-between mb-6">
-                <h2 className="text-xl font-bold text-[var(--text-primary)]">
-                  Reseñas
-                  {reviews.length > 0 && (
-                    <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">({reviews.length})</span>
-                  )}
-                </h2>
-                {avgRating && (
-                  <div className="text-right">
-                    <p className="text-3xl font-black text-[var(--text-primary)]">
-                      <span className="text-[var(--gold)]">★</span> {avgRating}
-                    </p>
-                    <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Promedio general</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Review form for guests with completed bookings */}
-              {canReview && reviewableBookingId && (
-                <div className="mb-6">
-                  <ReviewForm
-                    hotelId={hotel.id}
-                    bookingId={reviewableBookingId}
-                    locale={locale}
-                  />
-                </div>
-              )}
-
-              {reviews.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-xs)]">
-                  <p className="text-3xl mb-3 opacity-30">💬</p>
-                  <p className="text-[var(--text-muted)] text-sm font-medium">Aún no hay reseñas. ¡Sé el primero!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
-                  {reviews.map((r: any) => (
-                    <ReviewCard key={r.id} review={r} />
-                  ))}
-                </div>
-              )}
-            </section>
+            {/* Reseñas — client component con paginación */}
+            <HotelReviews
+              hotelId={hotel.id}
+              initialReviews={initialReviews as any[]}
+              initialTotal={initialTotal}
+              initialHasMore={initialHasMore}
+              avgRating={avgRating}
+              canReview={canReview}
+              reviewableBookingId={reviewableBookingId}
+              locale={locale}
+            />
           </div>
 
           {/* Columna derecha — Booking widget */}
@@ -353,53 +325,4 @@ function RoomCard({ rt }: { rt: any }) {
   );
 }
 
-function ReviewCard({ review }: { review: any }) {
-  const initials = review.guestId?.slice(0, 2).toUpperCase() ?? "HV";
-  const colors   = ["from-purple-400 to-indigo-500", "from-rose-400 to-pink-500", "from-amber-400 to-orange-500", "from-teal-400 to-emerald-500"];
-  const colorIdx = review.guestId ? review.guestId.charCodeAt(0) % colors.length : 0;
 
-  return (
-    <div className="bg-white border border-[var(--border)] rounded-2xl p-5 shadow-[var(--shadow-xs)] animate-slide-up">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`w-9 h-9 rounded-full bg-gradient-to-br ${colors[colorIdx]} flex items-center justify-center text-xs font-black text-white shrink-0`}>
-          {initials}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[var(--text-primary)]">Huésped verificado</p>
-          <p className="text-xs text-[var(--text-muted)]">
-            {new Date(review.createdAt).toLocaleDateString("es", { month: "long", year: "numeric" })}
-          </p>
-        </div>
-        <div className="flex items-center gap-0.5 shrink-0">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} className={`text-sm ${i < review.ratingOverall ? "text-[var(--gold)]" : "text-[var(--border)]"}`}>★</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Comentario */}
-      {review.comment && (
-        <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-light mb-4 italic">
-          &ldquo;{review.comment}&rdquo;
-        </p>
-      )}
-
-      {/* Sub-ratings */}
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "Servicio",  val: review.ratingService },
-          { label: "Limpieza",  val: review.ratingCleanliness },
-          { label: "Ubicación", val: review.ratingLocation },
-        ].map(({ label, val }) => (
-          <div key={label} className="bg-[var(--surface-2)] rounded-xl p-2.5 text-center">
-            <p className="text-[9px] uppercase tracking-widest text-[var(--text-muted)] font-bold">{label}</p>
-            <p className="text-sm font-black text-[var(--text-primary)] mt-0.5">
-              {val}<span className="text-[10px] font-normal text-[var(--text-muted)]">/5</span>
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}

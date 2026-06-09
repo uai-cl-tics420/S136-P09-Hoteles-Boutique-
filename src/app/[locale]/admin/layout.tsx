@@ -41,6 +41,7 @@ export default async function AdminLayout({
         <div className="flex-1 flex flex-col gap-1.5">
           {[
             { href: `/${locale}/admin`, label: "Dashboard", icon: "📊" },
+            { href: `/${locale}/admin/analytics`, label: "Analytics", icon: "📈" },
             { href: `/${locale}/admin/hotels`, label: "Propiedades", icon: "🏨" },
             { href: `/${locale}/admin/settings`, label: "Configuración", icon: "⚙️" },
           ].map((link) => (

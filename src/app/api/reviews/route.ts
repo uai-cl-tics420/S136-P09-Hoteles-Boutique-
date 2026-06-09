@@ -69,8 +69,19 @@ export async function GET(request: NextRequest) {
 
     if (!hotelId) return NextResponse.json({ error: "hotelId required" }, { status: 400 });
 
-    const hotelReviews = await getReviewsByHotel(hotelId);
-    return NextResponse.json({ reviews: hotelReviews }, { headers: CACHE_HEADERS });
+    const page  = Math.max(1, parseInt(searchParams.get("page")  ?? "1"));
+    const limit = Math.min(20, parseInt(searchParams.get("limit") ?? "5"));
+    const offset = (page - 1) * limit;
+
+    // Fetch one extra to determine if there are more pages
+    const all = await getReviewsByHotel(hotelId);
+    const total = all.length;
+    const paged = all.slice(offset, offset + limit);
+
+    return NextResponse.json(
+      { reviews: paged, total, page, hasMore: offset + limit < total },
+      { headers: CACHE_HEADERS }
+    );
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
