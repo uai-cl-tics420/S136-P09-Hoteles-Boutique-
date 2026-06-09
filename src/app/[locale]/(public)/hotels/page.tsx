@@ -37,7 +37,7 @@ interface PageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{
     query?: string; category?: string;
-    maxPrice?: string; minStars?: string; page?: string;
+    maxPrice?: string; minStars?: string; page?: string; experience?: string;
   }>;
 }
 
@@ -72,9 +72,10 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
     page:                sp.page     ? parseInt(sp.page)       : 1,
     limit:               12,
     preferredCategories: preferredCategories.length > 0 ? preferredCategories : undefined,
+    experienceType:      sp.experience,
   });
 
-  const isFiltered       = !!(sp.query || sp.category || sp.maxPrice || sp.minStars);
+  const isFiltered       = !!(sp.query || sp.category || sp.maxPrice || sp.minStars || sp.experience);
   const isPersonalised   = !isFiltered && preferredCategories.length > 0;
 
   return (

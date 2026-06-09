@@ -12,6 +12,8 @@ export interface HotelFilters {
   limit?: number;
   /** Preferred categories from the user's profile — used to boost relevance ranking */
   preferredCategories?: string[];
+  /** Filter hotels that offer a specific extra service category (SPA, DINING, etc.) */
+  experienceType?: string;
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -30,7 +32,7 @@ function groupBy<T extends { hotelId: string }>(rows: T[]): Map<string, T[]> {
 // los LATERAL JOINs que son incompatibles con Supabase/PgBouncer (transaction mode).
 
 export async function getHotels(filters: HotelFilters = {}) {
-  const { query, category, minStars, maxPrice, page = 1, limit = 12, preferredCategories } = filters;
+  const { query, category, minStars, maxPrice, page = 1, limit = 12, preferredCategories, experienceType } = filters;
   const offset = (page - 1) * limit;
 
   const conditions = [eq(hotels.active, true)];
@@ -52,6 +54,20 @@ export async function getHotels(filters: HotelFilters = {}) {
       .from(roomTypes)
       .where(lte(sql`CAST(${roomTypes.pricePerNight} AS NUMERIC)`, maxPrice));
     conditions.push(inArray(hotels.id, validHotelIdsQuery));
+  }
+
+  // Filter by experience type (SPA, DINING, etc.) — hotels that have at least one active extra service
+  if (experienceType) {
+    const hotelsWithExperience = db
+      .select({ hotelId: extraServices.hotelId })
+      .from(extraServices)
+      .where(
+        and(
+          eq(extraServices.category, experienceType as any),
+          eq(extraServices.available, true)
+        )
+      );
+    conditions.push(inArray(hotels.id, hotelsWithExperience));
   }
 
   // Personalisation: if the user has preferred categories, boost those hotels first.

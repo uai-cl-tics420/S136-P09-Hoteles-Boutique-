@@ -14,6 +14,10 @@ const STATUS_LABEL: Record<string, string> = {
   CANCELLED: "Reserva Cancelada", COMPLETED: "Estancia Completada",
 };
 
+const EXTRA_ICONS: Record<string, string> = {
+  SPA: "🧖", DINING: "🍽️", TRANSPORT: "🚗", EXPERIENCE: "🎭", OTHER: "✨",
+};
+
 function formatDate(dateStr: string) {
   if (!dateStr) return "";
   const [y, m, d] = dateStr.split("-");
@@ -33,10 +37,28 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [welcomeMsg, setWelcomeMsg] = useState<string | null>(null);
+  const [placesData, setPlacesData] = useState<any>(null);
 
   useEffect(() => {
     fetch(`/api/bookings/${id}`).then(r => r.json())
-      .then(d => { setBooking(d.booking); setLoading(false); })
+      .then(d => {
+        setBooking(d.booking);
+        setLoading(false);
+        const hotelId = d.booking?.roomType?.hotel?.id;
+        if (hotelId) {
+          // Load welcome message
+          fetch(`/api/admin/guest-config?hotelId=${hotelId}`)
+            .then(r => r.json())
+            .then(gc => { if (gc.config?.welcomeMessage) setWelcomeMsg(gc.config.welcomeMessage); })
+            .catch(() => {});
+          // Load Google Places data
+          fetch(`/api/places?hotelId=${hotelId}`)
+            .then(r => r.json())
+            .then(pd => { if (pd.placesData) setPlacesData(pd.placesData); })
+            .catch(() => {});
+        }
+      })
       .catch(() => setLoading(false));
   }, [id]);
 
@@ -167,6 +189,74 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
+        {/* ── Mensaje de bienvenida del hotel ─────────────────── */}
+        {welcomeMsg && booking.status === "CONFIRMED" && (
+          <div className="bg-gradient-to-br from-[var(--gold-light)] to-amber-50 border border-[var(--gold)]/30 rounded-3xl p-7 shadow-[var(--shadow-xs)] relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 w-20 h-20 bg-[var(--gold)]/10 rounded-full" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold-dark)] mb-3 flex items-center gap-2">
+              <span>✉️</span> Mensaje personal del hotel
+            </p>
+            <p className="text-[var(--text-primary)] font-medium leading-relaxed italic text-sm">
+              &ldquo;{welcomeMsg}&rdquo;
+            </p>
+            <p className="text-xs text-[var(--text-muted)] mt-3 font-bold">— {booking.roomType?.hotel?.name}</p>
+          </div>
+        )}
+
+        {/* ── Google Places Reviews ───────────────────────────── */}
+        {placesData && (
+          <div className="bg-white rounded-3xl border border-[var(--border)] p-7 shadow-[var(--shadow-xs)]">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#4285F4"/>
+                    <path d="M17.6 12.2c0-.4-.04-.8-.1-1.2H12v2.3h3.1c-.1.8-.7 1.9-1.8 2.4l2.7 2.1c1.6-1.5 2.6-3.7 2.6-5.6z" fill="#4285F4"/>
+                    <path d="M7.7 14.5l-.6.5-2.3 1.8C6.2 18.7 8.9 20 12 20c2.7 0 4.9-.9 6.5-2.4l-2.7-2.1c-.7.5-1.7.8-3.8.8-2.9 0-5.4-2-6.3-4.8z" fill="#34A853"/>
+                    <path d="M5.1 7.5C4.4 8.7 4 10.1 4 11.5c0 1.4.4 2.8 1.1 4l2.9-2.2c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8L5.1 7.5z" fill="#FBBC05"/>
+                    <path d="M12 6.5c1.6 0 3 .6 4.1 1.5l2.3-2.3C16.9 3.9 14.7 3 12 3 8.9 3 6.2 4.3 4.8 6.5L7.7 8.7C8.6 7.2 10.2 6.5 12 6.5z" fill="#EA4335"/>
+                  </svg>
+                  <h2 className="text-lg font-black text-[var(--text-primary)]">Reseñas en Google</h2>
+                </div>
+                <p className="text-xs text-[var(--text-muted)] font-medium">{placesData.name}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-black text-[var(--text-primary)]">{placesData.rating} <span className="text-[var(--gold)] text-xl">★</span></p>
+                <p className="text-xs text-[var(--text-muted)] font-medium">{placesData.totalRatings?.toLocaleString()} opiniones</p>
+                <a
+                  href={placesData.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block mt-2 text-[10px] font-bold uppercase tracking-widest text-[var(--gold)] hover:underline"
+                >
+                  Ver en Maps →
+                </a>
+              </div>
+            </div>
+            {placesData.reviews?.length > 0 && (
+              <div className="space-y-4">
+                {placesData.reviews.slice(0, 3).map((r: any, i: number) => (
+                  <div key={i} className="p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border)]">
+                    <div className="flex items-center gap-3 mb-2">
+                      {r.profilePhoto && (
+                        <img src={r.profilePhoto} alt={r.author} className="w-8 h-8 rounded-full object-cover" />
+                      )}
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-[var(--text-primary)]">{r.author}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[var(--gold)] text-xs tracking-wider">{"★".repeat(r.rating)}</span>
+                          <span className="text-[10px] text-[var(--text-muted)] font-medium">{r.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {r.text && <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">{r.text}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Extras */}
         {booking.extras?.length > 0 && (
           <div className="bg-white rounded-3xl border border-[var(--border)] p-7 shadow-[var(--shadow-xs)]">
@@ -174,14 +264,17 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
             <div className="space-y-3">
               {booking.extras.map((e: any) => (
                 <div key={e.id} className="flex items-center justify-between p-4 bg-[var(--surface)] border border-[var(--border)] rounded-2xl">
-                  <div>
-                    <p className="text-sm font-bold text-[var(--text-primary)]">{e.extraService?.name}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-0.5">
-                      {e.extraService?.category} · ×{e.quantity ?? 1}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{EXTRA_ICONS[e.extraService?.category] ?? "✨"}</span>
+                    <div>
+                      <p className="text-sm font-bold text-[var(--text-primary)]">{e.extraService?.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-0.5">
+                        {e.extraService?.category} · ×{e.quantity ?? 1}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm font-black text-[var(--text-primary)]">
-                    ${(parseFloat(e.extraService?.price ?? "0") * (e.quantity ?? 1)).toLocaleString()}
+                  <p className="text-sm font-black text-[var(--gold)]">
+                    ${(parseFloat(e.unitPrice ?? e.extraService?.price ?? "0") * (e.quantity ?? 1)).toLocaleString("es-CL")}
                   </p>
                 </div>
               ))}

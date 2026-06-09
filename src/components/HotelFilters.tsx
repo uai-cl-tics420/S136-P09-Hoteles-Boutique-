@@ -11,6 +11,13 @@ const CATEGORIES = [
   { value: "CITY",     label: "Ciudad",   icon: "🏙️" },
 ];
 
+const EXPERIENCES = [
+  { value: "SPA",        label: "Spa & Bienestar", icon: "🧖" },
+  { value: "DINING",     label: "Gastronomía",     icon: "🍽️" },
+  { value: "TRANSPORT",  label: "Transporte",      icon: "🚗" },
+  { value: "EXPERIENCE", label: "Experiencias",    icon: "🎭" },
+];
+
 const SELECT_CLASS = [
   "w-full bg-white border border-[var(--border)] rounded-xl px-4 py-2.5",
   "text-sm font-medium text-[var(--text-primary)]",
@@ -30,7 +37,8 @@ export default function HotelFilters() {
   const category = params.get("category") ?? "";
   const maxPrice = params.get("maxPrice") ?? "";
   const minStars = params.get("minStars") ?? "";
-  const hasFilters = !!(params.get("query") || category || maxPrice || minStars);
+  const experience = params.get("experience") ?? "";
+  const hasFilters = !!(params.get("query") || category || maxPrice || minStars || experience);
 
   // Sync input cuando los params cambien (ej. al borrar filtros)
   useEffect(() => {
@@ -150,6 +158,28 @@ export default function HotelFilters() {
           </div>
         </div>
 
+        {/* Experiencia */}
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+            Tipo de experiencia
+          </label>
+          <div className="relative">
+            <select
+              value={experience}
+              onChange={(e) => applyFilters({ experience: e.target.value })}
+              className={SELECT_CLASS}
+            >
+              <option value="">Todas las experiencias</option>
+              {EXPERIENCES.map(({ value, label, icon }) => (
+                <option key={value} value={value}>{icon} {label}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+
         {/* Estrellas */}
         <div className="flex-1 min-w-[160px]">
           <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
@@ -204,6 +234,9 @@ export default function HotelFilters() {
           )}
           {minStars && (
             <Chip label={`${minStars}+ ⭐`} onRemove={() => applyFilters({ minStars: "" })} />
+          )}
+          {experience && (
+            <Chip label={`Exp: ${EXPERIENCES.find(e => e.value === experience)?.label}`} onRemove={() => applyFilters({ experience: "" })} />
           )}
         </div>
       )}
