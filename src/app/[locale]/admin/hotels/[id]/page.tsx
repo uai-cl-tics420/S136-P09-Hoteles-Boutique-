@@ -19,7 +19,7 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<"edit" | "rooms" | "extras" | "guest-config">("edit");
+  const [tab, setTab] = useState<"edit" | "rooms" | "extras" | "guest-config" | "images">("edit");
   const [guestConfig, setGuestConfig] = useState({
     welcomeMessage: "",
     defaultPreferences: [] as string[],
@@ -31,19 +31,74 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [newRoom, setNewRoom] = useState({ name: "", capacity: "2", pricePerNight: "", totalRooms: "1", currency: "CLP", description: "", amenities: "" });
   const [savingRoom, setSavingRoom] = useState(false);
+  // Images
+  const [images, setImages] = useState<any[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newImageAlt, setNewImageAlt] = useState("");
+  const [savingImage, setSavingImage] = useState(false);
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/hotels/${id}`).then((r) => r.json()),
       fetch(`/api/admin/guest-config?hotelId=${id}`).then((r) => r.json()).catch(() => ({ config: null })),
       fetch(`/api/admin/hotels/${id}/room-types`).then((r) => r.json()).catch(() => ({ roomTypes: [] })),
-    ]).then(([hd, gc, rt]) => {
+      fetch(`/api/admin/hotels/${id}/images`).then((r) => r.json()).catch(() => ({ images: [] })),
+    ]).then(([hd, gc, rt, imgs]) => {
       setHotel(hd.hotel);
       if (gc.config) setGuestConfig(gc.config);
       setRoomTypes(rt.roomTypes ?? []);
+      setImages(imgs.images ?? []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [id]);
+
+  async function deleteRoomType(rtId: string) {
+    if (!confirm("¿Eliminar este tipo de habitación?")) return;
+    const res = await fetch(`/api/admin/hotels/${id}/room-types/${rtId}`, { method: "DELETE" });
+    if (res.ok) {
+      setRoomTypes((prev) => prev.filter((r) => r.id !== rtId));
+      toast.success("Habitación eliminada");
+    } else toast.error("Error al eliminar");
+  }
+
+  async function deleteExtra(extraId: string) {
+    if (!confirm("¿Eliminar este servicio?")) return;
+    const res = await fetch(`/api/hotels/${id}/extras/${extraId}`, { method: "DELETE" });
+    if (res.ok) {
+      setHotel((h: any) => ({ ...h, extraServices: h.extraServices.filter((e: any) => e.id !== extraId) }));
+      toast.success("Servicio eliminado");
+    } else toast.error("Error al eliminar");
+  }
+
+  async function addImage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newImageUrl.trim()) return;
+    setSavingImage(true);
+    try {
+      const res = await fetch(`/api/admin/hotels/${id}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: newImageUrl.trim(), altText: newImageAlt.trim() || null }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setImages((prev) => [...prev, data.image]);
+        setNewImageUrl("");
+        setNewImageAlt("");
+        toast.success("Imagen añadida");
+      } else toast.error(data.error ?? "Error al añadir imagen");
+    } catch { toast.error("Error de conexión"); }
+    finally { setSavingImage(false); }
+  }
+
+  async function deleteImage(imageId: string) {
+    if (!confirm("¿Eliminar esta imagen?")) return;
+    const res = await fetch(`/api/admin/hotels/${id}/images?imageId=${imageId}`, { method: "DELETE" });
+    if (res.ok) {
+      setImages((prev) => prev.filter((img) => img.id !== imageId));
+      toast.success("Imagen eliminada");
+    } else toast.error("Error al eliminar imagen");
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -143,6 +198,10 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
         <a href={`/${locale}/admin/hotels`} className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-hover)]">← Catálogo</a>
         <span className="text-[var(--border)]">|</span>
         <span className="px-4 text-sm font-black text-[var(--text-primary)]">{hotel.name}</span>
+        <a href={`/${locale}/hotels/${hotel.slug}`} target="_blank" rel="noopener noreferrer"
+          className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--gold)] hover:text-yellow-600 transition-colors rounded-full hover:bg-[var(--gold)]/10">
+          ↗ Ver sitio
+        </a>
       </div>
 
       {/* Quick links */}
@@ -173,10 +232,10 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full shadow-[var(--shadow-xs)] w-max">
-        {(["edit", "rooms", "extras", "guest-config"] as const).map((t) => (
+        {(["edit", "rooms", "extras", "images", "guest-config"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${tab === t ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
-            {{ edit: "Detalles", rooms: "Habitaciones", extras: "Exclusividades", "guest-config": "Experiencia" }[t]}
+            {{ edit: "Detalles", rooms: "Habitaciones", extras: "Exclusividades", images: `📷 Imágenes${images.length > 0 ? ` (${images.length})` : ""}`, "guest-config": "Experiencia" }[t]}
           </button>
         ))}
       </div>
@@ -204,6 +263,13 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
                         </div>
                       )}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => deleteRoomType(rt.id)}
+                      className="flex-shrink-0 text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded border bg-red-50 text-red-600 border-red-200 hover:bg-red-100 transition-colors"
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 ))}
               </div>
@@ -305,11 +371,16 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
                       <p className="text-base font-bold text-[var(--text-primary)]">{s.name}</p>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mt-1">{EXTRA_CAT_LABELS[s.category]} <span className="text-[var(--gold)] mx-1">◆</span> <span className="text-[var(--text-primary)]">${parseFloat(s.price).toLocaleString()}</span></p>
                     </div>
-                    <ExtraToggleButton
-                      hotelId={id}
-                      extraId={s.id}
-                      available={s.available}
-                    />
+                    <div className="flex items-center gap-2">
+                      <ExtraToggleButton hotelId={id} extraId={s.id} available={s.available} />
+                      <button
+                        type="button"
+                        onClick={() => deleteExtra(s.id)}
+                        className="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded border bg-red-50 text-red-600 border-red-200 hover:bg-red-100 transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -355,6 +426,81 @@ export default function AdminHotelDetailPage({ params }: { params: Promise<{ id:
                 <button type="submit" disabled={savingExtra}
                   className="bg-[var(--text-primary)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md disabled:opacity-50">
                   {savingExtra ? "Configurando..." : "Activar Servicio"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: images */}
+      {tab === "images" && (
+        <div className="space-y-6 animate-slide-up">
+          {/* Grid de imágenes actuales */}
+          {images.length > 0 ? (
+            <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
+              <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Galería ({images.length} imágenes)</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {images.map((img: any) => (
+                  <div key={img.id} className="relative group rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface)] aspect-video">
+                    <img src={img.url} alt={img.altText ?? "Hotel"} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                      <button
+                        onClick={() => deleteImage(img.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-lg"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                    {img.altText && (
+                      <p className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-medium px-3 py-1.5 truncate">{img.altText}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-white rounded-3xl border-2 border-dashed border-[var(--border)]">
+              <span className="text-4xl mb-3 block opacity-30">🖼️</span>
+              <p className="text-sm font-bold text-[var(--text-primary)]">Sin imágenes aún</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1">Añade la primera imagen de esta propiedad.</p>
+            </div>
+          )}
+
+          {/* Formulario añadir imagen */}
+          <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
+            <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Añadir Imagen</h2>
+            <form onSubmit={addImage} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">URL de la Imagen <span className="normal-case font-normal">(Unsplash, CDN, etc.)</span></label>
+                <input
+                  type="url"
+                  required
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Descripción Alt <span className="normal-case font-normal">(opcional)</span></label>
+                <input
+                  type="text"
+                  value={newImageAlt}
+                  onChange={(e) => setNewImageAlt(e.target.value)}
+                  placeholder="Ej: Vista exterior del hotel al atardecer"
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+                />
+              </div>
+              {newImageUrl && (
+                <div className="rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface)] aspect-video max-w-xs">
+                  <img src={newImageUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = "none")} />
+                </div>
+              )}
+              <div className="pt-4 border-t border-[var(--border-soft)]">
+                <button type="submit" disabled={savingImage}
+                  className="bg-[var(--text-primary)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md disabled:opacity-50">
+                  {savingImage ? "Añadiendo..." : "+ Añadir Imagen"}
                 </button>
               </div>
             </form>

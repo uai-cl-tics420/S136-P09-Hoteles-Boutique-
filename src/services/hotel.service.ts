@@ -78,8 +78,9 @@ export async function getHotels(filters: HotelFilters = {}) {
         .from(hotels)
         .where(and(...conditions))
         .orderBy(
-          sql<number>`CASE WHEN ${hotels.category} IN (${sql.raw(
-            preferredCategories.map((c) => `'${c}'`).join(",")
+          sql<number>`CASE WHEN ${hotels.category} IN (${sql.join(
+            preferredCategories.map((c) => sql`${c}`),
+            sql`, `
           )}) THEN 0 ELSE 1 END`,
           asc(hotels.name)
         )
