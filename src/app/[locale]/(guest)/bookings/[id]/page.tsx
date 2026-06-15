@@ -47,10 +47,10 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
         setLoading(false);
         const hotelId = d.booking?.roomType?.hotel?.id;
         if (hotelId) {
-          // Load welcome message
-          fetch(`/api/admin/guest-config?hotelId=${hotelId}`)
+          // Fix #5: Usar endpoint público para welcomeMessage (el anterior requería rol admin)
+          fetch(`/api/hotels/${hotelId}/welcome`)
             .then(r => r.json())
-            .then(gc => { if (gc.config?.welcomeMessage) setWelcomeMsg(gc.config.welcomeMessage); })
+            .then(wc => { if (wc.welcomeMessage) setWelcomeMsg(wc.welcomeMessage); })
             .catch(() => {});
           // Load Google Places data
           fetch(`/api/places?hotelId=${hotelId}`)

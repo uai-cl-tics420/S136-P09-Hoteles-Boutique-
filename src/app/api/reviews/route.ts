@@ -95,6 +95,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = reviewSchema.parse(body);
 
+    // Fix #4: Verificar si ya existe una reseña para este bookingId (evitar duplicados)
+    const existing = await db.query.reviews.findFirst({
+      where: eq(reviews.bookingId, data.bookingId),
+    });
+    if (existing) {
+      return NextResponse.json(
+        { error: "Ya dejaste una reseña para esta reserva" },
+        { status: 409 }
+      );
+    }
+
     const review = await createReview({ ...data, guestId: session.user.id });
     return NextResponse.json({ review }, { status: 201 });
   } catch (error: any) {

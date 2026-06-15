@@ -33,6 +33,7 @@ function LoginForm() {
         return;
       }
 
+      // Consultar si el usuario tiene OTP activo
       const checkRes = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,15 +42,11 @@ function LoginForm() {
       const data = await checkRes.json();
 
       if (data.requiresOtp) {
+        // Tiene 2FA configurado → pedir código
         setTempSessionId(data.tempSessionId);
         setStep("otp");
-      } else if (data.requiresOtpSetup) {
-        toast("Debes configurar la verificación en dos pasos para continuar", {
-          description: "Es un requisito de seguridad obligatorio.",
-          duration: 5000,
-        });
-        router.push(`/es/auth/otp-setup?session=${data.tempSessionId}`);
       } else {
+        // Sin 2FA → acceso directo
         toast.success("¡Bienvenido de vuelta!");
         router.refresh();
         router.push(callbackUrl);

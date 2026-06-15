@@ -92,11 +92,19 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("[POST /api/bookings]", error);
 
-    // Mensaje amigable si el tipo de habitación no existe
     if (error?.message === "Room type not found") {
       return NextResponse.json(
         { error: "El tipo de habitación no existe" },
         { status: 404 }
+      );
+    }
+
+    // Fix #1: Disponibilidad cerrada para alguna fecha del rango
+    if (error?.message?.startsWith("NO_AVAILABILITY:")) {
+      const date = error.message.split(":")[1];
+      return NextResponse.json(
+        { error: `No hay disponibilidad para la fecha ${date}. Por favor elige otras fechas.` },
+        { status: 409 }
       );
     }
 

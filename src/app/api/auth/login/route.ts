@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { verifyPassword, signAccessToken, generateRefreshToken } from "@/lib/auth/auth-service";
+import { verifyPassword } from "@/lib/auth/auth-service";
 import { createSession } from "@/lib/auth/session";
-import { redis } from "@/lib/redis/client";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -30,22 +29,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
-    // Crear sesión temporal siempre (OTP es obligatorio para todos)
-    const tempSessionId = await createSession(user.id, user.role);
-
-    // Si ya tiene OTP configurado → pedir código
+    // Si el usuario ya tiene OTP configurado → pedir código 2FA
     if (user.otpEnabled === "true") {
+      const tempSessionId = await createSession(user.id, user.role);
       return NextResponse.json(
         { requiresOtp: true, tempSessionId },
         { status: 200 }
       );
     }
 
-    // Si NO tiene OTP configurado → forzar setup antes de continuar
-    return NextResponse.json(
-      { requiresOtpSetup: true, tempSessionId },
-      { status: 200 }
-    );
+    // Sin OTP configurado → acceso directo (OTP es opcional, no obligatorio)
+    return NextResponse.json({ requiresOtp: false }, { status: 200 });
 
   } catch (error) {
     if (error instanceof z.ZodError) {

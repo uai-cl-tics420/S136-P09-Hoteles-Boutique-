@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { bookings, bookingExtras, extraServices, roomTypes } from "@/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { bookings, bookingExtras, extraServices, roomTypes, availability } from "@/db/schema";
+import { eq, and, inArray, gte, lte } from "drizzle-orm";
 import type { CreateBookingRequest } from "@/types/api";
 
 export async function createBooking(guestId: string, data: CreateBookingRequest) {
@@ -8,6 +8,24 @@ export async function createBooking(guestId: string, data: CreateBookingRequest)
     where: eq(roomTypes.id, data.roomTypeId),
   });
   if (!roomType) throw new Error("Room type not found");
+
+  // Fix #1: Validar disponibilidad antes de crear la reserva.
+  // Buscar si alguna fecha en el rango [checkIn, checkOut) está marcada como cerrada.
+  const blockedDays = await db
+    .select({ date: availability.date, roomsAvailable: availability.roomsAvailable })
+    .from(availability)
+    .where(
+      and(
+        eq(availability.roomTypeId, data.roomTypeId),
+        gte(availability.date, data.checkIn),
+        lte(availability.date, data.checkOut),
+      )
+    );
+
+  const closedDay = blockedDays.find((d) => d.roomsAvailable === 0);
+  if (closedDay) {
+    throw new Error(`NO_AVAILABILITY:${closedDay.date}`);
+  }
 
   const nights =
     (new Date(data.checkOut).getTime() - new Date(data.checkIn).getTime()) /
