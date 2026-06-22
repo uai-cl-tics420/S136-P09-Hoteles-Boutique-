@@ -7,6 +7,7 @@ import FavButton from "@/components/FavButton";
 import CompareButton from "@/components/CompareButton";
 import ComparisonBar from "@/components/ComparisonBar";
 import type { HotelCategory } from "@/types/domain";
+import HotelsPageContent from "./HotelsPageContent";
 
 export const dynamic = "force-dynamic";
 
@@ -79,159 +80,13 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
   const isPersonalised   = !isFiltered && preferredCategories.length > 0;
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-
-      {/* ── Navbar ───────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
-        <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <a href={`/${locale}/hotels`} className="flex items-center gap-2 group">
-            <span className="w-8 h-8 rounded-lg bg-[var(--text-primary)] flex items-center justify-center text-white text-sm font-black group-hover:bg-[var(--gold)] transition-colors duration-300">
-              HB
-            </span>
-            <span className="text-[15px] font-bold text-[var(--text-primary)] tracking-tight">
-              Hoteles<span className="font-light text-[var(--text-muted)]">Boutique</span>
-            </span>
-          </a>
-
-          {/* Nav */}
-          <nav className="flex items-center gap-2">
-            <NavLink href={`/${locale}/reviews`} label="⭐ Rankings" />
-            {session?.user ? (
-              <>
-                <NavLink href={`/${locale}/bookings`} label="Mis reservas" />
-                <NavLink href={`/${locale}/profile`}  label="Mi perfil" />
-                {(["HOTEL_ADMIN", "SUPER_ADMIN"] as const).includes((session.user as any).role) && (
-                  <NavLink href={`/${locale}/admin`} label="⚙ Panel Admin" />
-                )}
-                <form action={logoutAction}>
-                  <button
-                    type="submit"
-                    className="text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] px-4 py-1.5 rounded-full hover:border-red-300 hover:text-red-500 transition-all duration-200"
-                  >
-                    Salir
-                  </button>
-                </form>
-              </>
-            ) : (
-              <a
-                href={`/${locale}/auth/login`}
-                className="text-sm font-semibold bg-[var(--text-primary)] text-white px-5 py-2 rounded-full hover:bg-[var(--gold)] hover:shadow-[var(--shadow-gold)] transition-all duration-300"
-              >
-                Iniciar sesión
-              </a>
-            )}
-          </nav>
-        </div>
-      </header>
-
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[var(--text-primary)] text-white">
-        {/* Fondo con patrón sutil */}
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-            backgroundSize: "32px 32px",
-          }}
-        />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--text-primary)] via-[#1a1917] to-[#2d2820]" />
-
-        <div className="relative max-w-7xl mx-auto px-5 pt-16 pb-14 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/80 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 animate-fade-in">
-            <span className="w-1.5 h-1.5 bg-[var(--gold)] rounded-full" />
-            Experiencias de lujo boutique
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 animate-slide-up leading-[1.1]">
-            Tu próxima<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--gold)] to-[var(--gold-light)]">
-              aventura única
-            </span>
-          </h1>
-          <p className="text-white/60 text-lg font-light max-w-xl mx-auto animate-slide-up-delay">
-            Propiedades cuidadosamente seleccionadas. Atención personalizada. Momentos inolvidables.
-          </p>
-
-          {/* Stats */}
-          <div className="flex items-center justify-center gap-8 mt-10 animate-fade-in">
-            {[
-              { value: "8+",    label: "Hoteles" },
-              { value: "100%",  label: "Boutique" },
-              { value: "4.8★",  label: "Calificación" },
-            ].map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <p className="text-2xl font-black text-[var(--gold)]">{value}</p>
-                <p className="text-xs text-white/50 font-medium uppercase tracking-widest mt-0.5">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Wave bottom */}
-        <div className="relative h-10">
-          <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 w-full" preserveAspectRatio="none">
-            <path d="M0 40 Q360 0 720 20 Q1080 40 1440 10 L1440 40 Z" fill="var(--background)"/>
-          </svg>
-        </div>
-      </section>
-
-      {/* ── Contenido ────────────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-5 py-10">
-
-        {/* Filtros */}
-        <div className="relative">
-          <Suspense>
-            <HotelFilters />
-          </Suspense>
-        </div>
-
-        {/* Cabecera de resultados */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-sm text-[var(--text-muted)] font-medium">
-              {isFiltered
-                ? `${hotels.length} resultado${hotels.length !== 1 ? "s" : ""} encontrado${hotels.length !== 1 ? "s" : ""}`
-                : `${hotels.length} hoteles disponibles`
-              }
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {isPersonalised && (
-              <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-[var(--gold-light)] text-[var(--gold-dark)] px-3 py-1.5 rounded-full border border-[var(--gold)]/30">
-                ✨ Personalizado para ti
-              </span>
-            )}
-            <div className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-widest">
-              {isPersonalised ? "Relevancia" : "Orden: A – Z"}
-            </div>
-          </div>
-        </div>
-
-        {/* Grid de hoteles */}
-        {hotels.length === 0 ? (
-          <EmptyState locale={locale} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-            {hotels.map((hotel) => (
-              <HotelCard key={hotel.id} hotel={hotel} locale={locale} />
-            ))}
-          </div>
-        )}
-        <ComparisonBar locale={locale} />
-      </main>
-
-      {/* ── Footer mínimo ────────────────────────────────────── */}
-      <footer className="border-t border-[var(--border)] mt-20 py-8">
-        <div className="max-w-7xl mx-auto px-5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
-          <p>© {new Date().getFullYear()} HotelesBoutique. Experiencias exclusivas.</p>
-          <div className="flex gap-5 font-medium">
-            <a href="#" className="hover:text-[var(--gold)] transition-colors">Términos</a>
-            <a href="#" className="hover:text-[var(--gold)] transition-colors">Privacidad</a>
-            <a href="#" className="hover:text-[var(--gold)] transition-colors">Contacto</a>
-          </div>
-        </div>
-      </footer>
-    </div>
+    <HotelsPageContent
+      locale={locale}
+      hotels={hotels}
+      session={session}
+      isFiltered={isFiltered}
+      isPersonalised={isPersonalised}
+    />
   );
 }
 

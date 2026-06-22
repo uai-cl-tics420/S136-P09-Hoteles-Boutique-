@@ -2,6 +2,7 @@
 import { useState, useEffect, use } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 type DayStatus = "available" | "partial" | "full" | "closed";
 
@@ -18,37 +19,65 @@ function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay();
 }
 
-const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DAY_NAMES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const MONTH_NAMES_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const MONTH_NAMES_EN = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAY_NAMES_ES = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const DAY_NAMES_EN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 export default function AvailabilityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "es";
+  const [t, setT] = useState<any>(null);
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
+  const [roomTypes, setRoomTypes] = useState<any[]>([]);
+  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string>("");
   const [availability, setAvailability] = useState<AvailRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [editRooms, setEditRooms] = useState(1);
   const [editPrice, setEditPrice] = useState("");
   const [saving, setSaving] = useState(false);
-  const [totalRooms, setTotalRooms] = useState(10);
+
+  const MONTH_NAMES = locale === "es" ? MONTH_NAMES_ES : MONTH_NAMES_EN;
+  const DAY_NAMES = locale === "es" ? DAY_NAMES_ES : DAY_NAMES_EN;
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
+
+  const selectedRoomType = roomTypes.find((r) => r.id === selectedRoomTypeId);
+  const totalRooms = selectedRoomType?.totalRooms || 1;
+
+  useEffect(() => {
+    fetch(`/api/admin/hotels/${id}/room-types`)
+      .then((r) => r.json())
+      .then((d) => {
+        const rooms = d.roomTypes ?? [];
+        setRoomTypes(rooms);
+        if (rooms.length > 0) setSelectedRoomTypeId(rooms[0].id);
+      })
+      .catch(() => {});
+  }, [id]);
 
   function pad(n: number) { return n < 10 ? `0${n}` : `${n}`; }
   function dateStr(day: number) { return `${year}-${pad(month + 1)}-${pad(day)}`; }
 
   useEffect(() => {
+    if (!selectedRoomTypeId) return;
     setLoading(true);
     const from = `${year}-${pad(month + 1)}-01`;
     const lastDay = getDaysInMonth(year, month);
     const to = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
-    fetch(`/api/hotels/${id}/availability?from=${from}&to=${to}`)
+    fetch(`/api/hotels/${selectedRoomTypeId}/availability?from=${from}&to=${to}`)
       .then((r) => r.json())
       .then((d) => { setAvailability(d.availability ?? []); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [id, year, month]);
+  }, [selectedRoomTypeId, year, month]);
 
   function getRecord(day: number): AvailRecord | undefined {
     return availability.find((a) => a.date === dateStr(day));
@@ -73,7 +102,7 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
     if (selectedDay === null) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/hotels/${id}/availability`, {
+      const res = await fetch(`/api/hotels/${selectedRoomTypeId}/availability`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -88,18 +117,18 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
           const filtered = prev.filter((a) => a.date !== dateStr(selectedDay!));
           return [...filtered, data.availability];
         });
-        toast.success(`Disponibilidad actualizada para el ${selectedDay} de ${MONTH_NAMES[month]}`);
+        toast.success(`${t("admin.availability.availabilityUpdated")} ${selectedDay} ${t("admin.availability.daysClosed")}`);
       } else { toast.error("Error al guardar"); }
     } catch { toast.error("Error de conexión"); }
     finally { setSaving(false); }
   }
 
   async function handleBulkClose(days: number[]) {
-    if (!confirm(`¿Cerrar disponibilidad para ${days.length} días?`)) return;
+    if (!confirm(`${t("admin.availability.closeConfirm")} ${days.length} ${t("admin.availability.days")}?`)) return;
     setSaving(true);
     let ok = 0;
     for (const day of days) {
-      const res = await fetch(`/api/hotels/${id}/availability`, {
+      const res = await fetch(`/api/hotels/${selectedRoomTypeId}/availability`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ date: dateStr(day), roomsAvailable: 0 }),
@@ -111,7 +140,7 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
       }
     }
     setSaving(false);
-    toast.success(`${ok} días cerrados`);
+    toast.success(`${ok} ${t("admin.availability.daysClosed")}`);
   }
 
   const daysInMonth = getDaysInMonth(year, month);
@@ -149,18 +178,18 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
       <div className="flex items-center gap-3 bg-[var(--surface)] p-2 rounded-full border border-[var(--border)] w-max">
         <a href={`/${locale}/admin/hotels/${id}`}
           className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--surface-hover)]">
-          ← Propiedad
+          {t("admin.availability.breadcrumbProperty")}
         </a>
         <span className="text-[var(--border)]">|</span>
-        <span className="px-4 text-sm font-black text-[var(--text-primary)]">Gestión de Disponibilidad</span>
+        <span className="px-4 text-sm font-black text-[var(--text-primary)]">{t("admin.availability.management")}</span>
       </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Días Disponibles", value: daysInMonth - occupiedDays - partialDays, icon: "🟢", color: "text-emerald-600" },
-          { label: "Baja Ocupación", value: partialDays, icon: "🟡", color: "text-amber-600" },
-          { label: "Cerrados / Llenos", value: occupiedDays, icon: "🔴", color: "text-red-500" },
+          { label: t("admin.availability.daysAvailable"), value: daysInMonth - occupiedDays - partialDays, icon: "🟢", color: "text-emerald-600" },
+          { label: t("admin.availability.lowOccupancy"), value: partialDays, icon: "🟡", color: "text-amber-600" },
+          { label: t("admin.availability.closedFull"), value: occupiedDays, icon: "🔴", color: "text-red-500" },
         ].map(stat => (
           <div key={stat.label} className="bg-white rounded-3xl border border-[var(--border)] p-5 shadow-[var(--shadow-xs)] flex items-center gap-4">
             <span className="text-2xl">{stat.icon}</span>
@@ -194,9 +223,9 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
           {/* Legend */}
           <div className="flex gap-4 mb-5 flex-wrap">
             {[
-              { color: "bg-emerald-100 border-emerald-200", label: "Disponible" },
-              { color: "bg-amber-100 border-amber-200", label: "Poco disponible" },
-              { color: "bg-red-100 border-red-200", label: "Lleno / Cerrado" },
+              { color: "bg-emerald-100 border-emerald-200", label: t("admin.availability.availableLabel") },
+              { color: "bg-amber-100 border-amber-200", label: t("admin.availability.littleAvailable") },
+              { color: "bg-red-100 border-red-200", label: t("admin.availability.fullClosed") },
             ].map(l => (
               <span key={l.label} className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
                 <span className={`w-3.5 h-3.5 rounded-sm border ${l.color} inline-block`} />
@@ -246,14 +275,14 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
 
           {/* Bulk actions */}
           <div className="mt-6 pt-5 border-t border-[var(--border-soft)]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Acciones Masivas</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">{t("admin.availability.bulkActions")}</p>
             <div className="flex gap-3 flex-wrap">
               <button
                 onClick={() => handleBulkClose(weekendDays)}
                 disabled={saving}
                 className="text-xs font-bold uppercase tracking-widest border border-[var(--border)] text-[var(--text-muted)] rounded-xl px-4 py-2.5 hover:border-[var(--text-primary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all disabled:opacity-50"
               >
-                Cerrar fines de semana
+                {t("admin.availability.closeWeekends")}
               </button>
               <button
                 onClick={() => {
@@ -264,7 +293,7 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
                 disabled={saving}
                 className="text-xs font-bold uppercase tracking-widest border border-red-200 text-red-500 rounded-xl px-4 py-2.5 hover:bg-red-50 hover:border-red-300 transition-all disabled:opacity-50"
               >
-                Cerrar todo el mes
+                {t("admin.availability.closeMonth")}
               </button>
             </div>
           </div>
@@ -275,15 +304,24 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
 
           {/* Total rooms config */}
           <div className="bg-white rounded-3xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)]">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Habitaciones del hotel</p>
-            <input
-              type="number"
-              min={1}
-              value={totalRooms}
-              onChange={(e) => setTotalRooms(parseInt(e.target.value))}
-              className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
-            />
-            <p className="text-[10px] font-medium text-[var(--text-muted)] mt-2">Define el total para calcular el % de ocupación</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">{t("admin.availability.selectRoomType")}</p>
+            {roomTypes.length === 0 ? (
+              <p className="text-sm font-medium text-amber-600">{t("admin.availability.noRooms")}</p>
+            ) : (
+              <select
+                value={selectedRoomTypeId}
+                onChange={(e) => {
+                  setSelectedRoomTypeId(e.target.value);
+                  setSelectedDay(null);
+                }}
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+              >
+                {roomTypes.map((rt) => (
+                  <option key={rt.id} value={rt.id}>{rt.name} (Total: {rt.totalRooms})</option>
+                ))}
+              </select>
+            )}
+            <p className="text-[10px] font-medium text-[var(--text-muted)] mt-2">{t("admin.availability.totalCapacity")}: {totalRooms} {t("admin.availability.capacity")}</p>
           </div>
 
           {/* Day editor */}
@@ -295,14 +333,14 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
                 </div>
                 <div>
                   <p className="text-sm font-black text-[var(--text-primary)]">{MONTH_NAMES[month]} {year}</p>
-                  <p className="text-[10px] font-medium text-[var(--text-muted)]">Editar disponibilidad</p>
+                  <p className="text-[10px] font-medium text-[var(--text-muted)]">{t("admin.availability.editAvailability")}</p>
                 </div>
               </div>
 
               <div className="space-y-5">
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                    Habitaciones disponibles
+                    {t("admin.availability.roomsAvailable")}
                   </label>
                   <input
                     type="number"
@@ -315,24 +353,24 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
                   <p className={`text-[10px] font-bold uppercase tracking-widest mt-2 ${
                     editRooms === 0 ? "text-red-500" : editRooms < totalRooms * 0.4 ? "text-amber-600" : "text-emerald-600"
                   }`}>
-                    {editRooms === 0 ? "🔴 Cerrado" : editRooms < totalRooms * 0.4 ? "🟡 Baja disponibilidad" : "🟢 Disponible"}
+                    {editRooms === 0 ? t("admin.availability.closed") : editRooms < totalRooms * 0.4 ? t("admin.availability.lowAvailability") : t("admin.availability.available")}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
-                    Precio especial / noche <span className="normal-case font-normal">(opcional)</span>
+                    {t("admin.availability.specialPrice")} <span className="normal-case font-normal">{t("admin.availability.specialPriceOptional")}</span>
                   </label>
                   <input
                     type="number"
                     min={0}
                     value={editPrice}
                     onChange={(e) => setEditPrice(e.target.value)}
-                    placeholder="Usar precio base"
+                    placeholder={t("admin.availability.useBasePrice")}
                     className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors placeholder:font-normal"
                   />
                   {editPrice && (
-                    <p className="text-[10px] font-bold text-[var(--gold)] mt-2">◆ Precio especial: ${parseFloat(editPrice).toLocaleString()}</p>
+                    <p className="text-[10px] font-bold text-[var(--gold)] mt-2">{t("admin.availability.specialPriceSet")} ${parseFloat(editPrice).toLocaleString()}</p>
                   )}
                 </div>
 
@@ -342,13 +380,13 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
                     disabled={saving}
                     className="w-full bg-[var(--text-primary)] text-white rounded-xl py-3 text-sm font-bold uppercase tracking-widest hover:bg-black disabled:opacity-50 transition-all shadow-md"
                   >
-                    {saving ? "Guardando..." : "Confirmar Cambios"}
+                    {saving ? t("admin.availability.saving") : t("admin.availability.confirmChanges")}
                   </button>
                   <button
                     onClick={() => setSelectedDay(null)}
                     className="w-full border border-[var(--border)] text-[var(--text-muted)] rounded-xl py-3 text-sm font-bold uppercase tracking-widest hover:text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-all"
                   >
-                    Cancelar
+                    {t("admin.availability.cancel")}
                   </button>
                 </div>
               </div>
@@ -356,8 +394,8 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
           ) : (
             <div className="bg-[var(--surface)] border-2 border-dashed border-[var(--border)] rounded-3xl p-8 text-center">
               <span className="text-3xl block mb-3 opacity-50">📅</span>
-              <p className="text-sm font-bold text-[var(--text-primary)] mb-1">Selecciona un día</p>
-              <p className="text-xs font-medium text-[var(--text-muted)]">Haz clic en cualquier día del calendario para editar su disponibilidad y precio.</p>
+              <p className="text-sm font-bold text-[var(--text-primary)] mb-1">{t("admin.availability.selectDay")}</p>
+              <p className="text-xs font-medium text-[var(--text-muted)]">{t("admin.availability.selectDayDesc")}</p>
             </div>
           )}
         </div>

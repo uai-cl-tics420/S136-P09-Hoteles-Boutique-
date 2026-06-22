@@ -1,13 +1,24 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 export default function AdminDashboardPage() {
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const [bookings, setBookings] = useState<any[]>([]);
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [t, setT] = useState<any>(null);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   const fetchData = useCallback(async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
@@ -20,7 +31,7 @@ export default function AdminDashboardPage() {
       setHotels(h.hotels ?? []);
       setLastUpdated(new Date());
     } catch {
-      if (showSpinner) toast.error("Error al actualizar datos");
+      if (showSpinner) toast.error(t("admin.dashboard.refreshError"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,7 +72,7 @@ export default function AdminDashboardPage() {
     COMPLETED: "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]",
   };
   const statusLabel: Record<string, string> = {
-    CONFIRMED: "Confirmada", PENDING: "Pendiente", CANCELLED: "Cancelada", COMPLETED: "Completada",
+    CONFIRMED: t("bookings.status.CONFIRMED"), PENDING: t("bookings.status.PENDING"), CANCELLED: t("bookings.status.CANCELLED"), COMPLETED: t("bookings.status.COMPLETED"),
   };
 
   return (
@@ -84,7 +95,7 @@ export default function AdminDashboardPage() {
             >
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
-            {refreshing ? "Actualizando..." : "Actualizar"}
+            {refreshing ? t("admin.dashboard.refresh") : t("admin.dashboard.refresh")}
           </button>
           {lastUpdated && (
             <p className="text-[10px] text-[var(--text-muted)] font-medium">
@@ -97,10 +108,10 @@ export default function AdminDashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 stagger-children">
         {[
-          { label: "Propiedades Activas", value: hotels.length, icon: "🏨" },
-          { label: "Reservas Confirmadas", value: confirmed, icon: "✅" },
-          { label: "Pendientes por Revisar", value: pending, icon: "⏳" },
-          { label: "Ingresos Generados", value: `$${totalRevenue.toLocaleString()}`, icon: "💰" },
+          { label: t("admin.dashboard.activeProperties"), value: hotels.length, icon: "🏨" },
+          { label: t("admin.dashboard.confirmedBookings"), value: confirmed, icon: "✅" },
+          { label: t("admin.dashboard.pendingBookings"), value: pending, icon: "⏳" },
+          { label: t("admin.dashboard.totalRevenue"), value: `$${totalRevenue.toLocaleString()}`, icon: "💰" },
         ].map((stat) => (
           <div key={stat.label} className="bg-white rounded-3xl border border-[var(--border)] p-6 shadow-[var(--shadow-xs)] relative overflow-hidden group hover:border-[var(--gold)] transition-colors">
             <div className="absolute -right-4 -top-4 w-24 h-24 bg-[var(--surface-hover)] rounded-full opacity-50 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
@@ -114,9 +125,9 @@ export default function AdminDashboardPage() {
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { href: "/es/admin/hotels", label: "Gestionar Propiedades", desc: "Añadir o editar detalles del catálogo", icon: "🗝️" },
-          { href: "/es/hotels/reviews", label: "Análisis de Reseñas", desc: "Monitoriza el feedback de los huéspedes", icon: "⭐" },
-          { href: "/es/hotels", label: "Auditoría Visual", desc: "Navega como un cliente exclusivo", icon: "👁️" },
+          { href: `/${locale}/admin/hotels`, label: t("admin.dashboard.manageProperties"), desc: t("admin.dashboard.managePropertiesDesc"), icon: "🗝️" },
+          { href: `/${locale}/reviews`, label: t("admin.dashboard.reviewsAnalysis"), desc: t("admin.dashboard.reviewsAnalysisDesc"), icon: "⭐" },
+          { href: `/${locale}/hotels`, label: "Auditoría Visual", desc: "Navega como un cliente exclusivo", icon: "👁️" },
         ].map((a) => (
           <a key={a.href} href={a.href}
             className="group bg-white rounded-3xl border border-[var(--border)] p-8 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
@@ -132,7 +143,7 @@ export default function AdminDashboardPage() {
       {/* Recent bookings with status actions */}
       <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-black text-[var(--text-primary)]">Últimos Movimientos</h2>
+          <h2 className="text-xl font-black text-[var(--text-primary)]">{t("admin.dashboard.recentBookings")}</h2>
           <span className="text-[10px] font-bold uppercase tracking-widest bg-[var(--surface)] text-[var(--text-muted)] px-3 py-1 rounded-full border border-[var(--border)]">
             {bookings.length} Registros
           </span>
@@ -143,7 +154,7 @@ export default function AdminDashboardPage() {
         ) : bookings.length === 0 ? (
           <div className="text-center py-12 border-2 border-dashed border-[var(--border)] rounded-2xl">
             <span className="text-3xl mb-2 block opacity-50">📂</span>
-            <p className="text-sm font-bold text-[var(--text-primary)]">No hay operaciones recientes</p>
+            <p className="text-sm font-bold text-[var(--text-primary)]">{t("admin.dashboard.noBookings")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

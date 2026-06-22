@@ -1,8 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 export default function AdminHotelsPage() {
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -120,7 +123,7 @@ export default function AdminHotelsPage() {
                 <p className="text-xl font-black text-[var(--text-primary)] truncate group-hover:text-[var(--gold)] transition-colors">{h.name}</p>
                 <p className="text-sm font-medium text-[var(--text-muted)] mt-1 truncate">{h.locationCity}, {h.locationCountry}</p>
               </div>
-              <a href={`/es/admin/hotels/${h.id}`}
+              <a href={`/${locale}/admin/hotels/${h.id}`}
                 className="flex-shrink-0 text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-6 py-3 hover:bg-[var(--text-primary)] hover:text-white transition-all text-center">
                 Gestionar
               </a>

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 const CAT_LABELS: Record<string, string> = {
   LUXURY: "Lujo", BOUTIQUE: "Boutique", ECO: "Eco",
@@ -53,8 +54,15 @@ export default function ReviewsPage() {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"ranking" | "reviews">("ranking");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [t, setT] = useState<any>(null);
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "es";
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   const filteredRanking = categoryFilter
     ? ranking.filter((h) => h.category === categoryFilter)
@@ -88,10 +96,10 @@ export default function ReviewsPage() {
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <a href={`/${locale}/hotels`} className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
-              ← Explorar hoteles
+              {t("nav.exploreHotels")}
             </a>
             <span className="text-[var(--border)]">|</span>
-            <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">La Guía de Excelencia</span>
+            <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">{t("reviews.page.subtitle")}</span>
           </div>
         </div>
       </header>
@@ -100,20 +108,20 @@ export default function ReviewsPage() {
         
         {/* Titulo principal (estilo editorial) */}
         <div className="text-center mb-12 animate-slide-up">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)] mb-3">Selección Anual</p>
-          <h1 className="text-4xl md:text-5xl font-black text-[var(--text-primary)] tracking-tight mb-4">Rankings & Reseñas</h1>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)] mb-3">{t("reviews.page.badge")}</p>
+          <h1 className="text-4xl md:text-5xl font-black text-[var(--text-primary)] tracking-tight mb-4">{t("reviews.title")}</h1>
           <p className="text-sm font-medium text-[var(--text-muted)] max-w-xl mx-auto">
-            Descubre las propiedades mejor valoradas por nuestra comunidad exclusiva de viajeros. La excelencia reconocida a través de experiencias reales.
+            {t("reviews.page.description")}
           </p>
         </div>
 
         {/* Tabs Elegantes */}
         <div className="flex justify-center mb-12">
           <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full shadow-[var(--shadow-xs)]">
-            {(["ranking", "reviews"] as const).map((t) => (
-              <button key={t} onClick={() => setActiveTab(t)}
-                className={`px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${activeTab === t ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
-                {{ ranking: "Clasificación Global", reviews: "Leer Reseñas" }[t]}
+            {(["ranking", "reviews"] as const).map((tab) => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className={`px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${activeTab === tab ? "bg-[var(--text-primary)] text-white shadow-md" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}>
+                {{ ranking: t("reviews.page.tabRanking"), reviews: t("reviews.page.tabReviews") }[tab]}
               </button>
             ))}
           </div>
@@ -130,7 +138,7 @@ export default function ReviewsPage() {
                   : "bg-white text-[var(--text-muted)] border-[var(--border)] hover:border-[var(--text-primary)]"
               }`}
             >
-              Todos
+              {t("reviews.page.all")}
             </button>
             {Object.entries(CAT_LABELS).map(([key, label]) => (
               ranking.some(h => h.category === key) && (
@@ -158,24 +166,24 @@ export default function ReviewsPage() {
           </div>
         ) : activeTab === "ranking" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 stagger-children">
-            <RankingTable title="🏆 La Más Alta Distinción" data={filteredRanking} sortKey="avgOverall" locale={locale} />
-            <RankingTable title="💼 Excelencia en Servicio" data={filteredRanking} sortKey="avgService" locale={locale} />
-            <RankingTable title="✨ Estándares de Limpieza" data={filteredRanking} sortKey="avgCleanliness" locale={locale} />
-            <RankingTable title="📍 Ubicación Privilegiada" data={filteredRanking} sortKey="avgLocation" locale={locale} />
+            <RankingTable title={t("reviews.page.rankingHighest")} data={filteredRanking} sortKey="avgOverall" locale={locale} />
+            <RankingTable title={t("reviews.page.rankingService")} data={filteredRanking} sortKey="avgService" locale={locale} />
+            <RankingTable title={t("reviews.page.rankingCleanliness")} data={filteredRanking} sortKey="avgCleanliness" locale={locale} />
+            <RankingTable title={t("reviews.page.rankingLocation")} data={filteredRanking} sortKey="avgLocation" locale={locale} />
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-8 animate-slide-up">
             
             {/* Selector de Hotel */}
             <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] relative z-10">
-              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">Selecciona una propiedad</label>
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">{t("reviews.page.selectHotel")}</label>
               <div className="relative">
                 <select
                   value={selectedHotel}
                   onChange={(e) => setSelectedHotel(e.target.value)}
                   className="w-full appearance-none bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--text-primary)] rounded-xl px-5 py-4 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-all cursor-pointer"
                 >
-                  <option value="">— Colección Completa —</option>
+                  <option value="">{t("reviews.page.allHotels")}</option>
                   {hotels.map((h) => (
                     <option key={h.id} value={h.id}>{h.name}</option>
                   ))}
@@ -197,8 +205,8 @@ export default function ReviewsPage() {
             {!reviewsLoading && selectedHotel && reviews.length === 0 && (
               <div className="text-center py-20 bg-white rounded-3xl border border-[var(--border)]">
                 <span className="text-4xl mb-4 block opacity-50">✍️</span>
-                <p className="text-sm font-bold text-[var(--text-primary)] mb-1">Aún no hay reseñas</p>
-                <p className="text-xs text-[var(--text-muted)]">Sé el primero en compartir tu experiencia en esta propiedad.</p>
+                <p className="text-sm font-bold text-[var(--text-primary)] mb-1">{t("reviews.page.noReviewsYet")}</p>
+                <p className="text-xs text-[var(--text-muted)]">{t("reviews.page.noReviewsDesc")}</p>
               </div>
             )}
 
@@ -220,9 +228,9 @@ export default function ReviewsPage() {
                     
                     <div className="grid grid-cols-3 gap-4 bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
                       {[
-                        { label: "Servicio", val: r.ratingService },
-                        { label: "Limpieza", val: r.ratingCleanliness },
-                        { label: "Ubicación", val: r.ratingLocation },
+                        { label: t("reviews.service"), val: r.ratingService },
+                        { label: t("reviews.cleanliness"), val: r.ratingCleanliness },
+                        { label: t("reviews.location"), val: r.ratingLocation },
                       ].map(({ label, val }) => (
                         <div key={label} className="text-center">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{label}</p>

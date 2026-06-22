@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { hotels, extraServices } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { hotels } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * GET /api/admin/analytics/places?hotelId=xxx
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Hotel no encontrado" }, { status: 404 });
     }
 
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     // Si no hay API key configurada, retornar datos del hotel sin Places data
     if (!apiKey) {

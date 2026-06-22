@@ -59,7 +59,7 @@ export async function POST(
       description: description || null,
       capacity: parseInt(capacity),
       pricePerNight: parseFloat(pricePerNight).toFixed(2),
-      totalRooms: parseInt(totalRooms ?? 1),
+      totalRooms: parseInt(String(totalRooms ?? 1)),
       amenities: amenities ?? [],
       currency: currency ?? "CLP",
     }).returning();

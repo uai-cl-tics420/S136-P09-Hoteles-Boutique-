@@ -1,11 +1,13 @@
 "use client";
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 function OtpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const tempSessionId = searchParams.get("session");
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ function OtpForm() {
         return;
       }
       toast.success("Verificación exitosa");
-      router.push("/es/hotels");
+      router.push(`/${locale}/hotels`);
       router.refresh();
     } catch {
       toast.error("Error de conexión");
@@ -101,7 +103,7 @@ function OtpForm() {
         </div>
 
         <p className="text-center text-sm text-stone-400 mt-6">
-          <a href="/es/auth/login" className="hover:text-stone-600 transition-colors flex items-center justify-center gap-1.5">
+          <a href={`/${locale}/auth/login`} className="hover:text-stone-600 transition-colors flex items-center justify-center gap-1.5">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
             Volver al inicio de sesión
           </a>

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { getFavorites } from "@/components/FavButton";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "Pendiente", CONFIRMED: "Confirmada", CANCELLED: "Cancelada", COMPLETED: "Completada",
@@ -22,6 +23,7 @@ const PREF_OPTIONS = [
 export default function BookingsPage() {
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "es";
+  const [t, setT] = useState<any>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"bookings" | "favorites" | "preferences">("bookings");
@@ -32,6 +34,12 @@ export default function BookingsPage() {
   const [savingPrefs, setSavingPrefs] = useState(false);
   const [favHotels, setFavHotels] = useState<any[]>([]);
   const [favLoading, setFavLoading] = useState(false);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   useEffect(() => {
     Promise.all([
@@ -64,12 +72,12 @@ export default function BookingsPage() {
   }, [tab]);
 
   async function cancelBooking(id: string) {
-    if (!confirm("¿Cancelar esta reserva?")) return;
+    if (!confirm(t("bookings.cancelConfirm"))) return;
     const res = await fetch(`/api/bookings/${id}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Reserva cancelada exitosamente");
+      toast.success(t("bookings.cancelSuccess"));
       setBookings((b) => b.map((x) => x.id === id ? { ...x, status: "CANCELLED" } : x));
-    } else { toast.error("No se pudo cancelar la reserva"); }
+    } else { toast.error(t("bookings.cancelError")); }
   }
 
   async function savePreferences() {
@@ -84,9 +92,9 @@ export default function BookingsPage() {
           budgetMax: budgetMax ? parseInt(budgetMax) : null,
         }),
       });
-      if (res.ok) toast.success("Tus preferencias han sido guardadas");
-      else toast.error("Error al guardar preferencias");
-    } catch { toast.error("Error de conexión"); }
+      if (res.ok) toast.success(t("bookings.preferencesSaved"));
+      else toast.error(t("bookings.preferencesError"));
+    } catch { toast.error(t("bookings.connectionError")); }
     finally { setSavingPrefs(false); }
   }
 
@@ -100,13 +108,13 @@ export default function BookingsPage() {
     localStorage.setItem("hb_favorites", JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent("hb:favorites-changed"));
     setFavHotels((h) => h.filter((x) => x.id !== hotelId));
-    toast.success("Eliminado de favoritos");
+    toast.success(t("bookings.removedFromFavorites"));
   }
 
   const tabs = [
-    { key: "bookings", label: "Mis Reservas" },
-    { key: "favorites", label: "❤ Favoritos" },
-    { key: "preferences", label: "Mis Gustos" },
+    { key: "bookings", label: t("bookings.myBookings") },
+    { key: "favorites", label: t("bookings.favorites") },
+    { key: "preferences", label: t("bookings.myPreferences") },
   ] as const;
 
   return (
@@ -115,10 +123,10 @@ export default function BookingsPage() {
         <div className="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <a href={`/${locale}/hotels`} className="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
-              ← Explorar hoteles
+              {t("nav.exploreHotels")}
             </a>
             <span className="text-[var(--border)]">|</span>
-            <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">Mi Espacio</span>
+            <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">{t("bookings.mySpace")}</span>
           </div>
           <a href={`/${locale}/profile`} className="w-8 h-8 bg-[var(--surface-hover)] rounded-full flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--gold)] hover:text-white transition-all shadow-sm">
             <span className="text-sm">👤</span>
@@ -148,10 +156,10 @@ export default function BookingsPage() {
           ) : bookings.length === 0 ? (
             <div className="text-center py-24 bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)] animate-fade-in">
               <span className="text-5xl mb-6 block opacity-50">🧳</span>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Aún no tienes aventuras</h3>
-              <p className="text-[var(--text-muted)] mb-8">Descubre propiedades exclusivas y comienza tu viaje.</p>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t("bookings.noAdventures")}</h3>
+              <p className="text-[var(--text-muted)] mb-8">{t("bookings.noAdventuresDesc")}</p>
               <a href={`/${locale}/hotels`} className="inline-block bg-[var(--gold)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-colors shadow-md hover:-translate-y-0.5">
-                Explorar Colección
+                {t("bookings.exploreCollection")}
               </a>
             </div>
           ) : (
@@ -188,7 +196,7 @@ export default function BookingsPage() {
 
                         <div className="flex items-center gap-4 text-sm text-[var(--text-muted)] font-medium mt-4">
                           <div className="flex items-center gap-1.5"><span className="text-lg">📅</span><span>{b.checkIn} a {b.checkOut}</span></div>
-                          <div className="flex items-center gap-1.5"><span className="text-lg">👥</span><span>{b.guestsCount} {b.guestsCount === 1 ? "huésped" : "huéspedes"}</span></div>
+                          <div className="flex items-center gap-1.5"><span className="text-lg">👥</span><span>{b.guestsCount} {b.guestsCount === 1 ? t("common.guest") : t("common.guests")}</span></div>
                         </div>
 
                         {b.extras?.length > 0 && (
@@ -204,7 +212,7 @@ export default function BookingsPage() {
 
                       <div className="flex items-center justify-between mt-6 pt-5 border-t border-[var(--border-soft)]">
                         <div>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Costo Total</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{t("bookings.totalCost")}</p>
                           <p className="text-xl font-black text-[var(--text-primary)]">
                             ${parseFloat(b.totalPrice).toLocaleString()} <span className="text-sm font-medium">{b.currency}</span>
                           </p>
@@ -213,16 +221,16 @@ export default function BookingsPage() {
                         <div className="flex items-center gap-3">
                           <a href={`/${locale}/bookings/${b.id}`}
                             className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-4 py-2 hover:border-[var(--text-primary)] transition-all">
-                            Ver Detalle →
+                            {t("bookings.viewDetails")} →
                           </a>
                           {b.status === "COMPLETED" && (
                             <a href={`/${locale}/hotels/${b.roomType?.hotel?.slug}`} className="text-sm font-bold text-[var(--gold)] hover:text-yellow-600 transition-colors underline underline-offset-4">
-                              Calificar
+                              {t("bookings.rate")}
                             </a>
                           )}
                           {(b.status === "CONFIRMED" || b.status === "PENDING") && (
                             <button onClick={() => cancelBooking(b.id)} className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors">
-                              Cancelar
+                              {t("bookings.cancel")}
                             </button>
                           )}
                         </div>
@@ -245,15 +253,15 @@ export default function BookingsPage() {
             ) : favHotels.length === 0 ? (
               <div className="text-center py-24 bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)]">
                 <span className="text-5xl mb-6 block">♡</span>
-                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Sin favoritos aún</h3>
-                <p className="text-[var(--text-muted)] mb-8">Presiona el corazón en cualquier hotel para guardarlo aquí.</p>
+                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t("bookings.noFavorites")}</h3>
+                <p className="text-[var(--text-muted)] mb-8">{t("bookings.noFavoritesDesc")}</p>
                 <a href={`/${locale}/hotels`} className="inline-block bg-[var(--text-primary)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-[var(--gold)] transition-colors shadow-md">
-                  Explorar Hoteles
+                  {t("bookings.exploreHotels")}
                 </a>
               </div>
             ) : (
               <>
-                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">{favHotels.length} propiedad{favHotels.length !== 1 ? "es" : ""} guardada{favHotels.length !== 1 ? "s" : ""}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">{favHotels.length} {favHotels.length === 1 ? t("bookings.propertySaved") : t("bookings.propertiesSaved")}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {favHotels.map((h: any) => (
                     <div key={h.id} className="group bg-white rounded-3xl border border-[var(--border)] overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
@@ -267,7 +275,7 @@ export default function BookingsPage() {
                         <button
                           onClick={() => removeFav(h.id)}
                           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm hover:bg-red-600 transition-colors shadow-md"
-                          title="Quitar de favoritos"
+                          title={t("bookings.removeFromFavorites")}
                         >♥</button>
                       </div>
                       <div className="p-5">
@@ -277,12 +285,12 @@ export default function BookingsPage() {
                           {h.roomTypes?.[0] && (
                             <p className="text-sm font-black text-[var(--text-primary)]">
                               Desde ${parseFloat(h.roomTypes[0].pricePerNight).toLocaleString()}
-                              <span className="text-xs font-normal text-[var(--text-muted)] ml-1">/noche</span>
+                              <span className="text-xs font-normal text-[var(--text-muted)] ml-1">{t("common.perNight")}</span>
                             </p>
                           )}
                           <a href={`/${locale}/hotels/${h.slug}`}
                             className="text-[10px] font-bold uppercase tracking-widest bg-[var(--text-primary)] text-white px-4 py-2 rounded-xl hover:bg-[var(--gold)] transition-colors">
-                            Ver →
+                            {t("bookings.view")} →
                           </a>
                         </div>
                       </div>
@@ -298,11 +306,11 @@ export default function BookingsPage() {
         {tab === "preferences" && (
           <div className="space-y-6 animate-slide-up">
             <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
-              <h2 className="text-2xl font-black text-[var(--text-primary)] mb-2">Tu Perfil de Viajero</h2>
-              <p className="text-sm text-[var(--text-muted)] mb-8">Ayúdanos a recomendarte propiedades que se ajusten perfectamente a tu estilo de vida.</p>
+              <h2 className="text-2xl font-black text-[var(--text-primary)] mb-2">{t("bookings.travelerProfile")}</h2>
+              <p className="text-sm text-[var(--text-muted)] mb-8">{t("bookings.travelerProfileDesc")}</p>
 
               <div className="mb-8">
-                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">¿Qué buscas en tu próximo viaje?</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">{t("bookings.whatLookingFor")}</label>
                 <div className="flex flex-wrap gap-3">
                   {PREF_OPTIONS.map(({ key, label }) => (
                     <button key={key} onClick={() => toggleCat(key)}
@@ -315,26 +323,26 @@ export default function BookingsPage() {
 
               <div className="grid grid-cols-2 gap-6 mb-10">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Presupuesto Mínimo ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("bookings.minBudget")} ($)</label>
                   <input type="number" min={0} value={budgetMin} onChange={(e) => setBudgetMin(e.target.value)} placeholder="0"
                     className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Presupuesto Máximo ($)</label>
-                  <input type="number" min={0} value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} placeholder="Sin límite"
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("bookings.maxBudget")} ($)</label>
+                  <input type="number" min={0} value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} placeholder={t("bookings.noLimit")}
                     className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all" />
                 </div>
               </div>
 
               <button onClick={savePreferences} disabled={savingPrefs}
                 className="w-full sm:w-auto bg-[var(--gold)] text-white rounded-full px-8 py-4 text-sm font-bold tracking-widest uppercase hover:bg-yellow-600 disabled:opacity-50 transition-all shadow-md hover:shadow-lg active:scale-95">
-                {savingPrefs ? "Actualizando..." : "Guardar Perfil"}
+                {savingPrefs ? t("loading") : t("bookings.saveProfile")}
               </button>
             </div>
 
             {selectedCats.length > 0 && (
               <div className="bg-transparent mt-10">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-6">Selección Curada Para Ti</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-6">{t("bookings.curatedSelection")}</h3>
                 <RecommendedHotels categories={selectedCats} budgetMax={budgetMax ? parseInt(budgetMax) : undefined} locale={locale} />
               </div>
             )}

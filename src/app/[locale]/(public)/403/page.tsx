@@ -5,7 +5,8 @@ export const metadata = {
   description: "No tienes permisos para acceder a esta sección.",
 };
 
-export default function ForbiddenPage() {
+export default async function ForbiddenPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <div className="min-h-screen bg-[var(--background)] flex items-center justify-center px-6">
       <div className="text-center max-w-md animate-fade-in">
@@ -33,14 +34,14 @@ export default function ForbiddenPage() {
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            href="/es/hotels"
+            href={`/${locale}/hotels`}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--gold)] text-white text-sm font-bold rounded-2xl hover:opacity-90 hover:-translate-y-0.5 transition-all duration-200 shadow-md"
           >
             <span>←</span>
             Volver al inicio
           </Link>
           <Link
-            href="/es/auth/login"
+            href={`/${locale}/auth/login`}
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[var(--surface)] text-[var(--text-primary)] text-sm font-bold rounded-2xl border border-[var(--border)] hover:border-[var(--gold)] hover:-translate-y-0.5 transition-all duration-200"
           >
             Iniciar sesión con otra cuenta

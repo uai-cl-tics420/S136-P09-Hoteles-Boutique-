@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { bookings, bookingExtras, extraServices, roomTypes, availability } from "@/db/schema";
-import { eq, and, inArray, gte, lte } from "drizzle-orm";
+import { eq, and, inArray, gte, lte, lt } from "drizzle-orm";
 import type { CreateBookingRequest } from "@/types/api";
 
 export async function createBooking(guestId: string, data: CreateBookingRequest) {
@@ -18,7 +18,8 @@ export async function createBooking(guestId: string, data: CreateBookingRequest)
       and(
         eq(availability.roomTypeId, data.roomTypeId),
         gte(availability.date, data.checkIn),
-        lte(availability.date, data.checkOut),
+        // Checkout day is exclusive: guests leave that day, no room needed overnight.
+        lt(availability.date, data.checkOut),
       )
     );
 

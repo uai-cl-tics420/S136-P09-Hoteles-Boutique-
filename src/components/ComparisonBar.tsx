@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { getCompareList, type CompareItem } from "./CompareButton";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 const CAT_LABELS: Record<string, string> = {
   LUXURY: "Lujo", BOUTIQUE: "Boutique", ECO: "Eco",
@@ -48,6 +49,13 @@ export default function ComparisonBar({ locale }: Props) {
   const [details, setDetails] = useState<HotelDetail[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview" | "amenities" | "services">("overview");
+  const [t, setT] = useState<any>(null);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   useEffect(() => {
     const update = () => setList(getCompareList());
@@ -106,7 +114,7 @@ export default function ComparisonBar({ locale }: Props) {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
           <div className="flex items-center gap-3 bg-[var(--text-primary)] text-white rounded-2xl px-5 py-3 shadow-2xl border border-white/10">
             <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mr-1">
-              Comparando
+              {t("hotels.comparing")}
             </span>
             {list.map((h) => (
               <div key={h.id} className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-1.5">
@@ -121,13 +129,13 @@ export default function ComparisonBar({ locale }: Props) {
               onClick={() => { setActiveTab("overview"); setShowModal(true); }}
               className="bg-[var(--gold)] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-yellow-500 transition-colors shadow-sm ml-1 whitespace-nowrap"
             >
-              Ver Comparación →
+              {t("hotels.viewComparison")} →
             </button>
             <button
               onClick={clearAll}
               className="text-white/40 hover:text-white text-[10px] uppercase tracking-widest transition-colors"
             >
-              Limpiar
+              {t("hotels.clear")}
             </button>
           </div>
         </div>
@@ -143,9 +151,9 @@ export default function ComparisonBar({ locale }: Props) {
             {/* Header */}
             <div className="sticky top-0 bg-[var(--background)] border-b border-[var(--border)] p-6 flex items-center justify-between z-10">
               <div>
-                <h2 className="text-2xl font-black text-[var(--text-primary)]">Comparador de Propiedades</h2>
+                <h2 className="text-2xl font-black text-[var(--text-primary)]">{t("hotels.propertyComparator")}</h2>
                 <p className="text-xs font-medium text-[var(--text-muted)] mt-1">
-                  {list.length} propiedades · Análisis detallado lado a lado
+                  {list.length} {list.length === 1 ? t("hotels.property") : t("hotels.properties")} · {t("hotels.detailedAnalysis")}
                 </p>
               </div>
               <button
@@ -375,7 +383,7 @@ export default function ComparisonBar({ locale }: Props) {
                   onClick={clearAll}
                   className="text-sm font-bold text-[var(--text-muted)] hover:text-red-500 transition-colors uppercase tracking-widest"
                 >
-                  Limpiar comparación
+                  {t("hotels.clear")} comparación
                 </button>
               </div>
             </div>

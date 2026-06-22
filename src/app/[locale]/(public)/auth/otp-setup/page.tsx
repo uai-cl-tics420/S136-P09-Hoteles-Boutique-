@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
 
 function OtpSetupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const tempSessionId = searchParams.get("session") ?? "";
 
   const [step, setStep] = useState<"scan" | "verify">("scan");
@@ -59,7 +61,7 @@ function OtpSetupForm() {
       }
 
       toast.success("¡2FA configurado correctamente! Bienvenido.");
-      router.push("/es/hotels");
+      router.push(`/${locale}/hotels`);
       router.refresh();
     } catch {
       toast.error("Error de conexión");

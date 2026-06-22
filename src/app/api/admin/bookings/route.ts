@@ -12,27 +12,36 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get all hotels owned by this admin
-    const ownedHotels = await db.query.hotels.findMany({
-      where: eq(hotels.ownerId, (session.user as any).id),
-    });
-    const hotelIds = ownedHotels.map((h) => h.id);
+    let results;
 
-    if (hotelIds.length === 0) return NextResponse.json({ bookings: [] });
+    if (role === "SUPER_ADMIN") {
+      // SUPER_ADMIN can see all bookings across all hotels
+      results = await db.query.bookings.findMany({
+        with: { roomType: { with: { hotel: true } } },
+        orderBy: (b, { desc }) => [desc(b.createdAt)],
+      });
+    } else {
+      // HOTEL_ADMIN sees only bookings for their own hotels
+      const ownedHotels = await db.query.hotels.findMany({
+        where: eq(hotels.ownerId, (session.user as any).id),
+      });
+      const hotelIds = ownedHotels.map((h) => h.id);
 
-    // Get room types for those hotels
-    const allRoomTypes = await db.query.roomTypes.findMany({
-      where: (rt, { inArray }) => inArray(rt.hotelId, hotelIds),
-    });
-    const roomTypeIds = allRoomTypes.map((rt) => rt.id);
+      if (hotelIds.length === 0) return NextResponse.json({ bookings: [] });
 
-    if (roomTypeIds.length === 0) return NextResponse.json({ bookings: [] });
+      const allRoomTypes = await db.query.roomTypes.findMany({
+        where: (rt, { inArray }) => inArray(rt.hotelId, hotelIds),
+      });
+      const roomTypeIds = allRoomTypes.map((rt) => rt.id);
 
-    const results = await db.query.bookings.findMany({
-      where: (b, { inArray }) => inArray(b.roomTypeId, roomTypeIds),
-      with: { roomType: { with: { hotel: true } } },
-      orderBy: (b, { desc }) => [desc(b.createdAt)],
-    });
+      if (roomTypeIds.length === 0) return NextResponse.json({ bookings: [] });
+
+      results = await db.query.bookings.findMany({
+        where: (b, { inArray }) => inArray(b.roomTypeId, roomTypeIds),
+        with: { roomType: { with: { hotel: true } } },
+        orderBy: (b, { desc }) => [desc(b.createdAt)],
+      });
+    }
 
     return NextResponse.json({ bookings: results });
   } catch (error) {

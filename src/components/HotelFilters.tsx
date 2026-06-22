@@ -1,6 +1,7 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useTransition, useState, useEffect } from "react";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 const CATEGORIES = [
   { value: "LUXURY",   label: "Lujo",     icon: "💎" },
@@ -30,6 +31,15 @@ export default function HotelFilters() {
   const router = useRouter();
   const params = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [t, setT] = useState<any>(null);
+  const pathname = window.location.pathname;
+  const locale = pathname.split("/")[1] || "es";
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   // Estado local de la barra de búsqueda para reflejar el valor actual
   const [inputValue, setInputValue] = useState(params.get("query") ?? "");
@@ -96,7 +106,7 @@ export default function HotelFilters() {
               "focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/30 focus:border-[var(--gold)]",
               "transition-all duration-200",
             ].join(" ")}
-            placeholder="Ciudad, nombre del hotel o destino..."
+            placeholder={t("hotels.searchPlaceholder")}
           />
         </div>
         <button
@@ -107,7 +117,7 @@ export default function HotelFilters() {
             "active:scale-95 transition-all duration-200 whitespace-nowrap",
           ].join(" ")}
         >
-          Buscar
+          {t("hotels.search")}
         </button>
       </div>
 
@@ -116,7 +126,7 @@ export default function HotelFilters() {
         {/* Categoría */}
         <div className="flex-1 min-w-[160px]">
           <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
-            Categoría
+            {t("hotels.category")}
           </label>
           <div className="relative">
             <select
@@ -124,7 +134,7 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ category: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">Todas las categorías</option>
+              <option value="">{t("hotels.allCategories")}</option>
               {CATEGORIES.map(({ value, label, icon }) => (
                 <option key={value} value={value}>{icon} {label}</option>
               ))}
@@ -138,7 +148,7 @@ export default function HotelFilters() {
         {/* Precio máximo */}
         <div className="flex-1 min-w-[160px]">
           <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
-            Precio / noche
+            {t("hotels.pricePerNight")}
           </label>
           <div className="relative">
             <select
@@ -146,11 +156,11 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ maxPrice: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">Cualquier precio</option>
-              <option value="150000">Hasta $150.000</option>
-              <option value="300000">Hasta $300.000</option>
-              <option value="500000">Hasta $500.000</option>
-              <option value="800000">Hasta $800.000</option>
+              <option value="">{t("hotels.anyPrice")}</option>
+              <option value="150000">{t("hotels.upTo")} $150.000</option>
+              <option value="300000">{t("hotels.upTo")} $300.000</option>
+              <option value="500000">{t("hotels.upTo")} $500.000</option>
+              <option value="800000">{t("hotels.upTo")} $800.000</option>
             </select>
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -161,7 +171,7 @@ export default function HotelFilters() {
         {/* Experiencia */}
         <div className="flex-1 min-w-[160px]">
           <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
-            Tipo de experiencia
+            {t("hotels.experienceType")}
           </label>
           <div className="relative">
             <select
@@ -169,7 +179,7 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ experience: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">Todas las experiencias</option>
+              <option value="">{t("hotels.allExperiences")}</option>
               {EXPERIENCES.map(({ value, label, icon }) => (
                 <option key={value} value={value}>{icon} {label}</option>
               ))}
@@ -183,7 +193,7 @@ export default function HotelFilters() {
         {/* Estrellas */}
         <div className="flex-1 min-w-[160px]">
           <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
-            Estrellas mínimas
+            {t("hotels.minStars")}
           </label>
           <div className="relative">
             <select
@@ -191,10 +201,10 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ minStars: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">Cualquier calificación</option>
-              <option value="3">⭐⭐⭐ 3+ estrellas</option>
-              <option value="4">⭐⭐⭐⭐ 4+ estrellas</option>
-              <option value="5">⭐⭐⭐⭐⭐ Solo 5 estrellas</option>
+              <option value="">{t("hotels.anyRating")}</option>
+              <option value="3">⭐⭐⭐ 3+ {t("hotels.stars")}</option>
+              <option value="4">⭐⭐⭐⭐ 4+ {t("hotels.stars")}</option>
+              <option value="5">⭐⭐⭐⭐⭐ {t("hotels.only5Stars")}</option>
             </select>
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -214,7 +224,7 @@ export default function HotelFilters() {
             ].join(" ")}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            Limpiar filtros
+            {t("hotels.clearFilters")}
           </button>
         )}
       </div>
@@ -222,9 +232,9 @@ export default function HotelFilters() {
       {/* Chips de filtros activos */}
       {hasFilters && (
         <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--border)]">
-          <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold self-center mr-1">Activos:</span>
+          <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold self-center mr-1">{t("hotels.active")}:</span>
           {params.get("query") && (
-            <Chip label={`Búsqueda: ${params.get("query")}`} onRemove={() => applyFilters({ query: "" })} />
+            <Chip label={`${t("hotels.search")}: ${params.get("query")}`} onRemove={() => applyFilters({ query: "" })} />
           )}
           {category && (
             <Chip label={`Cat: ${CATEGORIES.find(c => c.value === category)?.label}`} onRemove={() => applyFilters({ category: "" })} />

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 
@@ -33,6 +33,8 @@ function PasswordStrength({ password }: { password: string }) {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "es";
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +65,7 @@ export default function RegisterPage() {
       toast.success("¡Cuenta creada! Inicia sesión para continuar.", {
         description: "Bienvenido a Hoteles Boutique.",
       });
-      router.push("/es/auth/login");
+      router.push(`/${locale}/auth/login`);
     } catch {
       toast.error("Error de conexión. Inténtalo de nuevo.");
     } finally {
@@ -94,7 +96,7 @@ export default function RegisterPage() {
           <div className="px-8 pt-8 pb-6">
             <button
               type="button"
-              onClick={() => signIn("google", { callbackUrl: "/es/hotels" })}
+              onClick={() => signIn("google", { callbackUrl: `/${locale}/hotels` })}
               className="flex w-full items-center justify-center gap-3 rounded-xl border border-stone-200 bg-white py-3 text-sm font-semibold text-[var(--text-primary)] transition-all hover:bg-stone-50 hover:border-stone-300 focus:outline-none focus:ring-2 focus:ring-[var(--gold)] shadow-sm"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -203,7 +205,7 @@ export default function RegisterPage() {
           <div className="px-8 pb-7 text-center">
             <p className="text-sm text-stone-500">
               ¿Ya tienes cuenta?{" "}
-              <a href="/es/auth/login" className="text-[var(--text-primary)] font-bold hover:text-[var(--gold-dark)] transition-colors">
+              <a href={`/${locale}/auth/login`} className="text-[var(--text-primary)] font-bold hover:text-[var(--gold-dark)] transition-colors">
                 Iniciar sesión
               </a>
             </p>

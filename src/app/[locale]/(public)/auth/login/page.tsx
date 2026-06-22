@@ -1,15 +1,25 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 // FIX: useSearchParams() debe estar en un componente hijo envuelto en <Suspense>
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/es/hotels";
+  const pathname = window.location.pathname;
+  const locale = pathname.split("/")[1] || "es";
+  const callbackUrl = searchParams.get("callbackUrl") || `/${locale}/hotels`;
+  const [t, setT] = useState<any>(null);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [email, setEmail] = useState("");
@@ -28,7 +38,7 @@ function LoginForm() {
     try {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (!result || result.error) {
-        setError("Correo o contraseña incorrectos");
+        setError(t("auth.loginError"));
         setLoading(false);
         return;
       }
@@ -47,13 +57,13 @@ function LoginForm() {
         setStep("otp");
       } else {
         // Sin 2FA → acceso directo
-        toast.success("¡Bienvenido de vuelta!");
+        toast.success(t("auth.loginSuccess"));
         router.refresh();
         router.push(callbackUrl);
       }
     } catch {
-      toast.error("Error en la autenticación");
-      setError("Error en la autenticación");
+      toast.error(t("auth.loginError"));
+      setError(t("auth.loginError"));
     } finally {
       setLoading(false);
     }
@@ -73,17 +83,17 @@ function LoginForm() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Código OTP inválido");
+        setError(data.error || t("auth.otpInvalid"));
         setLoading(false);
         return;
       }
 
-      toast.success("¡Autenticación exitosa!");
+      toast.success(t("auth.loginSuccess"));
       router.refresh();
       router.push(callbackUrl);
     } catch {
-      toast.error("Error verificando OTP");
-      setError("Error verificando OTP");
+      toast.error(t("auth.otpInvalid"));
+      setError(t("auth.otpInvalid"));
     } finally {
       setLoading(false);
     }
@@ -100,16 +110,16 @@ function LoginForm() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-stone-900 tracking-tight">Hoteles Boutique</h1>
-          <p className="text-sm text-stone-500 mt-1">Experiencias únicas, cada estadía</p>
+          <p className="text-sm text-stone-500 mt-1">{t("hotels.subtitle")}</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl shadow-stone-200/60 border border-stone-100 overflow-hidden">
           <div className="flex border-b border-stone-100">
             <div className={`flex-1 py-3 text-xs font-medium text-center transition-colors ${step === "credentials" ? "text-stone-900 border-b-2 border-stone-900" : "text-stone-400"}`}>
-              1. Credenciales
+              1. {t("auth.email")}
             </div>
             <div className={`flex-1 py-3 text-xs font-medium text-center transition-colors ${step === "otp" ? "text-violet-700 border-b-2 border-violet-600" : "text-stone-300"}`}>
-              2. Verificación 2FA
+              2. {t("auth.otpTitle")}
             </div>
           </div>
 
@@ -127,7 +137,7 @@ function LoginForm() {
               <form onSubmit={handleCredentialsSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
-                    Correo electrónico
+                    {t("auth.email")}
                   </label>
                   <input
                     type="email"
@@ -140,7 +150,7 @@ function LoginForm() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-600 mb-1.5 uppercase tracking-wide">
-                    Contraseña
+                    {t("auth.password")}
                   </label>
                   <div className="relative">
                     <input
@@ -176,14 +186,14 @@ function LoginForm() {
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                      Autenticando...
+                      {t("loading")}
                     </span>
-                  ) : "Ingresar"}
+                  ) : t("auth.login")}
                 </button>
 
                 <div className="relative my-5">
                   <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-stone-100" /></div>
-                  <div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-stone-400">O continúa con</span></div>
+                  <div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-stone-400">{t("auth.loginWithGoogle")}</span></div>
                 </div>
 
                 <button
@@ -197,7 +207,7 @@ function LoginForm() {
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
                     <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </svg>
-                  Continuar con Google
+                  {t("auth.loginWithGoogle")}
                 </button>
               </form>
             )}
@@ -211,14 +221,14 @@ function LoginForm() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-violet-800">Credenciales verificadas</p>
-                    <p className="text-xs text-violet-600 mt-0.5">Abre tu app autenticadora e ingresa el código de 6 dígitos</p>
+                    <p className="text-xs font-semibold text-violet-800">{t("auth.otpTitle")}</p>
+                    <p className="text-xs text-violet-600 mt-0.5">{t("auth.otpDescription")}</p>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-stone-600 mb-3 uppercase tracking-wide text-center">
-                    Código de verificación
+                    {t("auth.otpCode")}
                   </label>
                   <input
                     type="text"
@@ -242,9 +252,9 @@ function LoginForm() {
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                      Verificando...
+                      {t("loading")}
                     </span>
-                  ) : "Verificar código"}
+                  ) : t("auth.otpVerify")}
                 </button>
 
                 <button
@@ -253,7 +263,7 @@ function LoginForm() {
                   className="w-full text-stone-400 hover:text-stone-600 text-sm py-2 flex items-center justify-center gap-1.5 transition-colors"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
-                  Volver atrás
+                  {t("back")}
                 </button>
               </form>
             )}
@@ -261,8 +271,8 @@ function LoginForm() {
         </div>
 
         <p className="text-center text-sm text-stone-500 mt-6">
-          ¿No tienes cuenta?{" "}
-          <a href="/es/auth/register" className="text-stone-900 font-semibold hover:underline">Regístrate</a>
+          {t("auth.noAccount")}{" "}
+          <a href={`/${locale}/auth/register`} className="text-stone-900 font-semibold hover:underline">{t("auth.register")}</a>
         </p>
       </div>
     </main>
@@ -271,7 +281,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-stone-50"><div className="animate-pulse text-stone-400">Cargando...</div></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-stone-50"><div className="animate-pulse text-stone-400">Loading...</div></div>}>
       <LoginForm />
     </Suspense>
   );
