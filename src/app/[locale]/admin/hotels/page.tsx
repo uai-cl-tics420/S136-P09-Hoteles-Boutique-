@@ -86,13 +86,13 @@ export default function AdminHotelsPage() {
               <textarea value={form.description} onChange={e => setForm(x => ({ ...x, description: e.target.value }))} rows={4}
                 className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors resize-none leading-relaxed" />
             </div>
-            <div className="sm:col-span-2 flex items-center gap-4 pt-4 border-t border-[var(--border-soft)]">
+            <div className="sm:col-span-2 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-4 border-t border-[var(--border-soft)]">
               <button type="submit" disabled={saving}
-                className="bg-[var(--gold)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all shadow-md disabled:opacity-50">
+                className="w-full sm:w-auto bg-[var(--gold)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all shadow-md disabled:opacity-50">
                 {saving ? "Registrando..." : "Confirmar Registro"}
               </button>
               <button type="button" onClick={() => setShowForm(false)}
-                className="text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors px-4 py-4">
+                className="w-full sm:w-auto text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors px-4 py-4 text-center">
                 Cancelar Operación
               </button>
             </div>
