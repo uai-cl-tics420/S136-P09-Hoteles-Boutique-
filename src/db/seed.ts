@@ -827,10 +827,16 @@ async function seed() {
   try {
     console.log("🌍 Iniciando seed de Hoteles Boutique...\n");
 
-    const owner = await db.query.users.findFirst();
+    let owner = await db.query.users.findFirst();
     if (!owner) {
-      console.error("❌ No hay usuarios en la base de datos. Crea uno primero.");
-      process.exit(1);
+      console.log("⚠️ No hay usuarios en la base de datos. Creando admin@boutique.com...");
+      const [newOwner] = await db.insert(users).values({
+        email: "admin@boutique.com",
+        passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$lS5k72G1w56oNq2j6mO37g$4H11F2P/t9O09G2D8gQ+3O5U/P31x2Y9v2+U/t4I4O8", // hashed 'admin123' just in case
+        role: "SUPER_ADMIN",
+        locale: "es"
+      }).returning();
+      owner = newOwner;
     }
     console.log(`✓ Propietario: ${owner.email}\n`);
 
