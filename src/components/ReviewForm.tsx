@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 interface Props {
   hotelId: string;
@@ -43,11 +44,18 @@ export default function ReviewForm({ hotelId, bookingId, locale, onSuccess }: Pr
   const [comment, setComment]                     = useState("");
   const [submitting, setSubmitting]               = useState(false);
   const [submitted, setSubmitted]                 = useState(false);
+  const [t, setT] = useState<any>(null);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!ratingOverall || !ratingService || !ratingCleanliness || !ratingLocation) {
-      toast.error("Por favor califica todas las categorías");
+      toast.error(t("reviews.rateAllCategories"));
       return;
     }
     setSubmitting(true);
@@ -66,15 +74,15 @@ export default function ReviewForm({ hotelId, bookingId, locale, onSuccess }: Pr
         }),
       });
       if (res.ok) {
-        toast.success("¡Reseña publicada! Gracias por compartir tu experiencia.");
+        toast.success(t("reviews.reviewPublished"));
         setSubmitted(true);
         onSuccess?.();
       } else {
         const data = await res.json();
-        toast.error(data.error ?? "No se pudo publicar la reseña");
+        toast.error(data.error ?? t("reviews.publishError"));
       }
     } catch {
-      toast.error("Error de conexión");
+      toast.error(t("bookings.connectionError"));
     } finally {
       setSubmitting(false);
     }
@@ -84,8 +92,8 @@ export default function ReviewForm({ hotelId, bookingId, locale, onSuccess }: Pr
     return (
       <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-8 text-center animate-slide-up">
         <div className="text-4xl mb-3">🎉</div>
-        <p className="text-lg font-black text-[var(--text-primary)] mb-1">¡Gracias por tu reseña!</p>
-        <p className="text-sm font-medium text-[var(--text-muted)]">Tu opinión ayuda a otros viajeros a elegir mejor.</p>
+        <p className="text-lg font-black text-[var(--text-primary)] mb-1">{t("reviews.thankYou")}</p>
+        <p className="text-sm font-medium text-[var(--text-muted)]">{t("reviews.thankYouDesc")}</p>
       </div>
     );
   }
@@ -95,34 +103,34 @@ export default function ReviewForm({ hotelId, bookingId, locale, onSuccess }: Pr
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-[var(--gold)] rounded-2xl flex items-center justify-center text-white text-lg">★</div>
         <div>
-          <h3 className="text-base font-black text-[var(--text-primary)]">Califica tu estadía</h3>
-          <p className="text-xs font-medium text-[var(--text-muted)]">Como huésped verificado, comparte tu experiencia</p>
+          <h3 className="text-base font-black text-[var(--text-primary)]">{t("reviews.rateStay")}</h3>
+          <p className="text-xs font-medium text-[var(--text-muted)]">{t("reviews.verifiedGuest")}</p>
         </div>
       </div>
 
       <div className="space-y-4 mb-5">
         <div className="bg-[var(--surface)] rounded-2xl p-4 space-y-3 border border-[var(--border)]">
-          <StarRating label="General" value={ratingOverall} onChange={setRatingOverall} />
-          <StarRating label="Servicio" value={ratingService} onChange={setRatingService} />
-          <StarRating label="Limpieza" value={ratingCleanliness} onChange={setRatingCleanliness} />
-          <StarRating label="Ubicación" value={ratingLocation} onChange={setRatingLocation} />
+          <StarRating label={t("reviews.general")} value={ratingOverall} onChange={setRatingOverall} />
+          <StarRating label={t("reviews.service")} value={ratingService} onChange={setRatingService} />
+          <StarRating label={t("reviews.cleanliness")} value={ratingCleanliness} onChange={setRatingCleanliness} />
+          <StarRating label={t("reviews.location")} value={ratingLocation} onChange={setRatingLocation} />
         </div>
 
         {ratingOverall > 0 && (
           <p className="text-[10px] font-bold uppercase tracking-widest text-center text-[var(--text-muted)]">
-            {["", "Muy malo 😞", "Malo 😕", "Regular 😐", "Bueno 😊", "¡Excelente! 🤩"][ratingOverall]}
+            {["", t("reviews.veryBad"), t("reviews.bad"), t("reviews.average"), t("reviews.good"), t("reviews.excellent")][ratingOverall]}
           </p>
         )}
 
         <div>
           <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
-            Comentario <span className="normal-case font-normal">(Opcional)</span>
+            {t("reviews.comment")} <span className="normal-case font-normal">({t("common.optional")})</span>
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={3}
-            placeholder="Cuéntanos sobre tu experiencia: el trato del personal, las instalaciones, lo que más te gustó..."
+            placeholder={t("reviews.commentPlaceholder")}
             className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-all resize-none leading-relaxed"
           />
         </div>
@@ -133,7 +141,7 @@ export default function ReviewForm({ hotelId, bookingId, locale, onSuccess }: Pr
         disabled={submitting || !ratingOverall}
         className="w-full bg-[var(--gold)] text-white rounded-xl py-3.5 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all disabled:opacity-50 shadow-md"
       >
-        {submitting ? "Publicando reseña..." : "Publicar Reseña ★"}
+        {submitting ? t("reviews.publishing") : t("reviews.publishReview")}
       </button>
     </form>
   );

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 const STORAGE_KEY = "hb_favorites";
 
@@ -38,6 +40,13 @@ interface Props {
 export default function FavButton({ hotelId, hotelSlug, hotelName, size = "md" }: Props) {
   const [isFav, setIsFav] = useState(false);
   const [pulse, setPulse] = useState(false);
+  const [t, setT] = useState<any>(null);
+  const pathname = usePathname() || "";
+  const locale = pathname.split("/")[1] || "es";
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
 
   useEffect(() => {
     setIsFav(getFavorites().includes(hotelId));
@@ -45,6 +54,8 @@ export default function FavButton({ hotelId, hotelSlug, hotelName, size = "md" }
     window.addEventListener("hb:favorites-changed", handler);
     return () => window.removeEventListener("hb:favorites-changed", handler);
   }, [hotelId]);
+
+  if (!t) return null;
 
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
@@ -62,8 +73,8 @@ export default function FavButton({ hotelId, hotelSlug, hotelName, size = "md" }
   return (
     <button
       onClick={handleClick}
-      aria-label={isFav ? `Quitar ${hotelName} de favoritos` : `Guardar ${hotelName} en favoritos`}
-      title={isFav ? "Quitar de favoritos" : "Añadir a favoritos"}
+      aria-label={isFav ? t("hotels.removeFromFavorites") : t("hotels.addToFavorites")}
+      title={isFav ? t("hotels.removeFromFavorites") : t("hotels.addToFavorites")}
       className={`
         ${sizeClass} rounded-full flex items-center justify-center transition-all duration-300
         ${isFav

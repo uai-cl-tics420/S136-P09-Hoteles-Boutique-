@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { loadTranslations } from "@/i18n/i18n-util";
 
@@ -10,7 +10,7 @@ import { loadTranslations } from "@/i18n/i18n-util";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = window.location.pathname;
+  const pathname = usePathname() || "";
   const locale = pathname.split("/")[1] || "es";
   const callbackUrl = searchParams.get("callbackUrl") || `/${locale}/hotels`;
   const [t, setT] = useState<any>(null);

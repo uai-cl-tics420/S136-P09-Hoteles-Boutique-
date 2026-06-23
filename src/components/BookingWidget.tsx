@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 interface RoomType {
   id: string;
@@ -47,6 +48,13 @@ export default function BookingWidget({
   const [specialRequests, setSpecialRequests] = useState("");
   const [guestsCount, setGuestsCount]       = useState(1);
   const [booking, setBooking]               = useState(false);
+  const [t, setT] = useState<any>(null);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   const nights = checkIn && checkOut
     ? Math.max(0, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000))
@@ -72,7 +80,7 @@ export default function BookingWidget({
 
   async function handleBook() {
     if (!selectedRoom || !checkIn || !checkOut || nights <= 0) {
-      toast.error("Completa todos los campos de la reserva");
+      toast.error(t("bookings.completeFields"));
       return;
     }
     setBooking(true);
@@ -91,8 +99,8 @@ export default function BookingWidget({
       });
 
       if (res.status === 401) {
-        toast.error("Debes iniciar sesión para reservar", {
-          description: "Te redirigiremos al inicio de sesión...",
+        toast.error(t("auth.loginRequired"), {
+          description: t("auth.redirectingToLogin"),
           duration: 3000,
         });
         setTimeout(() => { window.location.href = `/${locale}/auth/login`; }, 1800);
@@ -101,12 +109,12 @@ export default function BookingWidget({
 
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error ?? "Error al procesar la reserva");
+        toast.error(data.error ?? t("bookings.bookingError"));
         return;
       }
 
-      toast.success("¡Reserva confirmada! 🎉", {
-        description: "Puedes ver todos los detalles a continuación.",
+      toast.success(t("bookings.bookingSuccess"), {
+        description: t("bookings.bookingSuccessDesc"),
       });
 
       // Redirect to booking detail page
@@ -117,7 +125,7 @@ export default function BookingWidget({
           : `/${locale}/bookings`;
       }, 1500);
     } catch {
-      toast.error("Error de conexión. Por favor intenta nuevamente.");
+      toast.error(t("bookings.connectionError"));
     } finally {
       setBooking(false);
     }
@@ -131,11 +139,11 @@ export default function BookingWidget({
 
       {/* Header */}
       <div className="bg-[var(--text-primary)] px-7 py-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)] mb-1">Reserva Exclusiva</p>
-        <h2 className="text-xl font-black text-white">Asegurar mi estadía</h2>
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)] mb-1">{t("bookings.exclusiveReservation")}</p>
+        <h2 className="text-xl font-black text-white">{t("bookings.secureStay")}</h2>
         {selectedRoomObj && nights > 0 && (
           <p className="text-white/60 text-xs font-medium mt-1">
-            {selectedRoomObj.name} · {nights} {nights === 1 ? "noche" : "noches"}
+            {selectedRoomObj.name} · {nights} {nights === 1 ? t("common.night") : t("common.nights")}
           </p>
         )}
       </div>
@@ -146,7 +154,7 @@ export default function BookingWidget({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
-              Check-in
+              {t("bookings.checkIn")}
             </label>
             <input
               type="date"
@@ -158,7 +166,7 @@ export default function BookingWidget({
           </div>
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
-              Check-out
+              {t("bookings.checkOut")}
             </label>
             <input
               type="date"
@@ -173,7 +181,7 @@ export default function BookingWidget({
         {/* Guests */}
         <div>
           <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
-            Huéspedes
+            {t("bookings.guests")}
           </label>
           <div className="flex items-center gap-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-2.5">
             <button
@@ -182,7 +190,7 @@ export default function BookingWidget({
               className="w-7 h-7 rounded-full bg-white border border-[var(--border)] flex items-center justify-center text-[var(--text-primary)] font-bold hover:border-[var(--gold)] transition-colors text-sm"
             >−</button>
             <span className="flex-1 text-center text-sm font-bold text-[var(--text-primary)]">
-              {guestsCount} {guestsCount === 1 ? "persona" : "personas"}
+              {guestsCount} {guestsCount === 1 ? t("common.person") : t("common.people")}
             </span>
             <button
               type="button"
@@ -192,7 +200,7 @@ export default function BookingWidget({
           </div>
           {selectedRoomObj && (
             <p className="text-[10px] font-medium text-[var(--text-muted)] mt-1">
-              Capacidad máx: {selectedRoomObj.capacity} personas
+              Capacidad máx: {selectedRoomObj.capacity} {t("common.people")}
             </p>
           )}
         </div>
@@ -201,7 +209,7 @@ export default function BookingWidget({
         {roomTypes.length > 0 && (
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
-              Tipo de Habitación
+              {t("bookings.roomType")}
             </label>
             <div className="space-y-2">
               {roomTypes.map((rt) => {
@@ -225,7 +233,7 @@ export default function BookingWidget({
                       <div>
                         <p className="text-sm font-bold text-[var(--text-primary)]">{rt.name}</p>
                         <p className="text-[10px] font-medium text-[var(--text-muted)] mt-0.5">
-                          Hasta {rt.capacity} personas
+                          Hasta {rt.capacity} {t("common.people")}
                         </p>
                       </div>
                     </div>
@@ -233,7 +241,7 @@ export default function BookingWidget({
                       <p className="text-sm font-black text-[var(--text-primary)]">
                         ${parseFloat(rt.pricePerNight).toLocaleString()}
                       </p>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)]">/ noche</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{t("common.perNight")}</p>
                     </div>
                   </div>
                 );
@@ -246,7 +254,7 @@ export default function BookingWidget({
         {availableExtras.length > 0 && (
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">
-              Servicios Exclusivos
+              {t("bookings.exclusiveServices")}
             </label>
             <div className="space-y-2">
               {availableExtras.map((s) => {
@@ -284,13 +292,13 @@ export default function BookingWidget({
         {/* Special requests */}
         <div>
           <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
-            Solicitudes Especiales <span className="normal-case font-normal">(Opcional)</span>
+            {t("bookings.specialRequests")} <span className="normal-case font-normal">({t("common.optional")})</span>
           </label>
           <textarea
             value={specialRequests}
             onChange={(e) => setSpecialRequests(e.target.value)}
             rows={2}
-            placeholder="Alergias, celebraciones, horarios de llegada..."
+            placeholder={t("bookings.specialRequestsPlaceholder")}
             className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-[var(--gold)] transition-all resize-none leading-relaxed"
           />
         </div>
@@ -300,21 +308,21 @@ export default function BookingWidget({
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 space-y-2.5">
             <div className="flex justify-between text-sm">
               <span className="font-medium text-[var(--text-muted)]">
-                {selectedRoomObj?.name} × {nights} {nights === 1 ? "noche" : "noches"}
+                {selectedRoomObj?.name} × {nights} {nights === 1 ? t("common.night") : t("common.nights")}
               </span>
               <span className="font-bold text-[var(--text-primary)]">${roomTotal.toLocaleString()}</span>
             </div>
             {extrasTotal > 0 && (
               <div className="flex justify-between text-sm">
                 <span className="font-medium text-[var(--text-muted)]">
-                  Servicios exclusivos ({selectedExtras.size})
+                  {t("bookings.exclusiveServices")} ({selectedExtras.size})
                 </span>
                 <span className="font-bold text-[var(--text-primary)]">+${extrasTotal.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between items-center pt-3 mt-1 border-t border-[var(--border-soft)]">
               <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-                Total a pagar
+                {t("bookings.totalToPay")}
               </span>
               <span className="text-2xl font-black text-[var(--text-primary)]">
                 ${grandTotal.toLocaleString()}
@@ -328,12 +336,12 @@ export default function BookingWidget({
           <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5">
             <span className="text-amber-500 text-lg shrink-0 mt-0.5">⚠️</span>
             <div className="flex-1">
-              <p className="text-xs font-bold text-amber-800">Necesitas una cuenta para reservar</p>
+              <p className="text-xs font-bold text-amber-800">{t("bookings.accountRequired")}</p>
               <a
                 href={`/${locale}/auth/login`}
                 className="text-xs text-amber-700 underline underline-offset-2 hover:text-amber-900 font-semibold mt-0.5 inline-block"
               >
-                Iniciar sesión o registrarse gratis →
+                {t("bookings.loginOrRegister")} →
               </a>
             </div>
           </div>
@@ -350,16 +358,16 @@ export default function BookingWidget({
           } disabled:opacity-60`}
         >
           {booking
-            ? "Procesando reserva..."
+            ? t("bookings.processing")
             : !isReady
-              ? "Completa los campos para reservar"
+              ? t("bookings.completeFields")
               : isLoggedIn
-                ? "✓ Confirmar Reserva"
-                : "Iniciar sesión para reservar"}
+                ? t("bookings.confirmReservation")
+                : t("bookings.loginToBook")}
         </button>
 
         <p className="text-[11px] font-medium text-[var(--text-muted)] text-center">
-          Sin cargos adicionales · Confirmación inmediata
+          {t("bookings.noAdditionalCharges")}
         </p>
       </div>
     </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useTransition, useState, useEffect } from "react";
 import { loadTranslations } from "@/i18n/i18n-util";
 
@@ -32,7 +32,7 @@ export default function HotelFilters() {
   const params = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [t, setT] = useState<any>(null);
-  const pathname = window.location.pathname;
+  const pathname = usePathname() || "";
   const locale = pathname.split("/")[1] || "es";
 
   useEffect(() => {

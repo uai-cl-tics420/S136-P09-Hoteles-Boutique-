@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import ReviewForm from "./ReviewForm";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 interface Review {
   id: string;
@@ -65,7 +66,7 @@ function GoogleReviewCard({ review }: { review: GoogleReview }) {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, t }: { review: Review; t: any }) {
   const initials = review.guestId?.slice(0, 2).toUpperCase() ?? "HV";
   const colors = [
     "from-purple-400 to-indigo-500", "from-rose-400 to-pink-500",
@@ -80,7 +81,7 @@ function ReviewCard({ review }: { review: Review }) {
           {initials}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[var(--text-primary)]">Huésped verificado</p>
+          <p className="text-sm font-bold text-[var(--text-primary)]">{t("reviews.verifiedGuest")}</p>
           <p className="text-xs text-[var(--text-muted)]">
             {new Date(review.createdAt).toLocaleDateString("es", { month: "long", year: "numeric" })}
           </p>
@@ -100,9 +101,9 @@ function ReviewCard({ review }: { review: Review }) {
 
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Servicio",  val: review.ratingService },
-          { label: "Limpieza",  val: review.ratingCleanliness },
-          { label: "Ubicación", val: review.ratingLocation },
+          { label: t("reviews.service"),  val: review.ratingService },
+          { label: t("reviews.cleanliness"),  val: review.ratingCleanliness },
+          { label: t("reviews.location"), val: review.ratingLocation },
         ].map(({ label, val }) => (
           <div key={label} className="bg-[var(--surface-2)] rounded-xl p-2.5 text-center">
             <p className="text-[9px] uppercase tracking-widest text-[var(--text-muted)] font-bold">{label}</p>
@@ -134,6 +135,13 @@ export default function HotelReviews({
   const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>([]);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showGoogle, setShowGoogle] = useState(false);
+  const [t, setT] = useState<any>(null);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
+
+  if (!t) return null;
 
   useEffect(() => {
     const fetchGoogleReviews = async () => {
@@ -174,7 +182,7 @@ export default function HotelReviews({
     <section className="animate-slide-up">
       <div className="flex items-end justify-between mb-6">
         <h2 className="text-xl font-bold text-[var(--text-primary)]">
-          Reseñas
+          {t("reviews.title")}
           {total > 0 && (
             <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">({total})</span>
           )}
@@ -184,7 +192,7 @@ export default function HotelReviews({
             <p className="text-3xl font-black text-[var(--text-primary)]">
               <span className="text-[var(--gold)]">★</span> {avgRating}
             </p>
-            <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Promedio general</p>
+            <p className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-widest">{t("reviews.averageRating")}</p>
           </div>
         )}
       </div>
@@ -203,15 +211,15 @@ export default function HotelReviews({
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
             </svg>
             <div>
-              <p className="text-sm font-bold text-[var(--text-primary)]">Google Maps Reviews</p>
-              <p className="text-xs text-[var(--text-muted)]">{googleReviews.length} reseñas externas</p>
+              <p className="text-sm font-bold text-[var(--text-primary)]">{t("reviews.title")}</p>
+              <p className="text-xs text-[var(--text-muted)]">{googleReviews.length} {t("reviews.externalReviews")}</p>
             </div>
           </div>
           <button
             onClick={() => setShowGoogle(!showGoogle)}
             className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
           >
-            {showGoogle ? 'Ocultar' : 'Ver'}
+            {showGoogle ? t("common.hide") : t("common.view")}
           </button>
         </div>
       )}
@@ -229,13 +237,13 @@ export default function HotelReviews({
       {reviews.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-xs)]">
           <p className="text-3xl mb-3 opacity-30">💬</p>
-          <p className="text-[var(--text-muted)] text-sm font-medium">Aún no hay reseñas. ¡Sé el primero!</p>
+          <p className="text-[var(--text-muted)] text-sm font-medium">{t("reviews.noReviewsYet")}</p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
             {reviews.map((r) => (
-              <ReviewCard key={r.id} review={r} />
+              <ReviewCard key={r.id} review={r} t={t} />
             ))}
           </div>
 
@@ -252,13 +260,13 @@ export default function HotelReviews({
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Cargando...
+                    {t("loading")}
                   </>
                 ) : (
                   <>
-                    Cargar más reseñas
+                    {t("reviews.loadMore")}
                     <span className="text-[10px] bg-[var(--surface)] px-2 py-0.5 rounded-full">
-                      {total - reviews.length} restantes
+                      {total - reviews.length} {t("reviews.remaining")}
                     </span>
                   </>
                 )}

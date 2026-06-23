@@ -5,6 +5,14 @@ export const metadata: Metadata = {
   description: "Experiencias exclusivas y personalizadas",
 };
 
+import "../globals.css";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <html lang="es">
+      <body className="antialiased">
+        {children}
+      </body>
+    </html>
+  );
 }

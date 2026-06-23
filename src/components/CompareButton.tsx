@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 const STORAGE_KEY = "hb_compare";
 const MAX_COMPARE = 3;
@@ -49,6 +51,13 @@ interface Props {
 export default function CompareButton({ hotel }: Props) {
   const [inList, setInList] = useState(false);
   const [full, setFull] = useState(false);
+  const [t, setT] = useState<any>(null);
+  const pathname = usePathname() || "";
+  const locale = pathname.split("/")[1] || "es";
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
 
   useEffect(() => {
     const update = () => {
@@ -60,6 +69,8 @@ export default function CompareButton({ hotel }: Props) {
     window.addEventListener("hb:compare-changed", update);
     return () => window.removeEventListener("hb:compare-changed", update);
   }, [hotel.id]);
+
+  if (!t) return null;
 
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
@@ -80,7 +91,7 @@ export default function CompareButton({ hotel }: Props) {
         disabled
         className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[var(--border)] text-[var(--text-muted)] bg-[var(--surface)] opacity-50 cursor-not-allowed"
       >
-        Máx. 3
+        {t("hotels.max3")}
       </button>
     );
   }
@@ -88,14 +99,14 @@ export default function CompareButton({ hotel }: Props) {
   return (
     <button
       onClick={handleClick}
-      title={inList ? "Quitar del comparador" : "Añadir al comparador"}
+      title={inList ? t("hotels.removeFromComparator") : t("hotels.addToComparator")}
       className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border transition-all duration-200 ${
         inList
           ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
           : "bg-white/80 text-[var(--text-muted)] border-[var(--border)] hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50"
       }`}
     >
-      {inList ? "✓ Comparando" : "+ Comparar"}
+      {inList ? t("hotels.comparing") : t("hotels.compare")}
     </button>
   );
 }

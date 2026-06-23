@@ -68,17 +68,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig.callbacks,
     async signIn({ user, account }) {
       if (account?.provider === "google" && user.email) {
-        const existing = await db.query.users.findFirst({
-          where: eq(users.email, user.email),
-        });
-        if (!existing) {
-          await db.insert(users).values({
-            email: user.email,
-            ssoProvider: "google",
-            ssoSubject: user.name ?? account.providerAccountId,
-            role: "GUEST",
-            locale: "es",
+        try {
+          const existing = await db.query.users.findFirst({
+            where: eq(users.email, user.email),
           });
+          if (!existing) {
+            await db.insert(users).values({
+              email: user.email,
+              ssoProvider: "google",
+              ssoSubject: user.name ?? account.providerAccountId,
+              role: "GUEST",
+              locale: "es",
+            });
+          }
+        } catch (error) {
+          console.error("Error saving Google user to DB:", error);
+          // Permite el login incluso si la escritura a BD falló, 
+          // o puedes retornar false si prefieres bloquear.
+          // Retornar true permite a jwt() atraparlo, pero como no existe en DB
+          // fallará si tu app asume que tiene ID de DB.
+          return false; // Retornamos false para mostrar mensaje de error en vez de crash
         }
       }
       return true;
