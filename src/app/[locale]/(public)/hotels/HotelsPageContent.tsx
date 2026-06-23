@@ -43,6 +43,24 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
   const [t, setT] = useState<any>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [showNav, setShowNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (typeof window !== "undefined") {
+        if (window.scrollY > lastScrollY && window.scrollY > 120) {
+          setShowNav(false);
+        } else {
+          setShowNav(true);
+        }
+        setLastScrollY(window.scrollY);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   useEffect(() => {
     loadTranslations(locale as any).then(setT);
@@ -63,7 +81,7 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
     <div className="min-h-screen bg-[var(--background)]">
 
       {/* ── Navbar Floating Glass ────────────────────────────── */}
-      <div className="sticky top-2 z-50 px-4 mb-4">
+      <div className={`sticky top-2 z-50 px-4 mb-4 transition-transform duration-500 ease-in-out ${showNav ? "translate-y-0" : "-translate-y-[150%]"}`}>
         <header className="max-w-7xl mx-auto min-h-[4rem] py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 bg-white/80 backdrop-blur-2xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-3xl px-6 transition-all duration-300">
           {/* Logo */}
           <a href={`/${locale}/hotels`} className="flex items-center gap-2 group">
