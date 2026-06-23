@@ -68,14 +68,14 @@ export default function HotelFilters() {
       }
       // Reset page on filter change
       next.delete("page");
-      startTransition(() => router.push(`?${next.toString()}`));
+      startTransition(() => router.push(`?${next.toString()}`, { scroll: false }));
     },
     [params, router]
   );
 
   function clearFilters() {
     setInputValue("");
-    startTransition(() => router.push("?"));
+    startTransition(() => router.push("?", { scroll: false }));
   }
 
   function handleSearch() {
