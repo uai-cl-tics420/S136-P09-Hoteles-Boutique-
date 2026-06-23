@@ -5,7 +5,10 @@ export const defaultLocale: Locales = "es";
 
 export async function loadTranslations(locale: Locales) {
   const { default: translations } = await import(`./${locale}/index`);
-  return translations;
+  const tFunc = (path: string) => {
+    return path.split('.').reduce((obj: any, key: string) => obj && obj[key], translations) || path;
+  };
+  return () => tFunc;
 }
 
 export function getLocaleFromPath(pathname: string): Locales {
