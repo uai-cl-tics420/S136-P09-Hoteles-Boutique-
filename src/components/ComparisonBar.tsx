@@ -55,8 +55,6 @@ export default function ComparisonBar({ locale }: Props) {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   useEffect(() => {
     const update = () => setList(getCompareList());
     update();
@@ -93,6 +91,7 @@ export default function ComparisonBar({ locale }: Props) {
     setShowModal(false);
   }
 
+  if (!t) return null;
   if (list.length < 2 && !showModal) return null;
 
   // Union sets for amenities and extras

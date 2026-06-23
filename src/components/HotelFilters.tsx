@@ -39,8 +39,6 @@ export default function HotelFilters() {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   // Estado local de la barra de búsqueda para reflejar el valor actual
   const [inputValue, setInputValue] = useState(params.get("query") ?? "");
 
@@ -77,6 +75,8 @@ export default function HotelFilters() {
   function handleSearch() {
     applyFilters({ query: inputValue });
   }
+
+  if (!t) return null;
 
   return (
     <div

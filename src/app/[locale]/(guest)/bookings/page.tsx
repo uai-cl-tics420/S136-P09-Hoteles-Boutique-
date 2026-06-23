@@ -39,8 +39,6 @@ export default function BookingsPage() {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   useEffect(() => {
     Promise.all([
       fetch("/api/bookings").then((r) => r.json()),
@@ -116,6 +114,8 @@ export default function BookingsPage() {
     { key: "favorites", label: t("bookings.favorites") },
     { key: "preferences", label: t("bookings.myPreferences") },
   ] as const;
+
+  if (!t) return null;
 
   return (
     <main className="min-h-screen bg-[var(--background)]">

@@ -62,8 +62,6 @@ export default function ReviewsPage() {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   const filteredRanking = categoryFilter
     ? ranking.filter((h) => h.category === categoryFilter)
     : ranking;
@@ -88,6 +86,8 @@ export default function ReviewsPage() {
   }, [selectedHotel]);
 
   const hotels = ranking.map((h) => ({ id: h.id, name: h.name }));
+
+  if (!t) return null;
 
   return (
     <main className="min-h-screen bg-[var(--background)]">

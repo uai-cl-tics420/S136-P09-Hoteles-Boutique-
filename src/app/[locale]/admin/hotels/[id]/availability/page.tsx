@@ -48,8 +48,6 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   const selectedRoomType = roomTypes.find((r) => r.id === selectedRoomTypeId);
   const totalRooms = selectedRoomType?.totalRooms || 1;
 
@@ -170,6 +168,8 @@ export default function AvailabilityPage({ params }: { params: Promise<{ id: str
 
   const occupiedDays = availability.filter(a => a.roomsAvailable === 0).length;
   const partialDays = availability.filter(a => a.roomsAvailable > 0 && a.roomsAvailable < totalRooms * 0.4).length;
+
+  if (!t) return null;
 
   return (
     <div className="space-y-8 max-w-6xl animate-fade-in">

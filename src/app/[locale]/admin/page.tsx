@@ -18,8 +18,6 @@ export default function AdminDashboardPage() {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   const fetchData = useCallback(async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
     try {
@@ -74,6 +72,8 @@ export default function AdminDashboardPage() {
   const statusLabel: Record<string, string> = {
     CONFIRMED: t("bookings.status.CONFIRMED"), PENDING: t("bookings.status.PENDING"), CANCELLED: t("bookings.status.CANCELLED"), COMPLETED: t("bookings.status.COMPLETED"),
   };
+
+  if (!t) return null;
 
   return (
     <div className="space-y-12 max-w-6xl">

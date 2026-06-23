@@ -19,8 +19,6 @@ function LoginForm() {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -98,6 +96,8 @@ function LoginForm() {
       setLoading(false);
     }
   }
+
+  if (!t) return null;
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 via-amber-50/40 to-stone-100 px-4">
