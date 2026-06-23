@@ -26,11 +26,10 @@ const COUNTRIES = [
 ];
 
 const SELECT_CLASS = [
-  "w-full bg-white border border-[var(--border)] rounded-xl px-4 py-2.5",
-  "text-sm font-medium text-[var(--text-primary)]",
+  "w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-xl px-4 py-2.5",
+  "text-sm font-medium text-[var(--text-primary)] shadow-sm hover:shadow-md",
   "focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/30 focus:border-[var(--gold)]",
-  "transition-all duration-200 cursor-pointer appearance-none",
-  "hover:border-[var(--gold)]/50",
+  "transition-all duration-300 cursor-pointer appearance-none hover:bg-white hover:border-[var(--gold)]/40",
 ].join(" ");
 
 export default function HotelFilters() {
@@ -88,8 +87,8 @@ export default function HotelFilters() {
   return (
     <div
       className={[
-        "rounded-2xl border border-[var(--border)] bg-white p-6 mb-10",
-        "shadow-[var(--shadow-sm)] transition-all duration-300",
+        "relative z-20 rounded-3xl border border-white/40 bg-white/50 backdrop-blur-2xl p-7 mb-12",
+        "shadow-[0_8px_40px_rgb(0,0,0,0.06)] hover:shadow-[0_12px_50px_rgb(0,0,0,0.08)] transition-all duration-500",
         "animate-slide-up",
         isPending ? "opacity-60 pointer-events-none scale-[0.995]" : "",
       ].join(" ")}
@@ -107,11 +106,11 @@ export default function HotelFilters() {
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
             className={[
-              "w-full bg-[var(--surface-2)] border border-[var(--border)] rounded-xl",
-              "pl-11 pr-4 py-3 text-sm font-medium text-[var(--text-primary)]",
+              "w-full bg-white/80 backdrop-blur-sm border border-white/60 rounded-2xl",
+              "pl-12 pr-4 py-3.5 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:shadow-md hover:bg-white",
               "placeholder:text-[var(--text-muted)]",
-              "focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/30 focus:border-[var(--gold)]",
-              "transition-all duration-200",
+              "focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/40 focus:border-[var(--gold)]",
+              "transition-all duration-300",
             ].join(" ")}
             placeholder={t("hotels.results.searchPlaceholder")}
           />
@@ -119,9 +118,9 @@ export default function HotelFilters() {
         <button
           onClick={handleSearch}
           className={[
-            "bg-[var(--text-primary)] text-white rounded-xl px-7 py-3 text-sm font-semibold",
-            "hover:bg-[var(--gold)] hover:shadow-[var(--shadow-gold)]",
-            "active:scale-95 transition-all duration-200 whitespace-nowrap",
+            "bg-gradient-to-r from-[var(--gold)] to-[var(--gold-dark)] text-white rounded-2xl px-8 py-3.5 text-sm font-bold tracking-wide shadow-md",
+            "hover:shadow-[0_8px_20px_rgba(234,179,8,0.3)] hover:-translate-y-0.5",
+            "active:scale-95 transition-all duration-300 whitespace-nowrap",
           ].join(" ")}
         >
           {t("hotels.search")}
@@ -132,7 +131,7 @@ export default function HotelFilters() {
       <div className="flex flex-wrap gap-4 items-end">
         {/* Categoría */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+          <label className="block text-[9px] font-black text-[var(--gold-dark)] mb-2 uppercase tracking-[0.15em] ml-1">
             {t("hotels.category")}
           </label>
           <div className="relative">
@@ -154,7 +153,7 @@ export default function HotelFilters() {
 
         {/* País */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+          <label className="block text-[9px] font-black text-[var(--gold-dark)] mb-2 uppercase tracking-[0.15em] ml-1">
             {t("hotels.country")}
           </label>
           <div className="relative">
@@ -176,7 +175,7 @@ export default function HotelFilters() {
 
         {/* Precio máximo */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+          <label className="block text-[9px] font-black text-[var(--gold-dark)] mb-2 uppercase tracking-[0.15em] ml-1">
             {t("hotels.priceRange")}
           </label>
           <div className="relative">
@@ -199,7 +198,7 @@ export default function HotelFilters() {
 
         {/* Experiencia */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+          <label className="block text-[9px] font-black text-[var(--gold-dark)] mb-2 uppercase tracking-[0.15em] ml-1">
             {t("hotels.experienceType")}
           </label>
           <div className="relative">
@@ -221,7 +220,7 @@ export default function HotelFilters() {
 
         {/* Estrellas */}
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+          <label className="block text-[9px] font-black text-[var(--gold-dark)] mb-2 uppercase tracking-[0.15em] ml-1">
             {t("hotels.minStars")}
           </label>
           <div className="relative">
@@ -246,10 +245,10 @@ export default function HotelFilters() {
           <button
             onClick={clearFilters}
             className={[
-              "flex items-center gap-1.5 text-sm font-medium",
+              "flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest",
               "text-[var(--text-muted)] hover:text-red-500",
-              "px-4 py-2.5 rounded-xl hover:bg-red-50",
-              "transition-all duration-200",
+              "px-5 py-2.5 rounded-xl hover:bg-red-50/50 border border-transparent hover:border-red-100",
+              "transition-all duration-300 mt-5",
             ].join(" ")}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>

@@ -50,68 +50,72 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
   return (
     <div className="min-h-screen bg-[var(--background)]">
 
-      {/* ── Navbar ───────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 glass border-b border-[var(--border-soft)] shadow-[var(--shadow-xs)]">
-        <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
+      {/* ── Navbar Floating Glass ────────────────────────────── */}
+      <div className="sticky top-2 z-50 px-4 mb-4">
+        <header className="max-w-7xl mx-auto min-h-[4rem] py-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 bg-white/80 backdrop-blur-2xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-3xl px-6 transition-all duration-300">
           {/* Logo */}
           <a href={`/${locale}/hotels`} className="flex items-center gap-2 group">
-            <span className="w-8 h-8 rounded-lg bg-[var(--text-primary)] flex items-center justify-center text-white text-sm font-black group-hover:bg-[var(--gold)] transition-colors duration-300">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-black to-gray-800 flex items-center justify-center text-[var(--gold)] text-sm font-black group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(201,168,76,0.5)] transition-all duration-300">
               HB
             </span>
-            <span className="text-[15px] font-bold text-[var(--text-primary)] tracking-tight">
-              Hoteles<span className="font-light text-[var(--text-muted)]">Boutique</span>
+            <span className="text-[17px] font-black text-black tracking-tight">
+              Hoteles<span className="font-light text-[var(--gold-dark)]">Boutique</span>
             </span>
           </a>
 
           {/* Nav */}
-          <nav className="flex items-center gap-2">
-            <NavLink href={`/${locale}/reviews`} label={t("nav.rankings")} />
+          <nav className="flex flex-wrap items-center gap-2">
+            <NavLink href={`/${locale}/reviews`} label={t("nav.rankings")} icon="⭐" />
             {session?.user ? (
               <>
-                <NavLink href={`/${locale}/bookings`} label={t("nav.myBookings")} />
-                <NavLink href={`/${locale}/profile`}  label={t("nav.myProfile")} />
+                <NavLink href={`/${locale}/bookings`} label={t("nav.myBookings")} icon="📅" />
+                <NavLink href={`/${locale}/profile`}  label={t("nav.myProfile")} icon="👤" />
                 {(["HOTEL_ADMIN", "SUPER_ADMIN"] as const).includes((session.user as any).role) && (
-                  <NavLink href={`/${locale}/admin`} label={t("nav.adminPanel")} />
+                  <NavLink href={`/${locale}/admin`} label={t("nav.adminPanel")} icon="⚙️" highlight />
                 )}
                 <button
                   onClick={() => logoutAction(locale)}
-                  className="text-sm font-medium text-[var(--text-secondary)] border border-[var(--border)] px-4 py-1.5 rounded-full hover:border-red-300 hover:text-red-500 transition-all duration-200"
+                  className="flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 px-4 py-2 rounded-xl transition-all duration-300 shadow-sm ml-1 hover:-translate-y-0.5"
                 >
-                  {t("auth.logout")}
+                  🚪 {t("auth.logout")}
                 </button>
               </>
             ) : (
               <a
                 href={`/${locale}/auth/login`}
-                className="text-sm font-semibold bg-[var(--text-primary)] text-white px-5 py-2 rounded-full hover:bg-[var(--gold)] hover:shadow-[var(--shadow-gold)] transition-all duration-300"
+                className="flex items-center gap-1.5 text-xs font-bold bg-gradient-to-r from-[var(--gold)] to-[var(--gold-dark)] text-white px-5 py-2.5 rounded-xl hover:shadow-[0_4px_15px_rgba(201,168,76,0.4)] hover:-translate-y-0.5 transition-all duration-300"
               >
-                {t("auth.login")}
+                🔑 {t("auth.login")}
               </a>
             )}
           </nav>
-        </div>
-      </header>
+        </header>
+      </div>
 
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[var(--text-primary)] text-white">
+      <section className="relative overflow-hidden bg-[#0f0f0f] text-white rounded-b-[2.5rem] shadow-2xl mb-8">
+        {/* Animated Orbs */}
+        <div className="absolute -top-32 -left-32 w-[40rem] h-[40rem] bg-[var(--gold)]/15 rounded-full blur-[100px] animate-pulse mix-blend-screen" />
+        <div className="absolute top-20 -right-20 w-[30rem] h-[30rem] bg-orange-600/10 rounded-full blur-[100px] animate-pulse mix-blend-screen" style={{ animationDelay: "1s" }}/>
+        
         {/* Fondo con patrón sutil */}
-        <div className="absolute inset-0 opacity-[0.04]"
+        <div className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
-            backgroundSize: "32px 32px",
+            backgroundSize: "40px 40px",
           }}
         />
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--text-primary)] via-[#1a1917] to-[#2d2820]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90" />
 
-        <div className="relative max-w-7xl mx-auto px-5 pt-16 pb-14 text-center">
+        <div className="relative max-w-7xl mx-auto px-5 pt-16 md:pt-24 pb-16 md:pb-24 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 text-white/80 text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6 animate-fade-in">
             <span className="w-1.5 h-1.5 bg-[var(--gold)] rounded-full" />
             {t("hotels.hero.badge")}
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-5 animate-slide-up leading-[1.1]">
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 animate-slide-up leading-[1.05]">
             {t("hotels.hero.title")}<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--gold)] to-[var(--gold-light)]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--gold-light)] via-[var(--gold)] to-orange-400">
               {t("hotels.hero.titleHighlight")}
             </span>
           </h1>
@@ -120,9 +124,9 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
           </p>
 
           {/* Stats */}
-          <div className="flex items-center justify-center gap-8 mt-10 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 mt-12 animate-fade-in">
             {[
-              { value: "8+",    label: t("hotels.hero.statsHotels") },
+              { value: "150+",  label: t("hotels.hero.statsHotels") },
               { value: "100%",  label: t("hotels.hero.statsBoutique") },
               { value: "4.8★",  label: t("hotels.hero.statsRating") },
             ].map(({ value, label }) => (
@@ -135,11 +139,7 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
         </div>
 
         {/* Wave bottom */}
-        <div className="relative h-10">
-          <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 w-full" preserveAspectRatio="none">
-            <path d="M0 40 Q360 0 720 20 Q1080 40 1440 10 L1440 40 Z" fill="var(--background)"/>
-          </svg>
-        </div>
+        <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-[var(--background)] to-transparent" />
       </section>
 
       {/* ── Contenido ────────────────────────────────────────── */}
@@ -187,9 +187,9 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
 
       {/* ── Footer mínimo ────────────────────────────────────── */}
       <footer className="border-t border-[var(--border)] mt-20 py-8">
-        <div className="max-w-7xl mx-auto px-5 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
+        <div className="max-w-7xl mx-auto px-5 flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-[var(--text-muted)] text-center md:text-left">
           <p>{t("common.copyright")} {new Date().getFullYear()} {t("common.copyrightText")}</p>
-          <div className="flex gap-5 font-medium">
+          <div className="flex flex-wrap justify-center md:justify-end gap-5 font-medium">
             <a href="#" className="hover:text-[var(--gold)] transition-colors">{t("common.terms")}</a>
             <a href="#" className="hover:text-[var(--gold)] transition-colors">{t("common.privacy")}</a>
             <a href="#" className="hover:text-[var(--gold)] transition-colors">{t("common.contact")}</a>
@@ -202,12 +202,17 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
 
 /* ── Sub-components ──────────────────────────────────────── */
 
-function NavLink({ href, label }: { href: string; label: string }) {
+function NavLink({ href, label, icon, highlight }: { href: string; label: string; icon?: string; highlight?: boolean }) {
   return (
     <a
       href={href}
-      className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] px-3 py-1.5 rounded-lg hover:bg-[var(--surface-2)] transition-all duration-200"
+      className={`flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl transition-all duration-300 shadow-sm hover:-translate-y-0.5 ${
+        highlight 
+          ? "bg-gradient-to-r from-[var(--gold)]/10 to-[var(--gold)]/20 text-[var(--gold-dark)] hover:from-[var(--gold)]/20 hover:to-[var(--gold)]/30 border border-[var(--gold)]/30" 
+          : "bg-black/5 text-[var(--text-primary)] hover:bg-black/10 border border-transparent"
+      }`}
     >
+      {icon && <span className="text-[14px]">{icon}</span>}
       {label}
     </a>
   );
@@ -227,7 +232,7 @@ function HotelCard({ hotel, locale }: { hotel: any; locale: string }) {
   return (
     <a
       href={`/${locale}/hotels/${hotel.slug}`}
-      className="group block bg-white rounded-2xl overflow-hidden border border-[var(--border)] card-lift animate-slide-up"
+      className="group block bg-white rounded-3xl overflow-hidden border border-black/5 shadow-sm hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-500 animate-slide-up"
     >
       {/* Imagen */}
       <div className="relative h-60 overflow-hidden bg-[var(--surface-2)]">
