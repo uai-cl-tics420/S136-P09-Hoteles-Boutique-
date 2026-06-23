@@ -106,7 +106,7 @@ export default function HotelFilters() {
               "focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--gold)]/30 focus:border-[var(--gold)]",
               "transition-all duration-200",
             ].join(" ")}
-            placeholder={t("hotels.searchPlaceholder")}
+            placeholder={t("hotels.results.searchPlaceholder")}
           />
         </div>
         <button
@@ -134,7 +134,7 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ category: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">{t("hotels.allCategories")}</option>
+              <option value="">{t("hotels.results.allCategories")}</option>
               {CATEGORIES.map(({ value, label, icon }) => (
                 <option key={value} value={value}>{icon} {label}</option>
               ))}
@@ -148,7 +148,7 @@ export default function HotelFilters() {
         {/* Precio máximo */}
         <div className="flex-1 min-w-[160px]">
           <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
-            {t("hotels.pricePerNight")}
+            {t("hotels.priceRange")}
           </label>
           <div className="relative">
             <select
@@ -156,11 +156,11 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ maxPrice: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">{t("hotels.anyPrice")}</option>
-              <option value="150000">{t("hotels.upTo")} $150.000</option>
-              <option value="300000">{t("hotels.upTo")} $300.000</option>
-              <option value="500000">{t("hotels.upTo")} $500.000</option>
-              <option value="800000">{t("hotels.upTo")} $800.000</option>
+              <option value="">{t("hotels.results.anyPrice")}</option>
+              <option value="150000">{t("hotels.results.upTo")} $150.000</option>
+              <option value="300000">{t("hotels.results.upTo")} $300.000</option>
+              <option value="500000">{t("hotels.results.upTo")} $500.000</option>
+              <option value="800000">{t("hotels.results.upTo")} $800.000</option>
             </select>
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -179,7 +179,7 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ experience: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">{t("hotels.allExperiences")}</option>
+              <option value="">{t("hotels.results.allExperiences")}</option>
               {EXPERIENCES.map(({ value, label, icon }) => (
                 <option key={value} value={value}>{icon} {label}</option>
               ))}
@@ -201,10 +201,10 @@ export default function HotelFilters() {
               onChange={(e) => applyFilters({ minStars: e.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="">{t("hotels.anyRating")}</option>
-              <option value="3">⭐⭐⭐ 3+ {t("hotels.stars")}</option>
-              <option value="4">⭐⭐⭐⭐ 4+ {t("hotels.stars")}</option>
-              <option value="5">⭐⭐⭐⭐⭐ {t("hotels.only5Stars")}</option>
+              <option value="">{t("hotels.results.anyRating")}</option>
+              <option value="3">⭐⭐⭐ 3 {t("hotels.results.starsPlus")}</option>
+              <option value="4">⭐⭐⭐⭐ 4 {t("hotels.results.starsPlus")}</option>
+              <option value="5">⭐⭐⭐⭐⭐ {t("hotels.results.only5Stars")}</option>
             </select>
             <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
@@ -224,7 +224,7 @@ export default function HotelFilters() {
             ].join(" ")}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            {t("hotels.clearFilters")}
+            {t("hotels.results.clear")}
           </button>
         )}
       </div>
@@ -232,7 +232,7 @@ export default function HotelFilters() {
       {/* Chips de filtros activos */}
       {hasFilters && (
         <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--border)]">
-          <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold self-center mr-1">{t("hotels.active")}:</span>
+          <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-bold self-center mr-1">{t("hotels.results.active")}</span>
           {params.get("query") && (
             <Chip label={`${t("hotels.search")}: ${params.get("query")}`} onRemove={() => applyFilters({ query: "" })} />
           )}

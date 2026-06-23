@@ -71,6 +71,8 @@ const es = {
     category: "Categoría",
     location: "Ubicación",
     rating: "Calificación",
+    experienceType: "Tipo de experiencia",
+    minStars: "Mín. Estrellas",
     perNight: "por noche",
     viewDetails: "Ver detalles",
     bookNow: "Reservar ahora",
