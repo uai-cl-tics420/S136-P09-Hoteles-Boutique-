@@ -70,6 +70,8 @@ const es = {
     priceRange: "Rango de precio",
     category: "Categoría",
     location: "Ubicación",
+    country: "País",
+    anyCountry: "Cualquier país",
     rating: "Calificación",
     experienceType: "Tipo de experiencia",
     minStars: "Mín. Estrellas",

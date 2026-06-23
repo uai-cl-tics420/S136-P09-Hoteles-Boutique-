@@ -19,6 +19,12 @@ const EXPERIENCES = [
   { value: "EXPERIENCE", label: "Experiencias",    icon: "🎭" },
 ];
 
+const COUNTRIES = [
+  { value: "Chile", label: "Chile", icon: "🇨🇱" },
+  { value: "Argentina", label: "Argentina", icon: "🇦🇷" },
+  { value: "Perú", label: "Perú", icon: "🇵🇪" },
+];
+
 const SELECT_CLASS = [
   "w-full bg-white border border-[var(--border)] rounded-xl px-4 py-2.5",
   "text-sm font-medium text-[var(--text-primary)]",
@@ -46,7 +52,8 @@ export default function HotelFilters() {
   const maxPrice = params.get("maxPrice") ?? "";
   const minStars = params.get("minStars") ?? "";
   const experience = params.get("experience") ?? "";
-  const hasFilters = !!(params.get("query") || category || maxPrice || minStars || experience);
+  const country = params.get("country") ?? "";
+  const hasFilters = !!(params.get("query") || category || maxPrice || minStars || experience || country);
 
   // Sync input cuando los params cambien (ej. al borrar filtros)
   useEffect(() => {
@@ -136,6 +143,28 @@ export default function HotelFilters() {
             >
               <option value="">{t("hotels.results.allCategories")}</option>
               {CATEGORIES.map(({ value, label, icon }) => (
+                <option key={value} value={value}>{icon} {label}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            </span>
+          </div>
+        </div>
+
+        {/* País */}
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-[10px] font-bold text-[var(--text-muted)] mb-1.5 uppercase tracking-widest">
+            {t("hotels.country")}
+          </label>
+          <div className="relative">
+            <select
+              value={country}
+              onChange={(e) => applyFilters({ country: e.target.value })}
+              className={SELECT_CLASS}
+            >
+              <option value="">{t("hotels.anyCountry")}</option>
+              {COUNTRIES.map(({ value, label, icon }) => (
                 <option key={value} value={value}>{icon} {label}</option>
               ))}
             </select>
@@ -238,6 +267,9 @@ export default function HotelFilters() {
           )}
           {category && (
             <Chip label={`Cat: ${CATEGORIES.find(c => c.value === category)?.label}`} onRemove={() => applyFilters({ category: "" })} />
+          )}
+          {country && (
+            <Chip label={`País: ${country}`} onRemove={() => applyFilters({ country: "" })} />
           )}
           {maxPrice && (
             <Chip label={`Máx: $${Number(maxPrice).toLocaleString("es-CL")}`} onRemove={() => applyFilters({ maxPrice: "" })} />

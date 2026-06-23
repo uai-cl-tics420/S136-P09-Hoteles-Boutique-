@@ -14,6 +14,7 @@ export interface HotelFilters {
   preferredCategories?: string[];
   /** Filter hotels that offer a specific extra service category (SPA, DINING, etc.) */
   experienceType?: string;
+  country?: string;
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -32,7 +33,7 @@ function groupBy<T extends { hotelId: string }>(rows: T[]): Map<string, T[]> {
 // los LATERAL JOINs que son incompatibles con Supabase/PgBouncer (transaction mode).
 
 export async function getHotels(filters: HotelFilters = {}) {
-  const { query, category, minStars, maxPrice, page = 1, limit = 12, preferredCategories, experienceType } = filters;
+  const { query, category, minStars, maxPrice, page = 1, limit = 12, preferredCategories, experienceType, country } = filters;
   const offset = (page - 1) * limit;
 
   const conditions = [eq(hotels.active, true)];
@@ -47,6 +48,7 @@ export async function getHotels(filters: HotelFilters = {}) {
   }
   if (category) conditions.push(eq(hotels.category, category));
   if (minStars) conditions.push(gte(hotels.starRating, minStars));
+  if (country) conditions.push(ilike(hotels.locationCountry, country));
 
   if (maxPrice !== undefined) {
     const validHotelIdsQuery = db

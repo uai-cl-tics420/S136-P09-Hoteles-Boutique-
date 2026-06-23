@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
       page: parseInt(searchParams.get("page") ?? "1"),
       limit: parseInt(searchParams.get("limit") ?? "12"),
       experienceType: searchParams.get("experience") ?? undefined,
+      country: searchParams.get("country") ?? undefined,
     });
 
     return NextResponse.json({ hotels: results }, { headers: CACHE_HEADERS });
