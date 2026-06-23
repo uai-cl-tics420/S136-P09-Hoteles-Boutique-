@@ -141,8 +141,6 @@ export default function HotelReviews({
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  if (!t) return null;
-
   useEffect(() => {
     const fetchGoogleReviews = async () => {
       setGoogleLoading(true);
@@ -160,6 +158,8 @@ export default function HotelReviews({
     };
     fetchGoogleReviews();
   }, [hotelId]);
+
+  if (!t) return null;
 
   async function loadMore() {
     const nextPage = page + 1;

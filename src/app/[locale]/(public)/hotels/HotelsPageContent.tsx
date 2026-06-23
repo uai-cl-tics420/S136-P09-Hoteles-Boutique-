@@ -6,6 +6,7 @@ import CompareButton from "@/components/CompareButton";
 import ComparisonBar from "@/components/ComparisonBar";
 import HotelFilters from "@/components/HotelFilters";
 import { useState, useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const CAT_LABELS: Record<string, string> = {
   LUXURY: "Lujo", BOUTIQUE: "Boutique", ECO: "Eco",
@@ -40,10 +41,21 @@ interface Props {
 
 export default function HotelsPageContent({ locale, hotels, session, isFiltered, isPersonalised }: Props) {
   const [t, setT] = useState<any>(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
+
+  const getLanguageSwitchUrl = (newLocale: string) => {
+    if (!pathname) return `/${newLocale}`;
+    const segments = pathname.split('/');
+    segments[1] = newLocale; 
+    const newPath = segments.join('/');
+    const currentParams = searchParams?.toString();
+    return currentParams ? `${newPath}?${currentParams}` : newPath;
+  };
 
   if (!t) return null;
 
@@ -65,6 +77,23 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
 
           {/* Nav */}
           <nav className="flex flex-wrap items-center gap-2">
+            
+            {/* Language Switcher */}
+            <div className="flex items-center bg-black/5 rounded-xl p-1 border border-black/5 mr-1">
+              <a 
+                href={getLanguageSwitchUrl("es")}
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all ${locale === "es" ? "bg-white shadow-sm text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+              >
+                ES
+              </a>
+              <a 
+                href={getLanguageSwitchUrl("en")}
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all ${locale === "en" ? "bg-white shadow-sm text-[var(--text-primary)]" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"}`}
+              >
+                EN
+              </a>
+            </div>
+
             <NavLink href={`/${locale}/reviews`} label={t("nav.rankings")} icon="⭐" />
             {session?.user ? (
               <>
