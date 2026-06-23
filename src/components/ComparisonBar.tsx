@@ -175,7 +175,7 @@ export default function ComparisonBar({ locale }: Props) {
                         : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
                     }`}
                   >
-                    {{ overview: "🏨 General", amenities: "✨ Amenidades", services: "🎭 Servicios Extra" }[tab]}
+                    {{ overview: t("hotels.general"), amenities: t("hotels.amenities"), services: t("hotels.extraServices") }[tab]}
                   </button>
                 ))}
               </div>
@@ -213,9 +213,9 @@ export default function ComparisonBar({ locale }: Props) {
                           {/* Data table */}
                           <div className="p-5 space-y-3">
                             {[
-                              { label: "Categoría", value: CAT_LABELS[h.category] ?? h.category },
+                              { label: t("hotels.category"), value: CAT_LABELS[h.category] ?? h.category },
                               {
-                                label: "Clasificación",
+                                label: t("hotels.rating"),
                                 value: (
                                   <span className="text-[var(--gold)]">
                                     {"★".repeat(h.starRating)}{"☆".repeat(5 - h.starRating)}
@@ -223,26 +223,26 @@ export default function ComparisonBar({ locale }: Props) {
                                 )
                               },
                               {
-                                label: "Precio desde",
+                                label: t("hotels.priceFrom"),
                                 value: (
                                   <span className={h.minPricePerNight === bestPrice && details.length > 1 ? "text-emerald-600 font-black" : ""}>
                                     {h.minPricePerNight
-                                      ? `$${Number(h.minPricePerNight).toLocaleString("es-CL")} / noche`
-                                      : "Consultar"}
+                                      ? `$${Number(h.minPricePerNight).toLocaleString("es-CL")} ${t("common.perNight")}`
+                                      : t("hotels.consult")}}
                                     {h.minPricePerNight === bestPrice && details.length > 1 && (
-                                      <span className="ml-2 text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest">Mejor precio</span>
+                                      <span className="ml-2 text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-widest">{t("hotels.bestPrice")}</span>
                                     )}
                                   </span>
                                 )
                               },
-                              { label: "Ciudad", value: h.locationCity },
+                              { label: t("hotels.city"), value: h.locationCity },
                               {
-                                label: "Tipos de habitación",
-                                value: `${h.roomTypes?.length ?? 0} disponibles`
+                                label: t("hotels.roomTypes"),
+                                value: `${h.roomTypes?.length ?? 0} ${t("hotels.available")}`
                               },
                               {
-                                label: "Servicios extra",
-                                value: `${h.extraServices?.length ?? 0} disponibles`
+                                label: t("hotels.extraServices"),
+                                value: `${h.extraServices?.length ?? 0} ${t("hotels.available")}`
                               },
                             ].map(({ label, value }) => (
                               <div key={label} className="flex justify-between items-center py-2 border-b border-[var(--border-soft)] last:border-0">
@@ -257,7 +257,7 @@ export default function ComparisonBar({ locale }: Props) {
                               href={`/${locale}/hotels/${h.slug}`}
                               className="block w-full text-center bg-[var(--text-primary)] text-white rounded-xl py-3 text-xs font-bold uppercase tracking-widest hover:bg-[var(--gold)] transition-colors shadow-sm"
                             >
-                              Ver Hotel →
+                              {t("hotels.viewHotel")} →
                             </a>
                           </div>
                         </div>
@@ -269,13 +269,13 @@ export default function ComparisonBar({ locale }: Props) {
                   {activeTab === "amenities" && (
                     <div>
                       {unionAmenities.length === 0 ? (
-                        <p className="text-sm text-[var(--text-muted)] text-center py-12">No hay información de amenidades disponible.</p>
+                        <p className="text-sm text-[var(--text-muted)] text-center py-12">{t("hotels.noAmenitiesInfo")}</p>
                       ) : (
                         <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
                           <table className="w-full text-left border-collapse">
                             <thead>
                               <tr className="bg-[var(--surface)] border-b border-[var(--border)]">
-                                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] w-44">Amenidad</th>
+                                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] w-44">{t("hotels.amenity")}</th>
                                 {details.map((h) => (
                                   <th key={h.id} className="p-4 text-xs font-black text-[var(--text-primary)] text-center">
                                     <div className="flex flex-col items-center gap-1">
@@ -307,7 +307,7 @@ export default function ComparisonBar({ locale }: Props) {
                           </table>
                           {/* Summary row */}
                           <div className="bg-[var(--surface)] border-t border-[var(--border)] p-4 flex items-center gap-3">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Total amenidades:</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{t("hotels.totalAmenities")}:</span>
                             {details.map((h) => (
                               <span key={h.id} className="text-sm font-black text-[var(--text-primary)]">
                                 {h.name.split(" ")[0]}: <span className="text-[var(--gold)]">{allAmenities(h).length}</span>
@@ -323,13 +323,13 @@ export default function ComparisonBar({ locale }: Props) {
                   {activeTab === "services" && (
                     <div>
                       {unionExtras.length === 0 ? (
-                        <p className="text-sm text-[var(--text-muted)] text-center py-12">No hay servicios extra disponibles en estas propiedades.</p>
+                        <p className="text-sm text-[var(--text-muted)] text-center py-12">{t("hotels.noExtraServices")}</p>
                       ) : (
                         <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
                           <table className="w-full text-left border-collapse">
                             <thead>
                               <tr className="bg-[var(--surface)] border-b border-[var(--border)]">
-                                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] w-44">Servicio</th>
+                                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] w-44">{t("hotels.service")}</th>
                                 {details.map((h) => (
                                   <th key={h.id} className="p-4 text-xs font-black text-[var(--text-primary)] text-center">
                                     <span className="truncate max-w-[120px]">{h.name.split(" ").slice(0, 2).join(" ")}</span>
@@ -383,7 +383,7 @@ export default function ComparisonBar({ locale }: Props) {
                   onClick={clearAll}
                   className="text-sm font-bold text-[var(--text-muted)] hover:text-red-500 transition-colors uppercase tracking-widest"
                 >
-                  {t("hotels.clear")} comparación
+                  {t("hotels.clearComparison")}
                 </button>
               </div>
             </div>

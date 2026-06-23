@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReviewForm from "./ReviewForm";
 
 interface Review {
@@ -22,6 +22,47 @@ interface Props {
   canReview: boolean;
   reviewableBookingId: string | null;
   locale: string;
+}
+
+interface GoogleReview {
+  author: string;
+  rating: number;
+  text: string;
+  time: string;
+  profilePhoto?: string;
+}
+
+function GoogleReviewCard({ review }: { review: GoogleReview }) {
+  return (
+    <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 shadow-[var(--shadow-xs)]">
+      <div className="flex items-center gap-3 mb-4">
+        {review.profilePhoto ? (
+          <img src={review.profilePhoto} alt={review.author} className="w-9 h-9 rounded-full object-cover" />
+        ) : (
+          <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-xs font-black text-white shrink-0">
+            G
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-[var(--text-primary)]">{review.author}</p>
+          <p className="text-xs text-[var(--text-muted)]">{review.time}</p>
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <span key={i} className={`text-sm ${i < review.rating ? "text-[var(--gold)]" : "text-[var(--border)]"}`}>★</span>
+          ))}
+        </div>
+      </div>
+      {review.text && (
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-light italic">
+          &ldquo;{review.text}&rdquo;
+        </p>
+      )}
+      <div className="mt-3 pt-3 border-t border-[var(--border-soft)]">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Google Maps</p>
+      </div>
+    </div>
+  );
 }
 
 function ReviewCard({ review }: { review: Review }) {
@@ -90,6 +131,27 @@ export default function HotelReviews({
   const [total, setTotal]       = useState(initialTotal);
   const [page, setPage]         = useState(1);
   const [loading, setLoading]   = useState(false);
+  const [googleReviews, setGoogleReviews] = useState<GoogleReview[]>([]);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [showGoogle, setShowGoogle] = useState(false);
+
+  useEffect(() => {
+    const fetchGoogleReviews = async () => {
+      setGoogleLoading(true);
+      try {
+        const res = await fetch(`/api/places?hotelId=${hotelId}`);
+        const data = await res.json();
+        if (data.placesData?.reviews) {
+          setGoogleReviews(data.placesData.reviews);
+        }
+      } catch {
+        // Silently fail if Google reviews can't be loaded
+      } finally {
+        setGoogleLoading(false);
+      }
+    };
+    fetchGoogleReviews();
+  }, [hotelId]);
 
   async function loadMore() {
     const nextPage = page + 1;
@@ -130,6 +192,37 @@ export default function HotelReviews({
       {canReview && reviewableBookingId && (
         <div className="mb-6">
           <ReviewForm hotelId={hotelId} bookingId={reviewableBookingId} locale={locale} />
+        </div>
+      )}
+
+      {/* Google Reviews Toggle */}
+      {googleReviews.length > 0 && (
+        <div className="mb-6 flex items-center justify-between bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+            </svg>
+            <div>
+              <p className="text-sm font-bold text-[var(--text-primary)]">Google Maps Reviews</p>
+              <p className="text-xs text-[var(--text-muted)]">{googleReviews.length} reseñas externas</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowGoogle(!showGoogle)}
+            className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            {showGoogle ? 'Ocultar' : 'Ver'}
+          </button>
+        </div>
+      )}
+
+      {showGoogle && googleReviews.length > 0 && (
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
+            {googleReviews.map((r, i) => (
+              <GoogleReviewCard key={`google-${i}`} review={r} />
+            ))}
+          </div>
         </div>
       )}
 
