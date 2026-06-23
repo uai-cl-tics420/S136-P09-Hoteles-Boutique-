@@ -194,7 +194,7 @@ export default function BookingsPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-[var(--text-muted)] font-medium mt-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-[var(--text-muted)] font-medium mt-4">
                           <div className="flex items-center gap-1.5"><span className="text-lg">📅</span><span>{b.checkIn} a {b.checkOut}</span></div>
                           <div className="flex items-center gap-1.5"><span className="text-lg">👥</span><span>{b.guestsCount} {b.guestsCount === 1 ? t("guest") : t("guests")}</span></div>
                         </div>
@@ -210,7 +210,7 @@ export default function BookingsPage() {
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between mt-6 pt-5 border-t border-[var(--border-soft)]">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6 pt-5 border-t border-[var(--border-soft)]">
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{t("bookings.totalCost")}</p>
                           <p className="text-xl font-black text-[var(--text-primary)]">
@@ -218,7 +218,7 @@ export default function BookingsPage() {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <a href={`/${locale}/bookings/${b.id}`}
                             className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-4 py-2 hover:border-[var(--text-primary)] transition-all">
                             {t("bookings.viewDetails")} →

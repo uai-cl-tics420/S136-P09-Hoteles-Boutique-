@@ -78,7 +78,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-12 max-w-6xl">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-4">
         <div>
           <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Centro de Control</h1>
           <p className="text-sm font-medium text-[var(--text-muted)] mt-2">Visión global del rendimiento de tu colección de propiedades.</p>
@@ -189,7 +189,7 @@ export default function AdminDashboardPage() {
                       </span>
                     </td>
                     <td className="py-4 pl-4 text-right align-middle">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex flex-wrap items-center justify-end gap-1.5">
                         {b.status === "PENDING" && (
                           <button
                             onClick={() => updateBookingStatus(b.id, "CONFIRMED")}
