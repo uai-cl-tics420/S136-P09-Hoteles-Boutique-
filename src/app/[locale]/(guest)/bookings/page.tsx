@@ -196,7 +196,7 @@ export default function BookingsPage() {
 
                         <div className="flex items-center gap-4 text-sm text-[var(--text-muted)] font-medium mt-4">
                           <div className="flex items-center gap-1.5"><span className="text-lg">📅</span><span>{b.checkIn} a {b.checkOut}</span></div>
-                          <div className="flex items-center gap-1.5"><span className="text-lg">👥</span><span>{b.guestsCount} {b.guestsCount === 1 ? t("common.guest") : t("common.guests")}</span></div>
+                          <div className="flex items-center gap-1.5"><span className="text-lg">👥</span><span>{b.guestsCount} {b.guestsCount === 1 ? t("guest") : t("guests")}</span></div>
                         </div>
 
                         {b.extras?.length > 0 && (
