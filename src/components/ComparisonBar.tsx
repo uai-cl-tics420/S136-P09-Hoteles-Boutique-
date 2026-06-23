@@ -111,14 +111,14 @@ export default function ComparisonBar({ locale }: Props) {
     <>
       {/* Floating bar */}
       {!showModal && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up">
-          <div className="flex items-center gap-3 bg-[var(--text-primary)] text-white rounded-2xl px-5 py-3 shadow-2xl border border-white/10">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mr-1">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-slide-up w-full max-w-[95vw] sm:w-auto">
+          <div className="flex items-center gap-2 md:gap-3 bg-[var(--text-primary)] text-white rounded-2xl px-3 md:px-5 py-2.5 md:py-3 shadow-2xl border border-white/10 overflow-x-auto">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 mr-1 hidden sm:inline-block">
               {t("comparison.comparing")}
             </span>
             {list.map((h) => (
-              <div key={h.id} className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-1.5">
-                <span className="text-sm font-bold truncate max-w-[120px]">{h.name}</span>
+              <div key={h.id} className="flex items-center gap-2 bg-white/10 rounded-xl px-2.5 md:px-3 py-1 md:py-1.5 shrink-0">
+                <span className="text-xs md:text-sm font-bold truncate max-w-[80px] md:max-w-[120px]">{h.name}</span>
                 <button
                   onClick={() => remove(h.id)}
                   className="w-4 h-4 rounded-full bg-white/20 hover:bg-red-400/80 flex items-center justify-center text-[10px] transition-colors"
@@ -127,13 +127,13 @@ export default function ComparisonBar({ locale }: Props) {
             ))}
             <button
               onClick={() => { setActiveTab("overview"); setShowModal(true); }}
-              className="bg-[var(--gold)] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-yellow-500 transition-colors shadow-sm ml-1 whitespace-nowrap"
+              className="bg-[var(--gold)] text-white text-[10px] font-bold uppercase tracking-widest px-3 md:px-4 py-1.5 md:py-2 rounded-xl hover:bg-yellow-500 transition-colors shadow-sm ml-1 shrink-0"
             >
               {t("comparison.viewComparison")}
             </button>
             <button
               onClick={clearAll}
-              className="text-white/40 hover:text-white text-[10px] uppercase tracking-widest transition-colors"
+              className="text-white/40 hover:text-white text-[10px] uppercase tracking-widest transition-colors shrink-0"
             >
               {t("comparison.clear")}
             </button>
@@ -144,10 +144,10 @@ export default function ComparisonBar({ locale }: Props) {
       {/* Comparison Modal */}
       {showModal && (
         <div
-          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4 animate-fade-in"
           onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
         >
-          <div className="bg-[var(--background)] rounded-3xl border border-[var(--border)] shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-auto animate-scale-in">
+          <div className="bg-[var(--background)] sm:rounded-3xl rounded-t-3xl border border-[var(--border)] shadow-2xl w-full max-w-5xl max-h-[90vh] sm:max-h-[90vh] overflow-auto animate-scale-in flex flex-col">
             {/* Header */}
             <div className="sticky top-0 bg-[var(--background)] border-b border-[var(--border)] p-6 flex items-center justify-between z-10">
               <div>
@@ -162,14 +162,14 @@ export default function ComparisonBar({ locale }: Props) {
               >✕</button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Tab switcher */}
-              <div className="flex gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full w-max mb-8 shadow-[var(--shadow-xs)]">
+              <div className="flex gap-1 sm:gap-2 p-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-full max-w-full overflow-x-auto mb-6 sm:mb-8 shadow-[var(--shadow-xs)] scrollbar-hide">
                 {(["overview", "amenities", "services"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 ${
+                    className={`px-3 sm:px-5 py-2 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest transition-all duration-300 shrink-0 ${
                       activeTab === tab
                         ? "bg-[var(--text-primary)] text-white shadow-md"
                         : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
@@ -183,7 +183,7 @@ export default function ComparisonBar({ locale }: Props) {
               </div>
 
               {loadingDetails ? (
-                <div className={`grid gap-5 ${list.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                <div className={`grid gap-5 grid-cols-1 md:grid-cols-2 ${list.length === 3 ? "lg:grid-cols-3" : ""}`}>
                   {list.map((h) => (
                     <div key={h.id} className="h-64 bg-white rounded-2xl border border-[var(--border)] animate-shimmer" />
                   ))}
@@ -192,7 +192,7 @@ export default function ComparisonBar({ locale }: Props) {
                 <>
                   {/* ── OVERVIEW TAB ───────────────────── */}
                   {activeTab === "overview" && (
-                    <div className={`grid gap-5 ${list.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                    <div className={`grid gap-5 grid-cols-1 md:grid-cols-2 ${list.length === 3 ? "lg:grid-cols-3" : ""}`}>
                       {details.map((h) => (
                         <div key={h.id} className="bg-white rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
                           {/* Image */}
@@ -274,7 +274,7 @@ export default function ComparisonBar({ locale }: Props) {
                         <p className="text-sm text-[var(--text-muted)] text-center py-12">{t("comparison.noAmenities")}</p>
                       ) : (
                         <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
-                          <table className="w-full text-left border-collapse">
+                          <table className="w-full min-w-max text-left border-collapse">
                             <thead>
                               <tr className="bg-[var(--surface)] border-b border-[var(--border)]">
                                 <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] w-44">{t("comparison.amenity")}</th>
@@ -327,7 +327,7 @@ export default function ComparisonBar({ locale }: Props) {
                         <p className="text-sm text-[var(--text-muted)] text-center py-12">{t("comparison.noServices")}</p>
                       ) : (
                         <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
-                          <table className="w-full text-left border-collapse">
+                          <table className="w-full min-w-max text-left border-collapse">
                             <thead>
                               <tr className="bg-[var(--surface)] border-b border-[var(--border)]">
                                 <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] w-44">{t("comparison.service")}</th>
