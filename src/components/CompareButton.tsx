@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { loadTranslations } from "@/i18n/i18n-util";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "hb_compare";
 const MAX_COMPARE = 3;
@@ -82,6 +83,11 @@ export default function CompareButton({ hotel }: Props) {
       const el = e.currentTarget as HTMLButtonElement;
       el.classList.add("animate-bounce");
       setTimeout(() => el.classList.remove("animate-bounce"), 600);
+      toast.error(t("hotels.max3"), { description: hotel.name });
+    } else if (result.added) {
+      toast.success(t("hotels.addToComparator"), { description: hotel.name });
+    } else {
+      toast.info(t("hotels.removeFromComparator"), { description: hotel.name });
     }
   }
 

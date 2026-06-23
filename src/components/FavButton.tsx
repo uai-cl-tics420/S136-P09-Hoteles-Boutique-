@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { loadTranslations } from "@/i18n/i18n-util";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "hb_favorites";
 
@@ -64,6 +65,12 @@ export default function FavButton({ hotelId, hotelSlug, hotelName, size = "md" }
     setIsFav(added);
     setPulse(true);
     setTimeout(() => setPulse(false), 400);
+    
+    if (added) {
+      toast.success(t("hotels.addToFavorites"), { description: hotelName });
+    } else {
+      toast.info(t("hotels.removeFromFavorites"), { description: hotelName });
+    }
   }
 
   const sizeClass = size === "sm"
