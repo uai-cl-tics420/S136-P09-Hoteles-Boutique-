@@ -143,7 +143,7 @@ export default function BookingWidget({
         <h2 className="text-xl font-black text-white">{t("bookings.secureStay")}</h2>
         {selectedRoomObj && nights > 0 && (
           <p className="text-white/60 text-xs font-medium mt-1">
-            {selectedRoomObj.name} · {nights} {nights === 1 ? t("common.night") : t("common.nights")}
+            {selectedRoomObj.name} · {nights} {nights === 1 ? t("night") : t("nights")}
           </p>
         )}
       </div>
@@ -190,7 +190,7 @@ export default function BookingWidget({
               className="w-7 h-7 rounded-full bg-white border border-[var(--border)] flex items-center justify-center text-[var(--text-primary)] font-bold hover:border-[var(--gold)] transition-colors text-sm"
             >−</button>
             <span className="flex-1 text-center text-sm font-bold text-[var(--text-primary)]">
-              {guestsCount} {guestsCount === 1 ? t("common.person") : t("common.people")}
+              {guestsCount} {guestsCount === 1 ? t("person") : t("people")}
             </span>
             <button
               type="button"
@@ -200,7 +200,7 @@ export default function BookingWidget({
           </div>
           {selectedRoomObj && (
             <p className="text-[10px] font-medium text-[var(--text-muted)] mt-1">
-              Capacidad máx: {selectedRoomObj.capacity} {t("common.people")}
+              Capacidad máx: {selectedRoomObj.capacity} {t("people")}
             </p>
           )}
         </div>
@@ -233,7 +233,7 @@ export default function BookingWidget({
                       <div>
                         <p className="text-sm font-bold text-[var(--text-primary)]">{rt.name}</p>
                         <p className="text-[10px] font-medium text-[var(--text-muted)] mt-0.5">
-                          Hasta {rt.capacity} {t("common.people")}
+                          Hasta {rt.capacity} {t("people")}
                         </p>
                       </div>
                     </div>
@@ -292,7 +292,7 @@ export default function BookingWidget({
         {/* Special requests */}
         <div>
           <label className="block text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
-            {t("bookings.specialRequests")} <span className="normal-case font-normal">({t("common.optional")})</span>
+            {t("bookings.specialRequests")} <span className="normal-case font-normal">({t("optional")})</span>
           </label>
           <textarea
             value={specialRequests}
@@ -308,7 +308,7 @@ export default function BookingWidget({
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 space-y-2.5">
             <div className="flex justify-between text-sm">
               <span className="font-medium text-[var(--text-muted)]">
-                {selectedRoomObj?.name} × {nights} {nights === 1 ? t("common.night") : t("common.nights")}
+                {selectedRoomObj?.name} × {nights} {nights === 1 ? t("night") : t("nights")}
               </span>
               <span className="font-bold text-[var(--text-primary)]">${roomTotal.toLocaleString()}</span>
             </div>
