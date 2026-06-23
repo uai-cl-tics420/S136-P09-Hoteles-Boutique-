@@ -109,13 +109,13 @@ export default function BookingsPage() {
     toast.success(t("bookings.removedFromFavorites"));
   }
 
+  if (!t) return null;
+
   const tabs = [
     { key: "bookings", label: t("bookings.myBookings") },
     { key: "favorites", label: t("bookings.favorites") },
     { key: "preferences", label: t("bookings.myPreferences") },
   ] as const;
-
-  if (!t) return null;
 
   return (
     <main className="min-h-screen bg-[var(--background)]">

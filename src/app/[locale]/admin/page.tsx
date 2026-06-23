@@ -69,11 +69,12 @@ export default function AdminDashboardPage() {
     CANCELLED: "bg-red-50 text-red-500 border-red-200",
     COMPLETED: "bg-[var(--surface)] text-[var(--text-muted)] border-[var(--border)]",
   };
+
+  if (!t) return null;
+
   const statusLabel: Record<string, string> = {
     CONFIRMED: t("bookings.status.CONFIRMED"), PENDING: t("bookings.status.PENDING"), CANCELLED: t("bookings.status.CANCELLED"), COMPLETED: t("bookings.status.COMPLETED"),
   };
-
-  if (!t) return null;
 
   return (
     <div className="space-y-12 max-w-6xl">
