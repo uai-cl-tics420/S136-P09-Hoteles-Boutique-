@@ -71,7 +71,7 @@ export default async function HotelsPage({ params, searchParams }: PageProps) {
     maxPrice:            sp.maxPrice ? parseFloat(sp.maxPrice) : undefined,
     minStars:            sp.minStars ? parseInt(sp.minStars)   : undefined,
     page:                sp.page     ? parseInt(sp.page)       : 1,
-    limit:               12,
+    limit:               150,
     preferredCategories: preferredCategories.length > 0 ? preferredCategories : undefined,
     experienceType:      sp.experience,
   });

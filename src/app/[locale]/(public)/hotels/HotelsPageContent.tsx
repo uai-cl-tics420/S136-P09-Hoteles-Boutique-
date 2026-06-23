@@ -4,6 +4,7 @@ import { logoutAction } from "@/lib/auth/auth-actions";
 import FavButton from "@/components/FavButton";
 import CompareButton from "@/components/CompareButton";
 import ComparisonBar from "@/components/ComparisonBar";
+import HotelFilters from "@/components/HotelFilters";
 import { useState, useEffect } from "react";
 
 const CAT_LABELS: Record<string, string> = {
@@ -146,7 +147,7 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
 
         {/* Filtros */}
         <div className="relative">
-          {/* HotelFilters is already a client component */}
+          <HotelFilters />
         </div>
 
         {/* Cabecera de resultados */}

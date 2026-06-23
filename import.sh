@@ -1,0 +1,1 @@
+echo "TRUNCATE TABLE users CASCADE;" > /tmp/wipe.sql && psql "postgresql://postgres.ktmkmrhnhngvutkelhbt:hFNLFAFfChkH8q68@aws-1-us-east-2.pooler.supabase.com:6543/postgres" < /tmp/wipe.sql && psql "postgresql://postgres.ktmkmrhnhngvutkelhbt:hFNLFAFfChkH8q68@aws-1-us-east-2.pooler.supabase.com:6543/postgres" < /tmp/data.sql

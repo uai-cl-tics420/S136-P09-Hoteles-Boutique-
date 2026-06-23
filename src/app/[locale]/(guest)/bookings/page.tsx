@@ -112,9 +112,9 @@ export default function BookingsPage() {
   if (!t) return null;
 
   const tabs = [
-    { key: "bookings", label: t("bookings.myBookings") },
-    { key: "favorites", label: t("bookings.favorites") },
-    { key: "preferences", label: t("bookings.myPreferences") },
+    { key: "bookings", label: t("bookings.page.tabBookings") },
+    { key: "favorites", label: t("bookings.page.tabFavorites") },
+    { key: "preferences", label: t("bookings.page.tabPreferences") },
   ] as const;
 
   return (
@@ -126,7 +126,7 @@ export default function BookingsPage() {
               {t("nav.exploreHotels")}
             </a>
             <span className="text-[var(--border)]">|</span>
-            <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">{t("bookings.mySpace")}</span>
+            <span className="text-sm font-bold tracking-wide uppercase text-[var(--text-primary)]">{t("bookings.page.mySpace")}</span>
           </div>
           <a href={`/${locale}/profile`} className="w-8 h-8 bg-[var(--surface-hover)] rounded-full flex items-center justify-center text-[var(--text-primary)] hover:bg-[var(--gold)] hover:text-white transition-all shadow-sm">
             <span className="text-sm">👤</span>
@@ -156,10 +156,10 @@ export default function BookingsPage() {
           ) : bookings.length === 0 ? (
             <div className="text-center py-24 bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)] animate-fade-in">
               <span className="text-5xl mb-6 block opacity-50">🧳</span>
-              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t("bookings.noAdventures")}</h3>
-              <p className="text-[var(--text-muted)] mb-8">{t("bookings.noAdventuresDesc")}</p>
+              <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t("bookings.page.noAdventures")}</h3>
+              <p className="text-[var(--text-muted)] mb-8">{t("bookings.page.noAdventuresDesc")}</p>
               <a href={`/${locale}/hotels`} className="inline-block bg-[var(--gold)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-colors shadow-md hover:-translate-y-0.5">
-                {t("bookings.exploreCollection")}
+                {t("bookings.page.exploreCollection")}
               </a>
             </div>
           ) : (
@@ -253,15 +253,15 @@ export default function BookingsPage() {
             ) : favHotels.length === 0 ? (
               <div className="text-center py-24 bg-white rounded-3xl border border-[var(--border)] shadow-[var(--shadow-xs)]">
                 <span className="text-5xl mb-6 block">♡</span>
-                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t("bookings.noFavorites")}</h3>
-                <p className="text-[var(--text-muted)] mb-8">{t("bookings.noFavoritesDesc")}</p>
+                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">{t("bookings.page.noFavorites")}</h3>
+                <p className="text-[var(--text-muted)] mb-8">{t("bookings.page.noFavoritesDesc")}</p>
                 <a href={`/${locale}/hotels`} className="inline-block bg-[var(--text-primary)] text-white rounded-full px-8 py-3 text-sm font-bold uppercase tracking-widest hover:bg-[var(--gold)] transition-colors shadow-md">
-                  {t("bookings.exploreHotels")}
+                  {t("bookings.page.exploreHotels")}
                 </a>
               </div>
             ) : (
               <>
-                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">{favHotels.length} {favHotels.length === 1 ? t("bookings.propertySaved") : t("bookings.propertiesSaved")}</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">{favHotels.length} {favHotels.length === 1 ? t("bookings.page.propertiesSaved") : t("bookings.page.propertiesSavedPlural")}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {favHotels.map((h: any) => (
                     <div key={h.id} className="group bg-white rounded-3xl border border-[var(--border)] overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
@@ -306,11 +306,11 @@ export default function BookingsPage() {
         {tab === "preferences" && (
           <div className="space-y-6 animate-slide-up">
             <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)]">
-              <h2 className="text-2xl font-black text-[var(--text-primary)] mb-2">{t("bookings.travelerProfile")}</h2>
-              <p className="text-sm text-[var(--text-muted)] mb-8">{t("bookings.travelerProfileDesc")}</p>
+              <h2 className="text-2xl font-black text-[var(--text-primary)] mb-2">{t("bookings.page.travelerProfile")}</h2>
+              <p className="text-sm text-[var(--text-muted)] mb-8">{t("bookings.page.travelerProfileDesc")}</p>
 
               <div className="mb-8">
-                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">{t("bookings.whatLookingFor")}</label>
+                <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-4">{t("bookings.page.whatLooking")}</label>
                 <div className="flex flex-wrap gap-3">
                   {PREF_OPTIONS.map(({ key, label }) => (
                     <button key={key} onClick={() => toggleCat(key)}
@@ -323,26 +323,26 @@ export default function BookingsPage() {
 
               <div className="grid grid-cols-2 gap-6 mb-10">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("bookings.minBudget")} ($)</label>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("bookings.page.budgetMin")}</label>
                   <input type="number" min={0} value={budgetMin} onChange={(e) => setBudgetMin(e.target.value)} placeholder="0"
                     className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("bookings.maxBudget")} ($)</label>
-                  <input type="number" min={0} value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} placeholder={t("bookings.noLimit")}
+                  <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("bookings.page.budgetMax")}</label>
+                  <input type="number" min={0} value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} placeholder={t("bookings.page.noLimit")}
                     className="w-full bg-[var(--background)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] focus:border-transparent transition-all" />
                 </div>
               </div>
 
               <button onClick={savePreferences} disabled={savingPrefs}
                 className="w-full sm:w-auto bg-[var(--gold)] text-white rounded-full px-8 py-4 text-sm font-bold tracking-widest uppercase hover:bg-yellow-600 disabled:opacity-50 transition-all shadow-md hover:shadow-lg active:scale-95">
-                {savingPrefs ? t("loading") : t("bookings.saveProfile")}
+                {savingPrefs ? t("loading") : t("bookings.page.saveProfile")}
               </button>
             </div>
 
             {selectedCats.length > 0 && (
               <div className="bg-transparent mt-10">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-6">{t("bookings.curatedSelection")}</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[var(--text-muted)] mb-6">{t("bookings.page.curatedSelection")}</h3>
                 <RecommendedHotels categories={selectedCats} budgetMax={budgetMax ? parseInt(budgetMax) : undefined} locale={locale} />
               </div>
             )}
