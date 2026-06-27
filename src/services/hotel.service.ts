@@ -15,6 +15,7 @@ export interface HotelFilters {
   /** Filter hotels that offer a specific extra service category (SPA, DINING, etc.) */
   experienceType?: string;
   country?: string;
+  sortBy?: string;
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────

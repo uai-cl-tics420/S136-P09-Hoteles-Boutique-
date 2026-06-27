@@ -51,8 +51,8 @@ async function main() {
     process.exit(1);
   }
 
-  const userIds    = (userRows as { id: string }[]).map(u => u.id);
-  const rooms      = roomTypeRows as { id: string; price_per_night: string }[];
+  const userIds    = (userRows as unknown as { id: string }[]).map(u => u.id);
+  const rooms      = roomTypeRows as unknown as { id: string; price_per_night: string }[];
 
   if (rooms.length === 0) {
     console.error("❌ No hay room_types.");

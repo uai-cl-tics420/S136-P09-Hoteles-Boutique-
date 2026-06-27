@@ -29,7 +29,7 @@ async function getMetrics() {
     revenue: Number(revenue.r ?? 0),
     avgRating: String(avgRating.r ?? "4.3"),
     pending: Number(pending.c),
-    catBreak: catBreak as {category:string;cnt:string}[],
+    catBreak: catBreak as unknown as {category:string;cnt:string}[],
   };
 }
 

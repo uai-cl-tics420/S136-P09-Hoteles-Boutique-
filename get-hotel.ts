@@ -1,1 +1,1 @@
-import { drizzle } from "drizzle-orm/postgres-js"; import postgres from "postgres"; const sql = postgres(process.env.DATABASE_URL!); const db = drizzle(sql); async function main() { const res = await sql\`SELECT id FROM hotels LIMIT 1\`; console.log(res); process.exit(0); } main();
+import { drizzle } from "drizzle-orm/postgres-js"; import postgres from "postgres"; const sql = postgres(process.env.DATABASE_URL!); const db = drizzle(sql); async function main() { const res = await sql`SELECT id FROM hotels LIMIT 1`; console.log(res); process.exit(0); } main();
