@@ -39,7 +39,7 @@ interface Props {
 }
 
 export default function FavButton({ hotelId, hotelSlug, hotelName, size = "md" }: Props) {
-  const [isFav, setIsFav] = useState(false);
+  const [isFav, setIsFav] = useState(() => getFavorites().includes(hotelId));
   const [pulse, setPulse] = useState(false);
   const [t, setT] = useState<any>(null);
   const pathname = usePathname() || "";
@@ -50,7 +50,6 @@ export default function FavButton({ hotelId, hotelSlug, hotelName, size = "md" }
   }, [locale]);
 
   useEffect(() => {
-    setIsFav(getFavorites().includes(hotelId));
     const handler = () => setIsFav(getFavorites().includes(hotelId));
     window.addEventListener("hb:favorites-changed", handler);
     return () => window.removeEventListener("hb:favorites-changed", handler);

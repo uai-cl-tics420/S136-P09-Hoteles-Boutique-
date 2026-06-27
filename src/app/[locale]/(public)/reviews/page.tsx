@@ -78,7 +78,7 @@ export default function ReviewsPage() {
 
   useEffect(() => {
     if (!selectedHotel) return;
-    setReviewsLoading(true);
+    queueMicrotask(() => setReviewsLoading(true));
     fetch(`/api/reviews?hotelId=${selectedHotel}`)
       .then((r) => r.json())
       .then((d) => { setReviews(d.reviews ?? []); setReviewsLoading(false); })
@@ -224,7 +224,7 @@ export default function ReviewsPage() {
                       </span>
                     </div>
                     
-                    {r.comment && <p className="text-[15px] leading-relaxed text-[var(--text-primary)] mb-6 font-medium">"{r.comment}"</p>}
+                    {r.comment && <p className="text-[15px] leading-relaxed text-[var(--text-primary)] mb-6 font-medium">&ldquo;{r.comment}&rdquo;</p>}
                     
                     <div className="grid grid-cols-3 gap-4 bg-[var(--surface)] rounded-2xl p-4 border border-[var(--border)]">
                       {[

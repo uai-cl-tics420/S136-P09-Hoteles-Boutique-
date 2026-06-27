@@ -66,7 +66,7 @@ export default function ComparisonBar({ locale }: Props) {
   // Load full hotel details when modal opens
   useEffect(() => {
     if (!showModal || list.length === 0) return;
-    setLoadingDetails(true);
+    queueMicrotask(() => setLoadingDetails(true));
     Promise.all(
       list.map((h) =>
         fetch(`/api/hotels/${h.id}`)

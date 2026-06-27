@@ -45,7 +45,10 @@ export default function HotelFilters() {
     loadTranslations(locale as any).then(setT);
   }, [locale]);
 
-  const [inputValue, setInputValue] = useState(params.get("query") ?? "");
+  const queryParam = params.get("query") ?? "";
+  const [searchDraft, setSearchDraft] = useState({ queryParam, value: queryParam });
+  const inputValue = searchDraft.queryParam === queryParam ? searchDraft.value : queryParam;
+  const setInputValue = (value: string) => setSearchDraft({ queryParam, value });
 
   const category = params.get("category") ?? "";
   const maxPrice = params.get("maxPrice") ?? "";
@@ -53,10 +56,6 @@ export default function HotelFilters() {
   const experience = params.get("experience") ?? "";
   const country = params.get("country") ?? "";
   const hasFilters = !!(params.get("query") || category || maxPrice || minStars || experience || country);
-
-  useEffect(() => {
-    setInputValue(params.get("query") ?? "");
-  }, [params]);
 
   const applyFilters = useCallback(
     (overrides: Record<string, string>) => {

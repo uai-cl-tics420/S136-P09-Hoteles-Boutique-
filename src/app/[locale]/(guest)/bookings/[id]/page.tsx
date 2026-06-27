@@ -183,7 +183,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
             {booking.specialRequests && (
               <div className="mt-5 p-4 bg-[var(--surface)] rounded-2xl border border-[var(--border-soft)]">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Solicitudes Especiales</p>
-                <p className="text-sm font-medium text-[var(--text-primary)] italic leading-relaxed">"{booking.specialRequests}"</p>
+                <p className="text-sm font-medium text-[var(--text-primary)] italic leading-relaxed">&ldquo;{booking.specialRequests}&rdquo;</p>
               </div>
             )}
           </div>

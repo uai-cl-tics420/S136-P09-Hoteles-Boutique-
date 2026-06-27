@@ -94,10 +94,10 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
 
       {/* ── Navbar Floating Pill ─────────────────────────────── */}
       <div className={`fixed top-3 left-0 right-0 z-50 px-4 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${showNav ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"}`}>
-        <header className="max-w-7xl mx-auto flex items-center justify-between gap-4 bg-white/85 backdrop-blur-2xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.10),0_1px_2px_rgba(0,0,0,0.05)] rounded-[2rem] px-5 py-2.5 transition-all duration-300">
+        <header className="max-w-7xl mx-auto flex items-center justify-between gap-3 bg-white/90 backdrop-blur-2xl border border-white/70 shadow-[0_10px_30px_rgba(31,25,15,0.12)] rounded-xl px-4 py-2.5 transition-all duration-300">
           {/* Logo */}
           <a href={`/${locale}/hotels`} className="flex items-center gap-2.5 group shrink-0">
-            <span className="w-8 h-8 rounded-xl bg-[var(--text-primary)] flex items-center justify-center text-[var(--gold)] text-[11px] font-black group-hover:scale-110 group-hover:shadow-[0_0_16px_rgba(201,150,58,0.5)] transition-all duration-300">
+            <span className="w-8 h-8 rounded-lg bg-[var(--text-primary)] flex items-center justify-center text-[var(--gold)] text-[11px] font-black group-hover:scale-105 group-hover:shadow-[0_0_16px_rgba(201,150,58,0.35)] transition-all duration-300">
               HB
             </span>
             <span className="hidden sm:block text-[15px] font-black text-[var(--text-primary)] tracking-tight">
@@ -106,7 +106,7 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
           </a>
 
           {/* Nav links */}
-          <nav className="flex items-center gap-1.5 flex-wrap">
+          <nav className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
             {/* Lang switcher */}
             <div className="flex items-center bg-[var(--surface-2)] rounded-lg p-0.5 border border-[var(--border)] mr-1">
               {["es","en"].map(l => (
