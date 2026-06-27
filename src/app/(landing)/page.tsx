@@ -17,14 +17,19 @@ const COPY = {
 };
 
 export default function RootLanguageSelection() {
+  // Default basado en idioma del navegador, se sobreescribe con hover
   const [lang, setLang] = useState<"es" | "en">("es");
+  const [hovered, setHovered] = useState<"es" | "en" | null>(null);
 
   useEffect(() => {
     const browserLang = navigator.language?.slice(0, 2).toLowerCase();
     setLang(browserLang === "en" ? "en" : "es");
   }, []);
 
-  const copy = COPY[lang];
+  // El idioma activo es el que tiene hover; si no hay hover, el del navegador
+  const activeLang = hovered ?? lang;
+  const copy = COPY[activeLang];
+
   return (
     <main className={`relative min-h-screen overflow-hidden bg-stone-950 ${outfit.className}`}>
       <div className="absolute inset-0">
@@ -58,18 +63,28 @@ export default function RootLanguageSelection() {
             <h1 className="text-5xl font-black leading-[0.94] tracking-tight text-white md:text-7xl">
               Boutique Hotels
             </h1>
-            <p className="mt-5 max-w-lg text-base font-medium leading-7 text-white/72 md:text-lg">
+            {/* Descripción que reacciona al hover del selector de idioma */}
+            <p
+              key={activeLang}
+              className="mt-5 max-w-lg text-base font-medium leading-7 text-white/72 md:text-lg"
+              style={{ animation: "fadeIn 0.25s ease" }}
+            >
               {copy.description}
             </p>
           </div>
 
           <div className="grid gap-3 rounded-xl border border-white/15 bg-white/12 p-3 shadow-2xl backdrop-blur-2xl">
-            <Link href="/es" className="group rounded-lg border border-white/12 bg-white/92 p-5 text-stone-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl">
+            <Link
+              href="/es"
+              onMouseEnter={() => setHovered("es")}
+              onMouseLeave={() => setHovered(null)}
+              className="group rounded-lg border border-white/12 bg-white/92 p-5 text-stone-950 transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl"
+            >
               <div className="flex items-center gap-4">
                 <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--gold-lighter)] text-sm font-black">ES</span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-base font-black">Espanol</h2>
-                  <p className="text-sm font-medium text-stone-500">Continuar en espanol</p>
+                  <h2 className="text-base font-black">Español</h2>
+                  <p className="text-sm font-medium text-stone-500">Continuar en español</p>
                 </div>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400 transition-transform group-hover:translate-x-1">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -77,7 +92,12 @@ export default function RootLanguageSelection() {
               </div>
             </Link>
 
-            <Link href="/en" className="group rounded-lg border border-white/12 bg-white/8 p-5 text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/14">
+            <Link
+              href="/en"
+              onMouseEnter={() => setHovered("en")}
+              onMouseLeave={() => setHovered(null)}
+              className="group rounded-lg border border-white/12 bg-white/8 p-5 text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/14"
+            >
               <div className="flex items-center gap-4">
                 <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/10 text-sm font-black">EN</span>
                 <div className="min-w-0 flex-1">
@@ -97,6 +117,13 @@ export default function RootLanguageSelection() {
           <span>{copy.footer}</span>
         </footer>
       </div>
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </main>
   );
 }
