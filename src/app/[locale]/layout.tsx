@@ -7,8 +7,9 @@ import { Toaster } from "sonner";
 import { AuthSessionProvider } from "../session-provider";
 import "../globals.css";
 
-const outfit = Outfit({ 
+const outfit = Outfit({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
   display: "swap",
   variable: "--font-outfit",
 });
@@ -26,15 +27,30 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
   if (!locales.includes(locale as Locales)) notFound();
-  
+
   return (
     <html lang={locale} className={`${outfit.variable} scroll-smooth`}>
-      <body className="min-h-screen bg-[#fafafa] font-sans text-gray-900 antialiased selection:bg-gray-900 selection:text-white">
+      <head>
+        <meta name="theme-color" content="#FAF9F6" />
+      </head>
+      <body className="min-h-screen bg-[var(--background)] font-sans text-[var(--foreground)] antialiased">
         <AuthSessionProvider>
           {children}
         </AuthSessionProvider>
-        <Toaster position="top-center" richColors closeButton />
+        <Toaster
+          position="top-center"
+          richColors
+          closeButton
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-outfit), sans-serif",
+              fontWeight: "600",
+              fontSize: "13px",
+              borderRadius: "16px",
+            },
+          }}
+        />
       </body>
     </html>
   );
-}
+}

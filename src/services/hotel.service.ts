@@ -33,7 +33,7 @@ function groupBy<T extends { hotelId: string }>(rows: T[]): Map<string, T[]> {
 // los LATERAL JOINs que son incompatibles con Supabase/PgBouncer (transaction mode).
 
 export async function getHotels(filters: HotelFilters = {}) {
-  const { query, category, minStars, maxPrice, page = 1, limit = 12, preferredCategories, experienceType, country } = filters;
+  const { query, category, minStars, maxPrice, page = 1, limit = 24, preferredCategories, experienceType, country } = filters;
   const offset = (page - 1) * limit;
 
   const conditions = [eq(hotels.active, true)];
@@ -60,7 +60,8 @@ export async function getHotels(filters: HotelFilters = {}) {
 
   // Filter by experience type (SPA, DINING, etc.) — hotels that have at least one active extra service
   if (experienceType) {
-    const hotelsWithExperience = db
+    // First fetch matching hotel IDs to avoid invalid SQL with empty IN ()
+    const hotelsWithExperience = await db
       .select({ hotelId: extraServices.hotelId })
       .from(extraServices)
       .where(
@@ -69,7 +70,9 @@ export async function getHotels(filters: HotelFilters = {}) {
           eq(extraServices.available, true)
         )
       );
-    conditions.push(inArray(hotels.id, hotelsWithExperience));
+    const matchingIds = [...new Set(hotelsWithExperience.map(r => r.hotelId))];
+    if (matchingIds.length === 0) return []; // no hotels match this experience
+    conditions.push(inArray(hotels.id, matchingIds));
   }
 
   // Personalisation: if the user has preferred categories, boost those hotels first.

@@ -344,6 +344,10 @@ const en = {
     commentPlaceholder: "Tell us about your experience: staff treatment, facilities, what you liked most...",
     publishing: "Publishing review...",
     publishReview: "Publish Review ★",
+    externalReviews: "external reviews",
+    averageRating: "Overall average",
+    loadMore: "Load more reviews",
+    remaining: "remaining",
     page: {
       subtitle: "The Excellence Guide",
       description: "Discover the highest-rated properties by our exclusive community of travelers. Excellence recognized through real experiences.",

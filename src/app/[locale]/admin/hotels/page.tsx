@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { loadTranslations } from "@/i18n/i18n-util";
 
 export default function AdminHotelsPage() {
   const pathname = usePathname();
@@ -9,8 +10,16 @@ export default function AdminHotelsPage() {
   const [hotels, setHotels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", locationCity: "", locationCountry: "Chile", category: "BOUTIQUE", starRating: 3, description: "" });
+  const [form, setForm] = useState({
+    name: "", locationCity: "", locationCountry: "Chile",
+    category: "BOUTIQUE", starRating: 3, description: ""
+  });
   const [saving, setSaving] = useState(false);
+  const [t, setT] = useState<any>(null);
+
+  useEffect(() => {
+    loadTranslations(locale as any).then(setT);
+  }, [locale]);
 
   useEffect(() => {
     fetch("/api/admin/hotels").then(r => r.json())
@@ -28,72 +37,110 @@ export default function AdminHotelsPage() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) { toast.error(data.error ?? "Error"); return; }
-      toast.success("Propiedad añadida al catálogo");
+      if (!res.ok) { toast.error(data.error ?? t?.("error") ?? "Error"); return; }
+      toast.success(t?.("admin.properties.confirmRegister") ?? "Propiedad registrada");
       setHotels(h => [data.hotel, ...h]);
       setShowForm(false);
       setForm({ name: "", locationCity: "", locationCountry: "Chile", category: "BOUTIQUE", starRating: 3, description: "" });
-    } catch { toast.error("Error de conexión"); }
+    } catch { toast.error(t?.("auth.connectionError") ?? "Error de conexión"); }
     finally { setSaving(false); }
   }
 
+  if (!t) return null;
+
   return (
     <div className="space-y-8 max-w-6xl animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Mis Propiedades</h1>
-          <p className="text-sm font-medium text-[var(--text-muted)] mt-2">{hotels.length} propiedades en tu colección exclusiva.</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tight">
+            {t("admin.properties.myProperties")}
+          </h1>
+          <p className="text-sm font-medium text-[var(--text-muted)] mt-2">
+            {hotels.length} {t("admin.properties.propertiesCount")}
+          </p>
         </div>
-        <button onClick={() => setShowForm(!showForm)}
-          className="bg-[var(--text-primary)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md">
-          {showForm ? "Cancelar Registro" : "+ Nueva Propiedad"}
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="w-full sm:w-auto bg-[var(--text-primary)] text-white rounded-xl px-6 py-3 text-sm font-bold uppercase tracking-widest hover:bg-black transition-all shadow-md"
+        >
+          {showForm ? t("cancel") : `+ ${t("admin.newHotel")}`}
         </button>
       </div>
 
       {/* Create form */}
       {showForm && (
-        <div className="bg-white rounded-3xl border border-[var(--border)] p-8 shadow-[var(--shadow-xs)] animate-slide-up relative overflow-hidden">
+        <div className="bg-white rounded-3xl border border-[var(--border)] p-6 sm:p-8 shadow-[var(--shadow-xs)] animate-slide-up relative overflow-hidden">
           <div className="absolute top-0 left-0 w-1 h-full bg-[var(--gold)]" />
-          <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">Añadir al Catálogo</h2>
+          <h2 className="text-xl font-black text-[var(--text-primary)] mb-6">{t("admin.properties.addToCatalog")}</h2>
           <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {[
-              { label: "Nombre del Hotel", key: "name", type: "text", required: true },
-              { label: "Ciudad", key: "locationCity", type: "text", required: true },
-              { label: "País", key: "locationCountry", type: "text", required: true },
+              { label: t("admin.properties.hotelName"), key: "name", type: "text", required: true },
+              { label: t("admin.properties.city"),      key: "locationCity",    type: "text", required: true },
+              { label: t("admin.properties.country"),   key: "locationCountry", type: "text", required: true },
             ].map(f => (
               <div key={f.key}>
                 <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{f.label}</label>
-                <input type={f.type} required={f.required}
-                  value={(form as any)[f.key]} onChange={e => setForm(x => ({ ...x, [f.key]: e.target.value }))}
-                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+                <input
+                  type={f.type}
+                  required={f.required}
+                  value={(form as any)[f.key]}
+                  onChange={e => setForm(x => ({ ...x, [f.key]: e.target.value }))}
+                  className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+                />
               </div>
             ))}
+
+            {/* Category */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Categoría</label>
-              <select value={form.category} onChange={e => setForm(x => ({ ...x, category: e.target.value }))}
-                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors">
-                {["LUXURY","BOUTIQUE","ECO","BEACH","MOUNTAIN","CITY"].map(c => <option key={c} value={c}>{c}</option>)}
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("admin.properties.category")}</label>
+              <select
+                value={form.category}
+                onChange={e => setForm(x => ({ ...x, category: e.target.value }))}
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+              >
+                {["LUXURY","BOUTIQUE","ECO","BEACH","MOUNTAIN","CITY"].map(c => (
+                  <option key={c} value={c}>{t(`hotels.categories.${c}`)}</option>
+                ))}
               </select>
             </div>
+
+            {/* Stars */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Clasificación Estrellas</label>
-              <input type="number" min={1} max={5} value={form.starRating}
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("admin.properties.stars")}</label>
+              <input
+                type="number" min={1} max={5} value={form.starRating}
                 onChange={e => setForm(x => ({ ...x, starRating: parseInt(e.target.value) }))}
-                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors" />
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-bold text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors"
+              />
             </div>
+
+            {/* Description */}
             <div className="sm:col-span-2">
-              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Descripción Premium</label>
-              <textarea value={form.description} onChange={e => setForm(x => ({ ...x, description: e.target.value }))} rows={4}
-                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors resize-none leading-relaxed" />
+              <label className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">{t("admin.properties.description")}</label>
+              <textarea
+                value={form.description}
+                onChange={e => setForm(x => ({ ...x, description: e.target.value }))}
+                rows={4}
+                className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm font-medium text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--gold)] transition-colors resize-none leading-relaxed"
+              />
             </div>
-            <div className="sm:col-span-2 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 pt-4 border-t border-[var(--border-soft)]">
-              <button type="submit" disabled={saving}
-                className="w-full sm:w-auto bg-[var(--gold)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all shadow-md disabled:opacity-50">
-                {saving ? "Registrando..." : "Confirmar Registro"}
+
+            {/* Actions */}
+            <div className="sm:col-span-2 flex flex-col sm:flex-row sm:items-center gap-3 pt-4 border-t border-[var(--border-soft)]">
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full sm:w-auto bg-[var(--gold)] text-white rounded-xl px-8 py-4 text-sm font-bold uppercase tracking-widest hover:bg-yellow-600 transition-all shadow-md disabled:opacity-50"
+              >
+                {saving ? t("admin.properties.registering") : t("admin.properties.confirmRegister")}
               </button>
-              <button type="button" onClick={() => setShowForm(false)}
-                className="w-full sm:w-auto text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors px-4 py-4 text-center">
-                Cancelar Operación
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="w-full sm:w-auto text-xs font-bold text-[var(--text-muted)] hover:text-[var(--text-primary)] uppercase tracking-widest transition-colors px-4 py-4 text-center"
+              >
+                {t("cancel")}
               </button>
             </div>
           </form>
@@ -108,25 +155,46 @@ export default function AdminHotelsPage() {
       ) : hotels.length === 0 ? (
         <div className="text-center py-20 border-2 border-dashed border-[var(--border)] rounded-3xl bg-white">
           <span className="text-4xl mb-4 block opacity-50">🏨</span>
-          <p className="text-lg font-black text-[var(--text-primary)] mb-1">Catálogo Vacío</p>
-          <p className="text-sm font-medium text-[var(--text-muted)]">No tienes propiedades registradas aún. Comienza añadiendo una.</p>
+          <p className="text-lg font-black text-[var(--text-primary)] mb-1">{t("admin.properties.noProperties")}</p>
+          <p className="text-sm font-medium text-[var(--text-muted)]">{t("admin.properties.noPropertiesDesc")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 stagger-children">
           {hotels.map((h: any) => (
-            <div key={h.id} className="group bg-white rounded-3xl border border-[var(--border)] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-sm hover:shadow-lg transition-all duration-300">
+            <div
+              key={h.id}
+              className="group bg-white rounded-3xl border border-[var(--border)] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 shadow-sm hover:shadow-lg transition-all duration-300"
+            >
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-widest bg-[var(--surface)] text-[var(--gold)] px-2 py-1 rounded border border-[var(--border)]">{h.category}</span>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-widest bg-[var(--surface)] text-[var(--gold)] px-2 py-1 rounded border border-[var(--border)]">
+                    {t(`hotels.categories.${h.category}`) ?? h.category}
+                  </span>
                   <span className="text-xs text-[var(--gold)]">{"★".repeat(h.starRating)}</span>
                 </div>
-                <p className="text-xl font-black text-[var(--text-primary)] truncate group-hover:text-[var(--gold)] transition-colors">{h.name}</p>
-                <p className="text-sm font-medium text-[var(--text-muted)] mt-1 truncate">{h.locationCity}, {h.locationCountry}</p>
+                <p className="text-lg sm:text-xl font-black text-[var(--text-primary)] truncate group-hover:text-[var(--gold)] transition-colors">
+                  {h.name}
+                </p>
+                <p className="text-sm font-medium text-[var(--text-muted)] mt-1 truncate">
+                  {h.locationCity}, {h.locationCountry}
+                </p>
               </div>
-              <a href={`/${locale}/admin/hotels/${h.id}`}
-                className="flex-shrink-0 text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-6 py-3 hover:bg-[var(--text-primary)] hover:text-white transition-all text-center">
-                Gestionar
-              </a>
+              <div className="flex gap-2 sm:flex-col lg:flex-row">
+                <a
+                  href={`/${locale}/admin/hotels/${h.id}`}
+                  className="flex-1 sm:flex-none text-center text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] border border-[var(--border)] rounded-xl px-5 py-2.5 hover:bg-[var(--text-primary)] hover:text-white transition-all"
+                >
+                  {t("admin.properties.edit")}
+                </a>
+                <a
+                  href={`/${locale}/hotels/${h.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 sm:flex-none text-center text-[10px] font-bold uppercase tracking-widest text-[var(--gold-dark)] border border-[var(--gold)]/30 rounded-xl px-5 py-2.5 hover:bg-[var(--gold)]/10 transition-all"
+                >
+                  {t("admin.properties.viewSite")}
+                </a>
+              </div>
             </div>
           ))}
         </div>

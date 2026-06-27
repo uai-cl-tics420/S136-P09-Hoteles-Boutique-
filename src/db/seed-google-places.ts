@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { hotels, hotelImages, roomTypes } from "./schema";
+import { hotels, hotelImages, roomTypes, extraServices } from "./schema";
 import { eq, sql } from "drizzle-orm";
 import { config } from "dotenv";
 
@@ -140,6 +140,53 @@ async function seed() {
         }
       ]);
       
+      // Extra services — assign a realistic mix per hotel category
+      const EXTRAS_BY_CAT: Record<string, {name: string; category: string; price: string}[]> = {
+        LUXURY:   [
+          { name: "Spa & Masajes",        category: "SPA",        price: "85000" },
+          { name: "Cena Gourmet Privada", category: "DINING",     price: "120000" },
+          { name: "Transfer Aeropuerto",  category: "TRANSPORT",  price: "45000" },
+          { name: "Tour Privado",         category: "EXPERIENCE", price: "95000" },
+        ],
+        BOUTIQUE: [
+          { name: "Desayuno en la Habitación", category: "DINING",     price: "25000" },
+          { name: "Masaje Relajante",          category: "SPA",        price: "60000" },
+          { name: "City Tour Privado",         category: "EXPERIENCE", price: "55000" },
+        ],
+        ECO: [
+          { name: "Trekking Guiado",      category: "EXPERIENCE", price: "40000" },
+          { name: "Yoga al Amanecer",     category: "SPA",        price: "30000" },
+          { name: "Traslado Ecoturístico",category: "TRANSPORT",  price: "35000" },
+        ],
+        BEACH: [
+          { name: "Kayak & Snorkel",      category: "EXPERIENCE", price: "50000" },
+          { name: "Cena en la Playa",     category: "DINING",     price: "90000" },
+          { name: "Masaje Sunset",        category: "SPA",        price: "70000" },
+        ],
+        MOUNTAIN: [
+          { name: "Senderismo Guiado",    category: "EXPERIENCE", price: "45000" },
+          { name: "Fogón Gourmet",        category: "DINING",     price: "55000" },
+          { name: "Transfer Montaña",     category: "TRANSPORT",  price: "40000" },
+        ],
+        CITY: [
+          { name: "Transfer VIP",         category: "TRANSPORT",  price: "38000" },
+          { name: "Cena de Negocios",     category: "DINING",     price: "75000" },
+          { name: "City Tour Premium",    category: "EXPERIENCE", price: "50000" },
+        ],
+      };
+      const extrasForCat = EXTRAS_BY_CAT[category] ?? EXTRAS_BY_CAT.BOUTIQUE;
+      for (const extra of extrasForCat) {
+        await db.insert(extraServices).values({
+          hotelId,
+          name: extra.name,
+          description: null,
+          price: extra.price,
+          currency: "CLP",
+          category: extra.category as any,
+          available: true,
+        });
+      }
+
       totalInserted++;
     }
   }

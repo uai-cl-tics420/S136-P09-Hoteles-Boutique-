@@ -50,10 +50,16 @@ export default function AdminDashboardPage() {
       body: JSON.stringify({ status }),
     });
     if (res.ok) {
-      toast.success(`Reserva marcada como ${statusLabel[status] ?? status}`);
+      const label: Record<string, string> = {
+        CONFIRMED: t?.("bookings.status.CONFIRMED") ?? "Confirmed",
+        PENDING: t?.("bookings.status.PENDING") ?? "Pending",
+        CANCELLED: t?.("bookings.status.CANCELLED") ?? "Cancelled",
+        COMPLETED: t?.("bookings.status.COMPLETED") ?? "Completed",
+      };
+      toast.success(`${label[status] ?? status}`);
       setBookings((prev) => prev.map((b) => b.id === id ? { ...b, status } : b));
     } else {
-      toast.error("No se pudo actualizar el estado");
+      toast.error(t?.("errors.serverError") ?? "Error al actualizar");
     }
   }
 
@@ -73,15 +79,18 @@ export default function AdminDashboardPage() {
   if (!t) return null;
 
   const statusLabel: Record<string, string> = {
-    CONFIRMED: t("bookings.status.CONFIRMED"), PENDING: t("bookings.status.PENDING"), CANCELLED: t("bookings.status.CANCELLED"), COMPLETED: t("bookings.status.COMPLETED"),
+    CONFIRMED: t("bookings.status.CONFIRMED"),
+    PENDING: t("bookings.status.PENDING"),
+    CANCELLED: t("bookings.status.CANCELLED"),
+    COMPLETED: t("bookings.status.COMPLETED"),
   };
 
   return (
     <div className="space-y-12 max-w-6xl">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-4">
         <div>
-          <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Centro de Control</h1>
-          <p className="text-sm font-medium text-[var(--text-muted)] mt-2">Visión global del rendimiento de tu colección de propiedades.</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tight">{t("admin.title")}</h1>
+          <p className="text-sm font-medium text-[var(--text-muted)] mt-2">{t("admin.dashboard.managePropertiesDesc")}</p>
         </div>
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
           <button
@@ -100,7 +109,7 @@ export default function AdminDashboardPage() {
           </button>
           {lastUpdated && (
             <p className="text-[10px] text-[var(--text-muted)] font-medium">
-              Última actualización: {lastUpdated.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              {lastUpdated.toLocaleTimeString(locale === "en" ? "en" : "es", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </p>
           )}
         </div>
@@ -146,8 +155,8 @@ export default function AdminDashboardPage() {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-black text-[var(--text-primary)]">{t("admin.dashboard.recentBookings")}</h2>
           <span className="text-[10px] font-bold uppercase tracking-widest bg-[var(--surface)] text-[var(--text-muted)] px-3 py-1 rounded-full border border-[var(--border)]">
-            {bookings.length} Registros
-          </span>
+              {bookings.length} {t("admin.bookings")}
+            </span>
         </div>
         
         {loading ? (
@@ -174,11 +183,12 @@ export default function AdminDashboardPage() {
                   <tr key={b.id} className="hover:bg-[var(--surface-hover)] transition-colors group">
                     <td className="py-4 pr-4">
                       <p className="text-sm font-bold text-[var(--text-primary)] group-hover:text-[var(--gold)] transition-colors">{b.roomType?.hotel?.name}</p>
-                      <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">{b.roomType?.name} · {b.guestsCount} pers.</p>
+                      <p className="text-xs font-medium text-[var(--text-muted)] mt-0.5">{b.roomType?.name} · {b.guestsCount} {t("guests")}</p>
                     </td>
                     <td className="py-4 px-4 align-middle">
-                      <p className="text-xs font-bold text-[var(--text-primary)]">{b.checkIn}</p>
-                      <p className="text-[10px] font-medium text-[var(--text-muted)]">al {b.checkOut}</p>
+                      <p className="text-xs font-bold text-[var(--text-primary)]"
+                      >{b.checkIn}</p>
+                      <p className="text-[10px] font-medium text-[var(--text-muted)]">{t("bookings.page.to")} {b.checkOut}</p>
                     </td>
                     <td className="py-4 px-4 text-right align-middle">
                       <p className="text-sm font-black text-[var(--text-primary)]">${parseFloat(b.totalPrice ?? "0").toLocaleString()}</p>
@@ -195,7 +205,7 @@ export default function AdminDashboardPage() {
                             onClick={() => updateBookingStatus(b.id, "CONFIRMED")}
                             className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors whitespace-nowrap"
                           >
-                            ✓ Confirmar
+                            ✓ {t("confirm")}
                           </button>
                         )}
                         {b.status === "CONFIRMED" && (
@@ -203,7 +213,7 @@ export default function AdminDashboardPage() {
                             onClick={() => updateBookingStatus(b.id, "COMPLETED")}
                             className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded border bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors whitespace-nowrap"
                           >
-                            ✓ Completar
+                            ✓ {t("bookings.status.COMPLETED")}
                           </button>
                         )}
                         {(b.status === "PENDING" || b.status === "CONFIRMED") && (

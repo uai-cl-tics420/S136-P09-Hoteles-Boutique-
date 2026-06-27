@@ -219,7 +219,7 @@ export default function HotelReviews({
             onClick={() => setShowGoogle(!showGoogle)}
             className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
           >
-            {showGoogle ? t("common.hide") : t("common.view")}
+            {showGoogle ? t("hide") : t("view")}
           </button>
         </div>
       )}
@@ -237,7 +237,7 @@ export default function HotelReviews({
       {reviews.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-2xl border border-[var(--border)] shadow-[var(--shadow-xs)]">
           <p className="text-3xl mb-3 opacity-30">💬</p>
-          <p className="text-[var(--text-muted)] text-sm font-medium">{t("reviews.noReviewsYet")}</p>
+          <p className="text-[var(--text-muted)] text-sm font-medium">{t("reviews.page.noReviewsYet")}</p>
         </div>
       ) : (
         <>
