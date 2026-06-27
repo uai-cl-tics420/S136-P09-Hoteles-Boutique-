@@ -293,6 +293,20 @@ export default function BookingWidget({ hotelSlug, roomTypes, extraServices, loc
           </svg>
           {t("bookings.noAdditionalCharges")}
         </p>
+
+        {/* Trust badges */}
+        <div className="grid grid-cols-3 gap-2 pt-4 border-t border-[var(--border-soft)]">
+          {[
+            { icon: "🔒", label: "Pago seguro" },
+            { icon: "✅", label: "Sin cargos ocultos" },
+            { icon: "⭐", label: "Mejor precio" },
+          ].map(b => (
+            <div key={b.label} className="flex flex-col items-center gap-1 text-center">
+              <span className="text-lg">{b.icon}</span>
+              <span className="text-[9px] font-bold text-[var(--text-muted)] leading-tight">{b.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

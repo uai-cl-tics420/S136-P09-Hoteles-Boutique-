@@ -14,6 +14,16 @@ const CAT_LABELS: Record<string, string> = {
   BEACH: "Playa", MOUNTAIN: "Montaña", CITY: "Ciudad",
 };
 
+// Inferred services per category for visual preview on cards
+const CAT_SERVICES: Record<string, { icon: string; label: string }[]> = {
+  LUXURY:   [{ icon: "💆", label: "Spa" }, { icon: "🍽️", label: "Gourmet" }, { icon: "🚗", label: "Transfer" }],
+  BOUTIQUE: [{ icon: "☕", label: "Desayuno" }, { icon: "💆", label: "Masajes" }, { icon: "🗺️", label: "Tours" }],
+  ECO:      [{ icon: "🥾", label: "Trekking" }, { icon: "🧘", label: "Yoga" }, { icon: "🌿", label: "Eco" }],
+  BEACH:    [{ icon: "🤿", label: "Snorkel" }, { icon: "🍹", label: "Beach bar" }, { icon: "💆", label: "Spa" }],
+  MOUNTAIN: [{ icon: "🏔️", label: "Senderismo" }, { icon: "🔥", label: "Fogón" }, { icon: "🌄", label: "Vista" }],
+  CITY:     [{ icon: "🚕", label: "Transfer" }, { icon: "🍷", label: "Cena" }, { icon: "🎭", label: "Tours" }],
+};
+
 const CAT_COLOR: Record<string, { badge: string; glow: string; overlay: string; dot: string }> = {
   LUXURY:   { badge: "bg-purple-950/80 text-purple-200 border-purple-500/30",  glow: "rgba(168,85,247,0.35)",  overlay: "from-purple-900/70 via-indigo-900/40",   dot: "bg-purple-400" },
   BOUTIQUE: { badge: "bg-rose-950/80 text-rose-200 border-rose-500/30",        glow: "rgba(244,63,94,0.35)",   overlay: "from-rose-900/70 via-pink-900/40",       dot: "bg-rose-400" },
@@ -64,6 +74,7 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
+      <ScrollProgress />
 
       {/* ── Navbar Floating Pill ─────────────────────────────── */}
       <div className={`fixed top-3 left-0 right-0 z-50 px-4 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${showNav ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"}`}>
@@ -270,14 +281,16 @@ function NavLink({ href, label, icon, highlight }: { href: string; label: string
 
 /* ── HotelCard ────────────────────────────────────────────── */
 function HotelCard({ hotel, locale, t }: { hotel: any; locale: string; t: any }) {
-  const colors = CAT_COLOR[hotel.category] ?? CAT_COLOR.CITY;
+  const colors   = CAT_COLOR[hotel.category] ?? CAT_COLOR.CITY;
+  const services = CAT_SERVICES[hotel.category] ?? [];
+  const isPopular = (hotel.avgRating && hotel.avgRating >= 4.5) || hotel.starRating === 5;
 
   return (
     <a
       href={`/${locale}/hotels/${hotel.slug}`}
-      className="group block bg-white rounded-[1.75rem] overflow-hidden border border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-2.5 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+      className="group block bg-white rounded-[1.75rem] overflow-hidden border border-[var(--border)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] hover:-translate-y-2.5 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative"
     >
-      {/* Image */}
+      {/* ── Image ───────────────────────────────────────────── */}
       <div className="relative h-56 overflow-hidden bg-[var(--surface-2)]">
         {hotel.images?.[0] ? (
           <img
@@ -290,32 +303,40 @@ function HotelCard({ hotel, locale, t }: { hotel: any; locale: string; t: any })
           <div className="w-full h-full flex items-center justify-center text-5xl opacity-10 bg-gradient-to-br from-[var(--surface-2)] to-[var(--border)]">🏨</div>
         )}
 
-        {/* Dark vignette overlay always subtle, stronger on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent opacity-60 group-hover:opacity-75 transition-opacity duration-500" />
+        {/* Vignette */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
 
-        {/* Top row: category badge + rating */}
+        {/* Top: category + popular + fav */}
         <div className="absolute top-3.5 left-3.5 right-3.5 flex items-start justify-between">
-          {/* Category badge */}
-          <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border backdrop-blur-md ${colors.badge}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} animate-pulse`} />
-            {CAT_LABELS[hotel.category] ?? hotel.category}
-          </span>
+          <div className="flex flex-col gap-1.5">
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border backdrop-blur-md ${colors.badge}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} animate-pulse`} />
+              {CAT_LABELS[hotel.category] ?? hotel.category}
+            </span>
+            {isPopular && (
+              <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-[var(--gold)]/90 text-white backdrop-blur-md shadow-[var(--shadow-gold)]">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="ping-gold absolute inline-flex h-full w-full rounded-full bg-white opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-white" />
+                </span>
+                Popular
+              </span>
+            )}
+          </div>
 
-          {/* Rating pill + Fav */}
+          {/* Rating + Fav */}
           <div className="flex items-center gap-1.5">
             {(hotel.avgRating || hotel.starRating) && (
               <div className="glass-dark rounded-full px-2.5 py-1 flex items-center gap-1 backdrop-blur-md">
                 <span className="text-[var(--gold-shine)] text-xs">★</span>
-                <span className="text-[11px] font-bold text-white">
-                  {hotel.avgRating ?? hotel.starRating}
-                </span>
+                <span className="text-[11px] font-bold text-white">{hotel.avgRating ?? hotel.starRating}</span>
               </div>
             )}
             <FavButton hotelId={hotel.id} hotelSlug={hotel.slug} hotelName={hotel.name} size="sm" />
           </div>
         </div>
 
-        {/* Bottom: hotel name slides up on hover */}
+        {/* Bottom: name slides up on hover */}
         <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-1 group-hover:translate-y-0 transition-transform duration-400">
           <p className="text-white font-black text-lg leading-tight drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             {hotel.name}
@@ -323,12 +344,12 @@ function HotelCard({ hotel, locale, t }: { hotel: any; locale: string; t: any })
         </div>
       </div>
 
-      {/* Card body */}
+      {/* ── Card body ───────────────────────────────────────── */}
       <div className="p-5">
-        {/* Stars row */}
+        {/* Star rating row */}
         <div className="flex items-center gap-0.5 mb-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} className={`text-[11px] transition-colors duration-200 ${i < hotel.starRating ? "text-[var(--gold)]" : "text-[var(--border)]"}`}>★</span>
+            <span key={i} className={`text-[11px] ${i < hotel.starRating ? "text-[var(--gold)]" : "text-[var(--border)]"}`}>★</span>
           ))}
         </div>
 
@@ -336,15 +357,26 @@ function HotelCard({ hotel, locale, t }: { hotel: any; locale: string; t: any })
         <h2 className="text-[15px] font-bold text-[var(--text-primary)] leading-snug group-hover:text-[var(--gold-dark)] transition-colors duration-300 line-clamp-1 mb-1">
           {hotel.name}
         </h2>
-        <p className="text-xs text-[var(--text-muted)] font-medium flex items-center gap-1">
+        <p className="text-xs text-[var(--text-muted)] font-medium flex items-center gap-1 mb-4">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-60">
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
           </svg>
           {hotel.locationCity}, {hotel.locationCountry}
         </p>
 
+        {/* Services preview chips */}
+        {services.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {services.map(s => (
+              <span key={s.label} className="service-chip">
+                <span>{s.icon}</span>{s.label}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Price + CTA */}
-        <div className="flex items-end justify-between pt-4 mt-4 border-t border-[var(--border-soft)]">
+        <div className="flex items-end justify-between pt-3.5 border-t border-[var(--border-soft)]">
           <div>
             <p className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest mb-0.5">{t("common.from")}</p>
             {hotel.minPricePerNight ? (
@@ -365,7 +397,6 @@ function HotelCard({ hotel, locale, t }: { hotel: any; locale: string; t: any })
               minPricePerNight: hotel.minPricePerNight ?? null,
               imageUrl: hotel.images?.[0]?.url,
             }} />
-            {/* Arrow CTA */}
             <div className="w-9 h-9 rounded-full bg-[var(--text-primary)] flex items-center justify-center group-hover:bg-[var(--gold)] group-hover:shadow-[var(--shadow-gold)] group-hover:scale-110 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -376,6 +407,21 @@ function HotelCard({ hotel, locale, t }: { hotel: any; locale: string; t: any })
       </div>
     </a>
   );
+}
+
+/* ── ScrollProgress ───────────────────────────────────────── */
+function ScrollProgress() {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const update = () => {
+      const el = document.documentElement;
+      const pct = (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+      setWidth(Math.min(100, pct));
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    return () => window.removeEventListener("scroll", update);
+  }, []);
+  return <div className="scroll-progress" style={{ width: `${width}%` }} />;
 }
 
 /* ── EmptyState ───────────────────────────────────────────── */
