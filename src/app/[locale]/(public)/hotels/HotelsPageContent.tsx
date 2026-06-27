@@ -24,6 +24,19 @@ const CAT_SERVICES: Record<string, { icon: string; label: string }[]> = {
   CITY:     [{ icon: "🚕", label: "Transfer" }, { icon: "🍷", label: "Cena" }, { icon: "🎭", label: "Tours" }],
 };
 
+// Always-available fallback images if a URL fails to load
+const FALLBACK_URLS = [
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80&auto=format&fit=crop",
+];
+function getFallback(hotelId: string) {
+  // deterministic fallback per hotel so it's consistent across reloads
+  const idx = hotelId.charCodeAt(0) % FALLBACK_URLS.length;
+  return FALLBACK_URLS[idx];
+}
 const CAT_COLOR: Record<string, { badge: string; glow: string; overlay: string; dot: string }> = {
   LUXURY:   { badge: "bg-purple-950/80 text-purple-200 border-purple-500/30",  glow: "rgba(168,85,247,0.35)",  overlay: "from-purple-900/70 via-indigo-900/40",   dot: "bg-purple-400" },
   BOUTIQUE: { badge: "bg-rose-950/80 text-rose-200 border-rose-500/30",        glow: "rgba(244,63,94,0.35)",   overlay: "from-rose-900/70 via-pink-900/40",       dot: "bg-rose-400" },
@@ -39,9 +52,12 @@ interface Props {
   session: any;
   isFiltered: boolean;
   isPersonalised: boolean;
+  currentPage?: number;
+  totalPages?: number;
+  totalHotels?: number;
 }
 
-export default function HotelsPageContent({ locale, hotels, session, isFiltered, isPersonalised }: Props) {
+export default function HotelsPageContent({ locale, hotels, session, isFiltered, isPersonalised, currentPage = 1, totalPages = 1, totalHotels }: Props) {
   const [t, setT] = useState<any>(null);
   const pathname  = usePathname();
   const searchParams = useSearchParams();
@@ -214,9 +230,11 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <p className="text-sm font-semibold text-[var(--text-muted)]">
-              {isFiltered
-                ? `${hotels.length} ${hotels.length !== 1 ? t("hotels.results.found") : t("hotels.results.foundSingular")}`
-                : `${hotels.length} ${t("hotels.results.available")}`
+              {totalHotels
+                ? <><span className="text-[var(--text-primary)] font-black">{totalHotels}</span> hoteles en total</>
+                : isFiltered
+                  ? `${hotels.length} ${hotels.length !== 1 ? t("hotels.results.found") : t("hotels.results.foundSingular")}`
+                  : `${hotels.length} ${t("hotels.results.available")}`
               }
             </p>
             {isPersonalised && (
@@ -225,9 +243,7 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
               </span>
             )}
           </div>
-          <p className="text-[11px] text-[var(--text-muted)] font-medium uppercase tracking-widest hidden sm:block">
-            {isPersonalised ? t("hotels.results.relevance") : t("hotels.results.orderBy")}
-          </p>
+          <SortSelector searchParams={searchParams} locale={locale} />
         </div>
 
         {/* Grid */}
@@ -239,6 +255,17 @@ export default function HotelsPageContent({ locale, hotels, session, isFiltered,
               <HotelCard key={hotel.id} hotel={hotel} locale={locale} t={t} />
             ))}
           </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalHotels={totalHotels ?? 0}
+            locale={locale}
+            searchParams={searchParams}
+          />
         )}
 
         <ComparisonBar locale={locale} />
@@ -298,6 +325,13 @@ function HotelCard({ hotel, locale, t }: { hotel: any; locale: string; t: any })
             alt={hotel.name}
             className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-110"
             loading="lazy"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = "1";
+                img.src = getFallback(hotel.id);
+              }
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-5xl opacity-10 bg-gradient-to-br from-[var(--surface-2)] to-[var(--border)]">🏨</div>
@@ -438,6 +472,98 @@ function EmptyState({ locale, t }: { locale: string; t: any }) {
         {t("hotels.results.viewAll")}
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
+    </div>
+  );
+}
+
+/* ── Pagination ───────────────────────────────────────────── */
+function Pagination({ currentPage, totalPages, totalHotels, locale, searchParams }: {
+  currentPage: number; totalPages: number; totalHotels: number;
+  locale: string; searchParams: any;
+}) {
+  function pageUrl(p: number) {
+    const params = new URLSearchParams();
+    searchParams.forEach((v: string, k: string) => { if (k !== "page") params.set(k, v); });
+    params.set("page", String(p));
+    return `/${locale}/hotels?${params.toString()}`;
+  }
+
+  const pages = Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+    if (totalPages <= 7) return i + 1;
+    if (currentPage <= 4) return i + 1;
+    if (currentPage >= totalPages - 3) return totalPages - 6 + i;
+    return currentPage - 3 + i;
+  });
+
+  return (
+    <div className="mt-14 flex flex-col items-center gap-5">
+      {/* Counter */}
+      <p className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+        Mostrando página <span className="text-[var(--text-primary)]">{currentPage}</span> de{" "}
+        <span className="text-[var(--text-primary)]">{totalPages}</span> ·{" "}
+        <span className="text-[var(--gold-dark)]">{totalHotels.toLocaleString("es-CL")} hoteles</span> en total
+      </p>
+
+      {/* Page buttons */}
+      <div className="flex items-center gap-1.5 flex-wrap justify-center">
+        {/* Prev */}
+        {currentPage > 1 ? (
+          <a href={pageUrl(currentPage - 1)}
+            className="w-9 h-9 rounded-xl border border-[var(--border)] bg-white hover:border-[var(--gold)] hover:shadow-[var(--shadow-gold)] flex items-center justify-center transition-all duration-200 group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--text-muted)] group-hover:text-[var(--gold-dark)]">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+          </a>
+        ) : (
+          <div className="w-9 h-9 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-2)] flex items-center justify-center opacity-40">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </div>
+        )}
+
+        {/* First page + ellipsis */}
+        {pages[0] > 1 && (
+          <>
+            <a href={pageUrl(1)} className="w-9 h-9 rounded-xl border border-[var(--border)] bg-white hover:border-[var(--gold)] text-[12px] font-bold text-[var(--text-muted)] hover:text-[var(--gold-dark)] flex items-center justify-center transition-all duration-200">1</a>
+            {pages[0] > 2 && <span className="text-[var(--text-muted)] text-sm px-1">…</span>}
+          </>
+        )}
+
+        {/* Page numbers */}
+        {pages.map(p => (
+          p === currentPage ? (
+            <span key={p} className="w-9 h-9 rounded-xl bg-[var(--text-primary)] text-white text-[12px] font-black flex items-center justify-center shadow-[var(--shadow-sm)]">
+              {p}
+            </span>
+          ) : (
+            <a key={p} href={pageUrl(p)}
+              className="w-9 h-9 rounded-xl border border-[var(--border)] bg-white hover:border-[var(--gold)] hover:bg-[var(--gold-lighter)] text-[12px] font-bold text-[var(--text-muted)] hover:text-[var(--gold-dark)] flex items-center justify-center transition-all duration-200">
+              {p}
+            </a>
+          )
+        ))}
+
+        {/* Last page + ellipsis */}
+        {pages[pages.length - 1] < totalPages && (
+          <>
+            {pages[pages.length - 1] < totalPages - 1 && <span className="text-[var(--text-muted)] text-sm px-1">…</span>}
+            <a href={pageUrl(totalPages)} className="w-9 h-9 rounded-xl border border-[var(--border)] bg-white hover:border-[var(--gold)] text-[12px] font-bold text-[var(--text-muted)] hover:text-[var(--gold-dark)] flex items-center justify-center transition-all duration-200">{totalPages}</a>
+          </>
+        )}
+
+        {/* Next */}
+        {currentPage < totalPages ? (
+          <a href={pageUrl(currentPage + 1)}
+            className="w-9 h-9 rounded-xl border border-[var(--border)] bg-white hover:border-[var(--gold)] hover:shadow-[var(--shadow-gold)] flex items-center justify-center transition-all duration-200 group">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--text-muted)] group-hover:text-[var(--gold-dark)]">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+          </a>
+        ) : (
+          <div className="w-9 h-9 rounded-xl border border-[var(--border-soft)] bg-[var(--surface-2)] flex items-center justify-center opacity-40">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

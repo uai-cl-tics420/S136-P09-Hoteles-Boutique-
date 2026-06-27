@@ -5,6 +5,8 @@ import { auth } from "@/lib/auth/nextauth.config";
 import BookingWidget from "@/components/BookingWidget";
 import HotelReviews from "@/components/HotelReviews";
 import FavButton from "@/components/FavButton";
+import HotelImg from "@/components/HotelImg";
+import SimilarHotels from "@/components/SimilarHotels";
 import { db } from "@/db";
 import { bookings } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -149,9 +151,10 @@ export default async function HotelDetailPage({ params }: PageProps) {
             <div className="grid grid-cols-1 md:grid-cols-5 md:grid-rows-2 gap-2.5 rounded-3xl overflow-hidden h-[300px] md:h-[480px]">
               {/* Main large image */}
               <div className="md:col-span-3 md:row-span-2 relative overflow-hidden group">
-                <img
+                <HotelImg
                   src={mainImage.url}
                   alt={hotel.name}
+                  fallbackSeed={hotel.id}
                   className="w-full h-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] group-hover:scale-105"
                   loading="eager"
                 />
@@ -161,9 +164,10 @@ export default async function HotelDetailPage({ params }: PageProps) {
               {thumbs.slice(0, 4).map((img: any, i: number) => (
                 <div key={img.id} className="relative overflow-hidden group hidden md:block">
                   {img.url && (
-                    <img
+                    <HotelImg
                       src={img.url}
                       alt={`${hotel.name} — ${i + 2}`}
+                      fallbackSeed={hotel.id + String(i)}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
@@ -279,6 +283,17 @@ export default async function HotelDetailPage({ params }: PageProps) {
           </div>
         </div>
       </main>
+
+      {/* Similar Hotels */}
+      <section className="max-w-7xl mx-auto px-5 pb-16">
+        <div className="divider-gold mb-12" />
+        <SimilarHotels
+          hotelId={hotel.id}
+          category={hotel.category}
+          locationCity={hotel.locationCity}
+          locale={locale}
+        />
+      </section>
 
       {/* Footer */}
       <footer className="border-t border-[var(--border)] mt-20 py-8">

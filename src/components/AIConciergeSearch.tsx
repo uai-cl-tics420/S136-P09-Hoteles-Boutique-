@@ -429,6 +429,18 @@ function AIConciergeHotelCard({ hotel, locale, isPrimary, mood }: {
             alt={hotel.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             loading="lazy"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.dataset.fb) {
+                img.dataset.fb = "1";
+                const FALLBACKS = [
+                  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&auto=format&fit=crop",
+                  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80&auto=format&fit=crop",
+                  "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80&auto=format&fit=crop",
+                ];
+                img.src = FALLBACKS[hotel.id.charCodeAt(0) % FALLBACKS.length];
+              }
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl opacity-10 bg-gradient-to-br from-[var(--surface-2)] to-[var(--border)]">🏨</div>

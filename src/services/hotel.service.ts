@@ -33,7 +33,7 @@ function groupBy<T extends { hotelId: string }>(rows: T[]): Map<string, T[]> {
 // los LATERAL JOINs que son incompatibles con Supabase/PgBouncer (transaction mode).
 
 export async function getHotels(filters: HotelFilters = {}) {
-  const { query, category, minStars, maxPrice, page = 1, limit = 24, preferredCategories, experienceType, country } = filters;
+  const { query, category, minStars, maxPrice, page = 1, limit = 24, preferredCategories, experienceType, country, sortBy } = filters;
   const offset = (page - 1) * limit;
 
   const conditions = [eq(hotels.active, true)];
@@ -75,29 +75,26 @@ export async function getHotels(filters: HotelFilters = {}) {
     conditions.push(inArray(hotels.id, matchingIds));
   }
 
-  // Personalisation: if the user has preferred categories, boost those hotels first.
-  // Fallback to alphabetical when no preferences or all equal priority.
-  const hotelRows = await (preferredCategories && preferredCategories.length > 0
-    ? db
-        .select()
-        .from(hotels)
-        .where(and(...conditions))
-        .orderBy(
-          sql<number>`CASE WHEN ${hotels.category} IN (${sql.join(
-            preferredCategories.map((c) => sql`${c}`),
-            sql`, `
-          )}) THEN 0 ELSE 1 END`,
-          asc(hotels.name)
-        )
-        .limit(limit)
-        .offset(offset)
-    : db
-        .select()
-        .from(hotels)
-        .where(and(...conditions))
-        .orderBy(asc(hotels.name))
-        .limit(limit)
-        .offset(offset));
+  // Build ORDER BY based on sortBy param
+  const buildOrder = (preferCats?: string[]) => {
+    if (sortBy === "rating") return [sql`RANDOM()`]; // rating sort after JOIN below
+    if (sortBy === "name")   return [asc(hotels.name)];
+    if (preferCats && preferCats.length > 0) {
+      return [
+        sql<number>`CASE WHEN ${hotels.category} IN (${sql.join(preferCats.map(c => sql`${c}`), sql`, `)}) THEN 0 ELSE 1 END`,
+        asc(hotels.name),
+      ];
+    }
+    return [asc(hotels.name)];
+  };
+
+  const hotelRows = await db
+    .select()
+    .from(hotels)
+    .where(and(...conditions))
+    .orderBy(...buildOrder(preferredCategories))
+    .limit(limit)
+    .offset(offset);
 
 
   if (hotelRows.length === 0) return [];

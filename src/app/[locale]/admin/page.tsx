@@ -200,11 +200,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── Quick actions ───────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { href: `/${locale}/admin/hotels`,  label: t("admin.dashboard.manageProperties"), desc: t("admin.dashboard.managePropertiesDesc"), icon: "🗝️" },
-          { href: `/${locale}/reviews`,       label: t("admin.dashboard.reviewsAnalysis"),  desc: t("admin.dashboard.reviewsAnalysisDesc"),  icon: "⭐" },
-          { href: `/${locale}/hotels`,        label: "Vista de Cliente",                    desc: "Navega como un huésped exclusivo",         icon: "👁️" },
+          { href: `/${locale}/admin/hotels`,    label: t("admin.dashboard.manageProperties"), desc: t("admin.dashboard.managePropertiesDesc"), icon: "🗝️" },
+          { href: `/${locale}/admin/stack`,     label: "Stack & Métricas",                   desc: "BD en vivo, arquitectura y escalabilidad",   icon: "⚡" },
+          { href: `/${locale}/admin/analytics`, label: "Analytics",                           desc: "Ingresos, gráficos y top hoteles",           icon: "📊" },
+          { href: `/${locale}/reviews`,         label: t("admin.dashboard.reviewsAnalysis"),  desc: t("admin.dashboard.reviewsAnalysisDesc"),  icon: "⭐" },
+          { href: `/${locale}/hotels`,          label: "Vista de Cliente",                    desc: "Navega como un huésped exclusivo",         icon: "👁️" },
         ].map(a => (
           <a key={a.href} href={a.href}
             className="group bg-white rounded-3xl border border-[var(--border)] p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
