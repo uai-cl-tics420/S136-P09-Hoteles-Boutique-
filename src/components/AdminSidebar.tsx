@@ -44,9 +44,13 @@ export default function AdminSidebarToggle({ locale }: { locale: string }) {
         lg:translate-x-0
       `}>
         <div className="mb-8 px-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)] mb-1">
+          <Link
+            href="/"
+            className="text-[10px] font-bold uppercase tracking-[0.3em] text-[var(--gold)] mb-1 hover:text-yellow-400 transition-colors cursor-pointer"
+            onClick={() => setOpen(false)}
+          >
             Hoteles Boutique
-          </p>
+          </Link>
           <a
             href={`/${locale}/admin`}
             className="text-xl font-black text-[var(--text-primary)] tracking-tight hover:text-[var(--gold)] transition-colors"
