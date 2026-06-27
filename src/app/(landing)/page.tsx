@@ -1,9 +1,30 @@
+"use client";
 import Link from "next/link";
 import { Outfit } from "next/font/google";
+import { useState, useEffect } from "react";
 
 const outfit = Outfit({ subsets: ["latin"], display: "swap" });
 
+const COPY = {
+  es: {
+    description: "Elige tu idioma y entra a una experiencia de reservas más cuidada, visual y directa.",
+    footer: "Experiencias exclusivas en Chile y Latinoamérica",
+  },
+  en: {
+    description: "Choose your language and enter a more curated, visual and direct booking experience.",
+    footer: "Exclusive stays across Chile and Latin America",
+  },
+};
+
 export default function RootLanguageSelection() {
+  const [lang, setLang] = useState<"es" | "en">("es");
+
+  useEffect(() => {
+    const browserLang = navigator.language?.slice(0, 2).toLowerCase();
+    setLang(browserLang === "en" ? "en" : "es");
+  }, []);
+
+  const copy = COPY[lang];
   return (
     <main className={`relative min-h-screen overflow-hidden bg-stone-950 ${outfit.className}`}>
       <div className="absolute inset-0">
@@ -38,7 +59,7 @@ export default function RootLanguageSelection() {
               Boutique Hotels
             </h1>
             <p className="mt-5 max-w-lg text-base font-medium leading-7 text-white/72 md:text-lg">
-              Elige tu idioma y entra a una experiencia de reservas mas cuidada, visual y directa.
+              {copy.description}
             </p>
           </div>
 
@@ -73,7 +94,7 @@ export default function RootLanguageSelection() {
 
         <footer className="flex flex-col gap-2 text-xs font-medium text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} Boutique Hotels Platform</span>
-          <span>Experiencias exclusivas en Chile y Latinoamerica</span>
+          <span>{copy.footer}</span>
         </footer>
       </div>
     </main>
