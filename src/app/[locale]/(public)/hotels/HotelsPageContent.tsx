@@ -567,3 +567,41 @@ function Pagination({ currentPage, totalPages, totalHotels, locale, searchParams
     </div>
   );
 }
+
+/* ── SortSelector ─────────────────────────────────────────── */
+function SortSelector({ searchParams, locale }: { searchParams: any; locale: string }) {
+  const current = searchParams.get?.("sortBy") ?? searchParams.sortBy ?? "";
+
+  function sortUrl(value: string) {
+    const params = new URLSearchParams();
+    searchParams.forEach?.((v: string, k: string) => { if (k !== "sortBy" && k !== "page") params.set(k, v); });
+    if (value) params.set("sortBy", value);
+    params.set("page", "1");
+    return `/${locale}/hotels?${params.toString()}`;
+  }
+
+  const options = [
+    { value: "",           label: "A–Z" },
+    { value: "price_asc",  label: "$ Menor" },
+    { value: "price_desc", label: "$ Mayor" },
+    { value: "rating",     label: "★ Rating" },
+  ];
+
+  return (
+    <div className="hidden sm:flex items-center gap-1 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl p-1">
+      {options.map(opt => (
+        <a
+          key={opt.value}
+          href={sortUrl(opt.value)}
+          className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg transition-all duration-150 ${
+            current === opt.value
+              ? "bg-[var(--text-primary)] text-white shadow-sm"
+              : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-white"
+          }`}
+        >
+          {opt.label}
+        </a>
+      ))}
+    </div>
+  );
+}

@@ -1,6 +1,5 @@
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
-import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -30,64 +29,96 @@ export default async function PublicPage({ params }: Props) {
   const stats = await getStats();
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col overflow-hidden">
 
-      {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative flex-1 flex items-center justify-center overflow-hidden min-h-[90vh]">
-        {/* Background gradient orbs */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-[var(--gold)]/8 blur-[120px]" />
-          <div className="absolute bottom-[-5%] right-[-5%] w-[500px] h-[500px] rounded-full bg-purple-500/6 blur-[100px]" />
+      {/* ── Hero Section ────────────────────────────────────────── */}
+      <section className="relative flex-1 flex items-center justify-center min-h-[92vh] overflow-hidden">
+
+        {/* Animated gradient orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-15%] left-[-8%] w-[700px] h-[700px] rounded-full bg-gradient-to-br from-[var(--gold)]/12 to-purple-500/5 blur-[140px] animate-orb" />
+          <div className="absolute bottom-[-10%] right-[-8%] w-[600px] h-[600px] rounded-full bg-gradient-to-tl from-purple-600/8 to-[var(--gold)]/6 blur-[120px] animate-orb" style={{ animationDelay: "2.5s" }} />
+          <div className="absolute top-[40%] left-[50%] w-[400px] h-[400px] rounded-full bg-[var(--gold)]/4 blur-[100px] animate-orb" style={{ animationDelay: "4s" }} />
         </div>
 
+        {/* Floating particles */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[15%] left-[12%] w-2 h-2 rounded-full bg-[var(--gold)]/30 animate-particle" />
+          <div className="absolute top-[25%] right-[18%] w-1.5 h-1.5 rounded-full bg-[var(--gold)]/20 animate-particle-d1" />
+          <div className="absolute top-[60%] left-[8%] w-1 h-1 rounded-full bg-purple-400/25 animate-particle-d2" />
+          <div className="absolute top-[70%] right-[12%] w-2.5 h-2.5 rounded-full bg-[var(--gold)]/15 animate-particle-d3" />
+          <div className="absolute top-[45%] left-[75%] w-1.5 h-1.5 rounded-full bg-[var(--gold-shine)]/20 animate-particle" />
+          <div className="absolute top-[35%] left-[30%] w-1 h-1 rounded-full bg-purple-300/15 animate-particle-d2" />
+        </div>
+
+        {/* Decorative rings */}
+        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="w-[500px] h-[500px] rounded-full border border-[var(--gold)]/5 animate-spin-slow" />
+        </div>
+        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <div className="w-[700px] h-[700px] rounded-full border border-[var(--border)]/30 animate-spin-slow" style={{ animationDirection: "reverse", animationDuration: "14s" }} />
+        </div>
+
+        {/* Main content */}
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-[var(--gold-lighter)] border border-[var(--gold)]/25 text-[var(--gold-dark)] text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-8 animate-fade-in">
-            <span className="w-1.5 h-1.5 bg-[var(--gold)] rounded-full animate-pulse" />
+
+          {/* Badge with glow */}
+          <div className="inline-flex items-center gap-2.5 bg-[var(--gold-lighter)] border border-[var(--gold)]/25 text-[var(--gold-dark)] text-[10px] font-black uppercase tracking-[0.25em] px-5 py-2.5 rounded-full mb-10 animate-text-reveal animate-glow-ring">
+            <span className="relative flex h-2 w-2">
+              <span className="ping-gold absolute inline-flex h-full w-full rounded-full bg-[var(--gold)] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--gold)]" />
+            </span>
             Plataforma Boutique · Latinoamérica
           </div>
 
-          {/* Headline */}
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight mb-6 animate-slide-up leading-[0.9]">
-            <span className="text-[var(--text-primary)]">Hoteles</span>
-            <br />
-            <span className="text-gradient-gold">Boutique</span>
+          {/* Headline with staggered text reveal */}
+          <h1 className="text-6xl sm:text-8xl md:text-[9rem] font-black tracking-tighter mb-4 leading-[0.85]">
+            <span className="block animate-text-reveal text-[var(--text-primary)]">Hoteles</span>
+            <span className="block animate-text-reveal-d1">
+              <span className="text-gradient-gold">Boutique</span>
+            </span>
           </h1>
 
-          <p className="text-lg sm:text-xl text-[var(--text-muted)] font-light max-w-2xl mx-auto mb-12 animate-slide-up-delay leading-relaxed">
+          {/* Animated underline */}
+          <div className="relative mx-auto mb-8 h-[2px] max-w-[200px] bg-[var(--border)]">
+            <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-[var(--gold-shine)] via-[var(--gold)] to-[var(--gold-dark)] animate-line-draw" />
+          </div>
+
+          {/* Description */}
+          <p className="text-lg sm:text-xl text-[var(--text-muted)] font-light max-w-2xl mx-auto mb-14 animate-text-reveal-d2 leading-relaxed">
             Descubre experiencias únicas en los hoteles más exclusivos de Latinoamérica.
             Reservas inteligentes, asistente IA y colecciones curadas para el viajero moderno.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-fade-in">
+          {/* CTAs with animation */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-text-reveal-d3">
             <a href={`/${locale}/hotels`}
-              className="btn-gold text-[12px] font-black tracking-[0.12em] uppercase px-10 py-4 rounded-2xl shadow-[var(--shadow-gold)] hover:scale-105 transition-transform duration-300 inline-flex items-center gap-2.5">
-              <span className="text-base">✦</span>
+              className="btn-gold text-[12px] font-black tracking-[0.14em] uppercase px-12 py-5 rounded-2xl shadow-[var(--shadow-gold)] hover:scale-105 transition-all duration-300 inline-flex items-center gap-3 group">
+              <span className="text-base group-hover:rotate-90 transition-transform duration-500">✦</span>
               Explorar Hoteles
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </a>
             <a href={`/${locale}/hotels`}
-              className="text-[12px] font-bold tracking-[0.1em] uppercase px-8 py-4 rounded-2xl border border-[var(--border)] bg-white text-[var(--text-secondary)] hover:border-[var(--gold)] hover:text-[var(--gold-dark)] transition-all duration-200 inline-flex items-center gap-2">
-              <span>🤖</span> AI Concierge
+              className="text-[12px] font-bold tracking-[0.1em] uppercase px-10 py-5 rounded-2xl border border-[var(--border)] bg-white text-[var(--text-secondary)] hover:border-[var(--gold)] hover:text-[var(--gold-dark)] hover:shadow-[var(--shadow-md)] transition-all duration-300 inline-flex items-center gap-2.5 group">
+              <span className="group-hover:animate-bounce">🤖</span> AI Concierge
             </a>
           </div>
 
-          {/* ── Live Stats ───────────────────────────────────── */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl mx-auto animate-fade-in">
+          {/* ── Live Stats with staggered pop ───────────────── */}
+          <div className="stats-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 max-w-4xl mx-auto">
             {[
               { value: `${stats.hotels}+`,    label: "Hoteles",    icon: "🏨" },
               { value: `${stats.cities}`,     label: "Ciudades",   icon: "🌆" },
               { value: `${stats.countries}`,  label: "Países",     icon: "🌎" },
               { value: `${stats.reviews}+`,   label: "Reseñas",    icon: "⭐" },
               { value: stats.avgRating,       label: "Rating Prom",icon: "✦"  },
-              { value: "100%",                label: "Boutique",   icon: "💎" },
+              { value: `${stats.bookings}+`,  label: "Reservas",   icon: "🛎️" },
             ].map(s => (
-              <div key={s.label} className="bg-white border border-[var(--border)] rounded-2xl p-4 shadow-[var(--shadow-xs)] hover:border-[var(--gold)] hover:shadow-[var(--shadow-md)] transition-all duration-300 group">
-                <p className="text-xl mb-1">{s.icon}</p>
-                <p className="text-2xl font-black text-[var(--text-primary)] group-hover:text-[var(--gold-dark)] transition-colors">{s.value}</p>
+              <div key={s.label} className="group bg-white/80 backdrop-blur-sm border border-[var(--border)] rounded-2xl p-4 shadow-[var(--shadow-xs)] hover:border-[var(--gold)] hover:shadow-[var(--shadow-md)] hover:-translate-y-1 transition-all duration-300 cursor-default">
+                <p className="text-xl mb-1 group-hover:scale-110 transition-transform duration-300">{s.icon}</p>
+                <p className="text-2xl font-black text-[var(--text-primary)] group-hover:text-[var(--gold-dark)] transition-colors duration-300">{s.value}</p>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-muted)]">{s.label}</p>
               </div>
             ))}
@@ -103,66 +134,96 @@ export default async function PublicPage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── Feature Strip ────────────────────────────────────── */}
-      <section className="border-t border-[var(--border)] bg-white">
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--text-muted)] text-center mb-12">
-            Tecnología de clase mundial
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ── Infinite Marquee Ticker ──────────────────────────────── */}
+      <div className="border-y border-[var(--border)] bg-[var(--surface-2)] py-4 overflow-hidden">
+        <div className="animate-marquee whitespace-nowrap inline-flex items-center gap-8">
+          {[...Array(2)].map((_, rep) => (
+            <span key={rep} className="inline-flex items-center gap-8">
+              {["Santiago", "Buenos Aires", "Lima", "Cusco", "Medellín", "Bariloche", "Valparaíso", "São Paulo", "Bogotá", "Tulum", "Mendoza", "Pucón"].map(city => (
+                <span key={`${city}-${rep}`} className="inline-flex items-center gap-2 text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+                  <span className="w-1 h-1 rounded-full bg-[var(--gold)]" />
+                  {city}
+                </span>
+              ))}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Feature Strip with staggered cards ─────────────────── */}
+      <section className="bg-white">
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          <div className="text-center mb-14">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--gold)] mb-3">
+              Arquitectura de clase mundial
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tight">
+              Tecnología que
+              <span className="text-gradient-gold"> impulsa</span> la experiencia
+            </h2>
+          </div>
+          <div className="feature-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 icon: "🤖",
                 title: "AI Concierge",
                 desc: "Búsqueda en lenguaje natural con Gemini 1.5 Flash + motor NLP local de respaldo.",
                 badge: "Gemini API",
+                gradient: "from-purple-500/10 to-violet-500/5",
               },
               {
                 icon: "⚡",
                 title: "Bun Runtime",
-                desc: "Seeds de 411 hoteles, 1.227 reseñas y 1.233 imágenes ejecutadas en segundos con Bun.",
+                desc: `Seeds de ${stats.hotels} hoteles, ${stats.reviews} reseñas y miles de imágenes en segundos.`,
                 badge: "Bun 1.3",
+                gradient: "from-amber-500/10 to-orange-500/5",
               },
               {
                 icon: "🗄️",
-                title: "Drizzle ORM + Postgres",
+                title: "Drizzle + Postgres",
                 desc: "Schema tipado, índices optimizados, consultas relacionales con JOINs eficientes.",
                 badge: "Type-safe",
+                gradient: "from-emerald-500/10 to-green-500/5",
               },
               {
                 icon: "🌐",
                 title: "Next.js 15 + i18n",
                 desc: "App Router, Server Components, streaming, internacionalización ES/EN completa.",
                 badge: "Next.js 15",
+                gradient: "from-sky-500/10 to-blue-500/5",
               },
             ].map(f => (
-              <div key={f.title} className="group p-6 rounded-3xl border border-[var(--border)] hover:border-[var(--gold)] hover:shadow-[var(--shadow-md)] transition-all duration-300 hover:-translate-y-1">
-                <div className="w-12 h-12 bg-[var(--surface-2)] rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-[var(--gold-lighter)] transition-colors border border-[var(--border)] group-hover:border-[var(--gold)]/30">
-                  {f.icon}
+              <div key={f.title} className="group relative p-7 rounded-3xl border border-[var(--border)] hover:border-[var(--gold)] hover:shadow-[var(--shadow-lg)] transition-all duration-400 hover:-translate-y-2 overflow-hidden">
+                {/* Gradient glow on hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${f.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`} />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 bg-[var(--surface-2)] rounded-2xl flex items-center justify-center text-2xl mb-5 group-hover:bg-[var(--gold-lighter)] group-hover:scale-110 transition-all duration-400 border border-[var(--border)] group-hover:border-[var(--gold)]/30">
+                    {f.icon}
+                  </div>
+                  <div className="flex items-start justify-between mb-3">
+                    <p className="text-[15px] font-bold text-[var(--text-primary)] group-hover:text-[var(--gold-dark)] transition-colors">{f.title}</p>
+                    <span className="text-[9px] font-black uppercase tracking-widest bg-[var(--gold-lighter)] text-[var(--gold-dark)] border border-[var(--gold)]/20 px-2 py-0.5 rounded-full ml-2 shrink-0">{f.badge}</span>
+                  </div>
+                  <p className="text-[13px] text-[var(--text-muted)] leading-relaxed font-medium">{f.desc}</p>
                 </div>
-                <div className="flex items-start justify-between mb-2">
-                  <p className="text-[15px] font-bold text-[var(--text-primary)] group-hover:text-[var(--gold-dark)] transition-colors">{f.title}</p>
-                  <span className="text-[9px] font-black uppercase tracking-widest bg-[var(--gold-lighter)] text-[var(--gold-dark)] border border-[var(--gold)]/20 px-2 py-0.5 rounded-full ml-2 shrink-0">{f.badge}</span>
-                </div>
-                <p className="text-[13px] text-[var(--text-muted)] leading-relaxed font-medium">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Tech Stack Footer ─────────────────────────────────── */}
-      <footer className="border-t border-[var(--border)] bg-[var(--text-primary)] text-white">
-        <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+      {/* ── Tech Stack Footer ─────────────────────────────────────── */}
+      <footer className="border-t border-[var(--border)] aurora-bg text-white noise relative">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
-            <p className="text-[15px] font-black tracking-tight mb-1">
-              Hoteles<span className="text-[var(--gold)]">Boutique</span>
+            <p className="text-xl font-black tracking-tight mb-1">
+              Hoteles<span className="text-[var(--gold-shine)]">Boutique</span>
             </p>
             <p className="text-[10px] font-medium text-white/40 uppercase tracking-widest">
               Plataforma Full-Stack · TICS420 · UAI 2026
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             {[
               { label: "Bun 1.3", color: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
               { label: "Next.js 15", color: "bg-white/10 text-white/70 border-white/20" },
@@ -171,7 +232,7 @@ export default async function PublicPage({ params }: Props) {
               { label: "Gemini AI", color: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
               { label: "TypeScript", color: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
             ].map(t => (
-              <span key={t.label} className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border ${t.color}`}>
+              <span key={t.label} className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border hover:scale-105 transition-transform duration-200 cursor-default ${t.color}`}>
                 {t.label}
               </span>
             ))}
